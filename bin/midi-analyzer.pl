@@ -26,7 +26,7 @@ foreach my $one (@ARGV) {
     say ref $events[0] ;
     SH::PrettyPrint::print_arrayofarrays $_ for @events;
 #    print Dumper @events;
-# print     $opus->dump( { flat=>1} );
+ print     $opus->dump( { flat=>1} );
    print Dumper  \%MIDI::number2note;
 }
 exit;
