@@ -14,6 +14,7 @@ use overload
 sub to_string {
   my $self = shift;
   die Dumper $self if ! defined $self->pitch;
-  return $self->time.'-'.$self->length.'-'.$MIDI::number2note{ $self->pitch() };
+  return '' if $self->length<3;
+  return $self->time.'-'.$self->length.'-'.$MIDI::number2note{ $self->pitch() }."-".$self->volume."\n";
 }
 1;

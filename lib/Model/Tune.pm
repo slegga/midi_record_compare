@@ -11,6 +11,11 @@ has longest_note => 0;
 has 'notes';
 has file => '';
 
+=head1 DESCRIPTION
+
+('note_off', dtime, channel, note, velocity)
+('note_on',  dtime, channel, note, velocity)
+
 =head1 compile
 
 Generate notes from file or events;
@@ -32,7 +37,7 @@ sub compile {
     my @notes;
     for my $event(@{$self->events}) {#0=type,pitch,dtime,0,volumne
       next if !$event->[0] =~/^note_o(o|ff)$/;
-      next if @$event<4;
+      next if @$event<5;
       $time += $event->[1];
       if ($event->[4]) {
         $times[$event->[3]] = $time;
@@ -51,7 +56,7 @@ sub compile {
 
 sub to_string {
   my $self = shift;
-  my @notes = map{"$_"} @{$self->notes};
+  my @notes = map{"$_"} grep {$_} @{$self->notes};
   return join(' ',@notes);
 }
 1;
