@@ -51,6 +51,7 @@ sub compile {
       }
     }
 #    warn Dumper \@notes;
+    @notes = sort { $a->{'time'} <=> $b->{'time'} }  @notes;
     $self->notes(\@notes);
   } else {
     confess("Nothing to do");
