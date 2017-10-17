@@ -34,19 +34,23 @@ sub compile {
   if (@{$self->events}) {
     my $time = 0;
     my @times=map{0} 0..127;
+    my @volumes=map{0} 0..127;
     my @notes;
     for my $event(@{$self->events}) {#0=type,pitch,dtime,0,volumne
-      next if !$event->[0] =~/^note_o(o|ff)$/;
+      next if $event->[0] !~ /^note_o(n|ff)/;
+#      printf "%s %s %s %s %s\n",@$event;
+      
       next if @$event<5;
       $time += $event->[1];
       if ($event->[4]) {
         $times[$event->[3]] = $time;
+        $volumes[$event->[3]] = $event->[4];
       } else {
         push @notes, Model::Note->new(time => $times[$event->[3]]
-        , pitch =>$event->[3],length => $event->[1], volume =>$event->[4]);
+        , pitch =>$event->[3],length =>$time - $times[$event->[3]], volume =>$volumes[$event->[3]]);
       }
     }
-    warn Dumper \@notes;
+#    warn Dumper \@notes;
     $self->notes(\@notes);
   } else {
     confess("Nothing to do");
