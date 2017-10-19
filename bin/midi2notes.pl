@@ -3,6 +3,8 @@ use FindBin;
 use lib "$FindBin::Bin/../../utillities-perl/lib";
 use lib "$FindBin::Bin/../lib";
 use lib '/media/data/perlbrew/perls/perl-5.26.0/lib/site_perl/5.26.0/';
+use lib '/home/bruker/perl5/perlbrew/perls/perl-5.26.0/lib/site_perl/5.26.0/';
+
 use Mojo::Base -strict;
 use MIDI; # uses MIDI::Opus et al
 use Data::Dumper;
@@ -22,4 +24,5 @@ velocity = a value 0 to 127
 
 my $tune = Model::Tune->new(file=>$ARGV[0]);
 $tune->compile;
+$tune->calc_shortest_note;
 say "$tune";

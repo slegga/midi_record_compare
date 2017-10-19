@@ -7,7 +7,7 @@ use overload
 has 'events';
 has length => 0;
 has shortest_note => 0;
-has longest_note => 0;
+has time_diff =>100000000;
 has 'notes';
 has file => '';
 
@@ -48,15 +48,82 @@ sub compile {
       } else {
         push @notes, Model::Note->new(time => $times[$event->[3]]
         , pitch =>$event->[3],length =>$time - $times[$event->[3]], volume =>$volumes[$event->[3]]);
+				
       }
     }
 #    warn Dumper \@notes;
     @notes = sort { $a->{'time'} <=> $b->{'time'} }  @notes;
+		
     $self->notes(\@notes);
+		my $pre_time;
+		for my $note (@notes) {
+			if (! defined $pre_time) {
+				$pre_time = $note->time;
+				next;
+			}
+			$note->delta_time($note->time - $pre_time);
+			$pre_time = $note->time;
+			
+		}
   } else {
     confess("Nothing to do");
   }
   return $self;
+}
+
+
+sub calc_shortest_note {
+	my $self =shift;
+  my $try = 80;
+	my $best_diff = 10000000;
+	
+	my $diff = $self->_calc_time_diff($try);
+	my $new_try=$try+1;
+	
+	while ($diff > $self->_calc_time_diff($new_try)) {
+		$diff= $self->_calc_time_diff($new_try);
+		$try=$new_try;
+		$new_try++;
+
+	}
+	if ($try == 80) {
+		$new_try= $try-1;
+		while ($diff > $self->_calc_time_diff($new_try)) {
+		  $diff= $self->_calc_time_diff($new_try);
+			$try=$new_try;
+			$new_try--;
+		}
+	
+	}
+	$self->time_diff($diff);
+	my $numnotes = $self->notes;
+	$numnotes = scalar @$numnotes;
+	printf "%s -%s - %d\n",$try,$diff, $diff / $numnotes;
+
+	$self->shortest_note($try);
+	return $self;
+}
+
+sub _calc_time_diff {
+	my $self = shift;
+  
+  my $try = shift||die;
+	my $notes = $self->notes;
+	my @notes = @$notes;
+	my $return=0;
+	for my $note(@notes) {
+		my $i = 1;
+		my $nd = $note->delta_time;
+		my $d1 = $nd;
+		my $d2=111111;
+		while ( $d1 < $d2) {
+		  $d1 = $d2;
+			$d2 = abs( $nd - $try*$i );
+		}
+		$return += $d2;
+	}
+#	warn "$try - $return";
+	return $return;
 }
 
 sub to_string {
