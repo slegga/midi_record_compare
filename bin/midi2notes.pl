@@ -8,7 +8,7 @@ use lib '/home/bruker/perl5/perlbrew/perls/perl-5.26.0/lib/site_perl/5.26.0/';
 use Mojo::Base -strict;
 use MIDI; # uses MIDI::Opus et al
 use Data::Dumper;
-use Carp::Always;
+#use Carp::Always;
 use Model::Tune;
 
 

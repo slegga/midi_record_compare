@@ -2,6 +2,7 @@ package Model::Tune;
 use Mojo::Base -base;
 use Model::Note;
 use Data::Dumper;
+use List::Util qw/min max/;
 use overload
     '""' => sub { shift->to_string }, fallback => 1;
 has 'events';
@@ -74,31 +75,23 @@ sub compile {
 
 sub calc_shortest_note {
 	my $self =shift;
-  my $try = 80;
+	my $numnotes = $self->notes;
+
+    my $try = max grep{$_&& $_>=30} map{ $_->{delta_time} } @$numnotes;;
 	my $best_diff = 10000000;
 	
 	my $diff = $self->_calc_time_diff($try);
-	my $new_try=$try+1;
+	my $new_try=$try-1;
 	
-	while ($diff > $self->_calc_time_diff($new_try)) {
+	while ($diff >= $self->_calc_time_diff($new_try)) {
 		$diff= $self->_calc_time_diff($new_try);
 		$try=$new_try;
-		$new_try++;
+		$new_try--;
 
 	}
-	if ($try == 80) {
-		$new_try= $try-1;
-		while ($diff > $self->_calc_time_diff($new_try)) {
-		  $diff= $self->_calc_time_diff($new_try);
-			$try=$new_try;
-			$new_try--;
-		}
-	
-	}
 	$self->time_diff($diff);
-	my $numnotes = $self->notes;
 	$numnotes = scalar @$numnotes;
-	printf "%s -%s - %d\n",$try,$diff, $diff / $numnotes;
+	printf "%s -%s - %d - %d\n",$try,$diff, $numnotes, $diff / $numnotes;
 
 	$self->shortest_note($try);
 	return $self;
@@ -115,14 +108,16 @@ sub _calc_time_diff {
 		my $i = 1;
 		my $nd = $note->delta_time;
 		my $d1 = $nd;
-		my $d2=111111;
-		while ( $d1 < $d2) {
+		my $d2 = abs( $nd - $try);
+		while ( $d1 > $d2 || $d1 > $try) {
 		  $d1 = $d2;
 			$d2 = abs( $nd - $try*$i );
+            $i++;
 		}
-		$return += $d2;
+        warn ":$i - nd:$nd - d1:$d1 - d2:$d2 - try:$try";
+		$return += $d1;
 	}
-#	warn "$try - $return";
+	warn "$try - $return";
 	return $return;
 }
 
