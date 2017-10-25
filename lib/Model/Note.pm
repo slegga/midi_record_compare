@@ -8,6 +8,7 @@ has pitch => 0;
 has volume => 0;
 has length => 0;
 has delta_time => 0;
+has beat_point => sub {return Model::Beat->new()};
 
 use overload
     '""' => sub { shift->to_string }, fallback => 1;

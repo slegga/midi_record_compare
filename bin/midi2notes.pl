@@ -23,6 +23,7 @@ velocity = a value 0 to 127
 =cut
 
 my $tune = Model::Tune->new(file=>$ARGV[0]);
-$tune->compile;
+$tune->data2events;
 $tune->calc_shortest_note;
+$tune->events2notes;
 say "$tune";

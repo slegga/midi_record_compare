@@ -1,6 +1,7 @@
 package Model::Tune;
 use Mojo::Base -base;
 use Model::Note;
+use Model::Beat;
 use Data::Dumper;
 use List::Util qw/min max/;
 use overload
@@ -24,14 +25,14 @@ Generate notes from file or events;
 
 =cut
 
-=head2 compile
+=head2 data2events
 
 Take mididata and create events and create point in time from dtime
 
 =cut
 
 
-sub compile {
+sub data2events {
   my $self = shift;
   if ($self->file) {
     my $opus = MIDI::Opus->new({ 'from_file' => $self->file, 'no_parse' => 1 });
@@ -139,7 +140,7 @@ sub _calc_time_diff {
 	return $return;
 }
 
-=head2 gen_notes
+=head2 events2notes
 
 Calculate notes as: point in time, length, sound
 i.e 
@@ -150,14 +151,26 @@ i.e
 
 =cut
 
-sub gen_notes {
+sub events2notes {
     my $self = shift;
     die "Missing beat" if !$self->beat;
     my $notes = $self->notes;
     my @notes = @$notes;
-    my $beat = Model::Beat->new(beat_part);
+    my $beat = Model::Beat->new();
     for my $note(@notes) {
         my $tmp_place
+     my $p = $self->beat_part;
+     my $s = $self->beat_size;
+     if ($s % 3 == 0) {
+        $s=4 * $s / 3
+     }
+     if ($p %2 == 0 && $s % 2 == 0) {
+         $p = $p /2;
+         $s = $s /2;
+     }
+     return sprintf "%d/%d",$p,$s;
+  } else {
+
     }
     return $self;
 }
