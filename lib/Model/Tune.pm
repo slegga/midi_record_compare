@@ -7,7 +7,8 @@ use overload
     '""' => sub { shift->to_string }, fallback => 1;
 has 'events';
 has length => 0;
-has shortest_note => 0;
+has shortest_note_time => 0;
+has beat => 4;
 has time_diff =>100000000;
 has 'notes';
 has file => '';
@@ -22,6 +23,13 @@ has file => '';
 Generate notes from file or events;
 
 =cut
+
+=head2 compile
+
+Take mididata and create events and create point in time from dtime
+
+=cut
+
 
 sub compile {
   my $self = shift;
@@ -72,6 +80,11 @@ sub compile {
   return $self;
 }
 
+=head2 calc_shortest_note
+
+Guess the shorest note. If shorter than 96 it is a 1/8 else 1/4.
+
+=cut
 
 sub calc_shortest_note {
 	my $self =shift;
@@ -93,7 +106,12 @@ sub calc_shortest_note {
 	$numnotes = scalar @$numnotes;
 	printf "%s -%s - %d - %d\n",$try,$diff, $numnotes, $diff / $numnotes;
 
-	$self->shortest_note($try);
+	$self->shortest_note_time($try);
+    if ($try>=96) {
+        $self->beat(4);
+    } elsif($try<96) {
+        $self->beat(8);
+    } 
 	return $self;
 }
 
@@ -119,6 +137,29 @@ sub _calc_time_diff {
 	}
 	warn "$try - $return";
 	return $return;
+}
+
+=head2 gen_notes
+
+Calculate notes as: point in time, length, sound
+i.e 
+ beat:4
+ 0.0;0.1;C4
+ 0.1;0.1;D4
+...
+
+=cut
+
+sub gen_notes {
+    my $self = shift;
+    die "Missing beat" if !$self->beat;
+    my $notes = $self->notes;
+    my @notes = @$notes;
+    my $beat = Model::Beat->new(beat_part);
+    for my $note(@notes) {
+        my $tmp_place
+    }
+    return $self;
 }
 
 sub to_string {

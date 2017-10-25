@@ -14,8 +14,16 @@ use overload
 
 sub to_string {
   my $self = shift;
+  my $opts = shift;
   die Dumper $self if ! defined $self->pitch;
   return '' if $self->length<3;
-  return sprintf "%s-%s-%s-%s-%s\n",$self->time,$self->length,$MIDI::number2note{ $self->pitch() },$self->volume,$self->delta_time;
+  if (! $opts) {
+      return sprintf "%s-%s-%s-%s-%s\n",$self->time,$self->length,$MIDI::number2note{ $self->pitch() },$self->volume,$self->delta_time;
+  } else {
+      # time, length,note
+      # 1 3/8;2/8;C4
+      # opts={beatpart=>(12348)}
+    
+  }
 }
 1;
