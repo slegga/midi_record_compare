@@ -158,9 +158,17 @@ sub events2notes {
     my @notes = @$notes;
     my $beat = Model::Beat->new();
     for my $note(@notes) {
-        my $tmp_place
-     my $p = $self->beat_part;
-     my $s = $self->beat_size;
+      $note->value($self->_calc_length($note->length));
+    }
+    return $self;
+}
+
+sub _calc_length {
+    my $self=shift;
+    my $time=shift;
+    
+     my $p = int($time / $self->shortest_note_time + 6/10);
+     my $s = $self->beat;
      if ($s % 3 == 0) {
         $s=4 * $s / 3
      }
@@ -169,15 +177,14 @@ sub events2notes {
          $s = $s /2;
      }
      return sprintf "%d/%d",$p,$s;
-  } else {
 
-    }
-    return $self;
 }
 
 sub to_string {
   my $self = shift;
   my @notes = map{"$_"} grep {$_} @{$self->notes};
-  return join(' ',@notes);
+  return join('',@notes);
 }
+
+
 1;

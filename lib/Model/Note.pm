@@ -5,8 +5,9 @@ use Data::Dumper;
 
 has time => 0;
 has pitch => 0;
+has length =>0;
 has volume => 0;
-has length => 0;
+has value => 0;
 has delta_time => 0;
 has beat_point => sub {return Model::Beat->new()};
 
@@ -18,9 +19,11 @@ sub to_string {
   my $opts = shift;
   die Dumper $self if ! defined $self->pitch;
   return '' if $self->length<3;
-  if (! $opts) {
-      return sprintf "%s-%s-%s-%s-%s\n",$self->time,$self->length,$MIDI::number2note{ $self->pitch() },$self->volume,$self->delta_time;
-  } else {
+  if ($self->value) {
+    return sprintf ";%s;%s   %s-%s-%s-%s\n",$self->value,$MIDI::number2note{ $self->pitch() },$self->time,$self->length,$self->volume,$self->delta_time;
+  }
+  else  {
+      return sprintf ";%s   %s-%s-%s-%s\n",$MIDI::number2note{ $self->pitch() },$self->time,$self->length,$self->volume,$self->delta_time;
       # time, length,note
       # 1 3/8;2/8;C4
       # opts={beatpart=>(12348)}
