@@ -34,5 +34,6 @@ sub add {
 	if ($beat_part>$self->beat_size) {
 		...;
 	}
+	return Model::Beat
 }
 1;
