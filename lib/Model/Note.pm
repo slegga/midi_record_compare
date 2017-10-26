@@ -2,6 +2,7 @@ package Model::Note;
 use Mojo::Base -base;
 use MIDI;
 use Data::Dumper;
+use Clone;
 
 has time => 0;
 has pitch => 0;
@@ -9,7 +10,7 @@ has length =>0;
 has volume => 0;
 has value => 0;
 has delta_time => 0;
-has beat_point => sub {return Model::Beat->new()};
+has place_beat => sub {return Model::Beat->new()};
 
 use overload
     '""' => sub { shift->to_string }, fallback => 1;
@@ -29,5 +30,10 @@ sub to_string {
       # opts={beatpart=>(12348)}
     
   }
+}
+
+sub clone {
+	my $self = shift;
+	return clone $self;
 }
 1;

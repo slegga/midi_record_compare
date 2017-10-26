@@ -159,6 +159,11 @@ sub events2notes {
     my $beat = Model::Beat->new();
     for my $note(@notes) {
       $note->value($self->_calc_length($note->length));
+			
+			#step up beat
+			my $beat_part = int( 1/2 + $note->delta_time / $self->shortest_note_time );
+			$beat = $beat + Model::Beat->new(beat_part => $beat_part);
+			$note->beat_place($beat->clone);
     }
     return $self;
 }
