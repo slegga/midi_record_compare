@@ -156,7 +156,7 @@ sub events2notes {
     die "Missing beat" if !$self->beat;
     my $notes = $self->notes;
     my @notes = @$notes;
-    my $beat = Model::Beat->new();
+    my $beat = Model::Beat->new(beat_size=>$self->beat);
     for my $note(@notes) {
       $note->value($self->_calc_length($note->length));
 			
@@ -165,7 +165,7 @@ sub events2notes {
 			warn $beat;
 			$beat = $beat + $beat_part;
 			warn $beat;
-			$note->beat_place($beat->clone);
+			$note->place_beat($beat->clone);
     }
     return $self;
 }

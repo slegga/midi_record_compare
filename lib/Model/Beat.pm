@@ -1,6 +1,7 @@
 package Model::Beat;
 use Mojo::Base -base;
 use Data::Dumper;
+use Clone;
 
 has beat_no => 0;
 has beat_part => 0;
@@ -31,9 +32,15 @@ sub add {
 	} else {
 		die ref $other .'  '. $other;
 	}
-	if ($beat_part>$self->beat_size) {
-		...;
+	 while ($beat_part>=$self->beat_size) {
+		$beat_no++;
+        $beat_part -= $self->beat_size;
 	}
-	return Model::Beat
+	return Model::Beat->new(beat_no => $beat_no, beat_part => $beat_part, beat_size => $self->beat_size);
+}
+
+sub clone {
+    my $self = shift;
+    return Model::Beat->new(beat_no => $self->beat_no, beat_part => $self->beat_part, beat_size => $self->beat_size);
 }
 1;
