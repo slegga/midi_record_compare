@@ -4,12 +4,17 @@ use MIDI;
 use Data::Dumper;
 use Clone;
 
+# midi
 has time => 0;
 has pitch => 0;
 has length =>0;
 has volume => 0;
-has value => 0;
 has delta_time => 0;
+
+# note
+has delta_place_numerator => 0;
+has length_numerator => 0;
+has length_name => '';
 has place_beat => sub {return Model::Beat->new()};
 
 use overload
@@ -21,9 +26,9 @@ sub to_string {
   die Dumper $self if ! defined $self->pitch;
   return '' if $self->length<3;
   if ($self->place_beat)  {
-      return sprintf "%s;%s;%s   %s-%s-%s-%s\n",$self->place_beat,$self->value,$MIDI::number2note{ $self->pitch() },$self->time,$self->length,$self->volume,$self->delta_time;
-  }  elsif ($self->value) {
-    return sprintf ";%s;%s   %s-%s-%s-%s\n",$self->value,$MIDI::number2note{ $self->pitch() },$self->time,$self->length,$self->volume,$self->delta_time;
+      return sprintf "%s;%s;%s   #%s-%s-%s-%s\n",$self->delta_place_numerator,$self->length_name,$MIDI::number2note{ $self->pitch() },$self->place_beat,$self->time,$self->length, $self->delta_time;
+  }  elsif ($self->length_name) {
+    return sprintf ";%s;%s   %s-%s-%s-%s\n",$self->length_name,$MIDI::number2note{ $self->pitch() },$self->time,$self->length,$self->volume,$self->delta_time;
   }
   else  {
       return sprintf ";%s   %s-%s-%s-%s\n",$MIDI::number2note{ $self->pitch() },$self->time,$self->length,$self->volume,$self->delta_time;

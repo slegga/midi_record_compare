@@ -11,7 +11,8 @@ has denominator => 8;
 
 use overload
     '""' => sub { shift->to_string }, fallback => 1,
-    '+' => \&add,;
+    '+' => \&add,
+    '-' => \&subtract,;
 
 
 sub to_string {
@@ -23,7 +24,7 @@ sub to_string {
 }
 
 sub add {
-  my ($self, $other,$swap) = @_;;
+  my ($self, $other,$swap) = @_;
 	my $number = $self->number;
   my $numerator = $self->numerator;
 	if (ref $other eq __PACKAGE__ ) {
@@ -41,8 +42,36 @@ sub add {
 	return Model::Beat->new(number => $number, numerator => $numerator, denominator => $self->denominator);
 }
 
+sub subtract {
+  my ($self, $other,$swap) = @_;
+  my $number = $self->number;
+  my $numerator = $self->numerator;
+	if ($swap) {
+		...;
+	}
+  if (ref $other eq __PACKAGE__ ) {
+      $number -= $other->number;
+      $numerator -= $other->numerator;
+  } elsif($other=~/^\d+$/)  {
+    $numerator -= $other;
+  } else {
+    die ref $other .'  '. $other;
+  }
+   while ($numerator<0) {
+    $number--;
+        $numerator += $self->denominator;
+  }
+  return Model::Beat->new(number => $number, numerator => $numerator, denominator => $self->denominator);
+
+}
+
 sub clone {
     my $self = shift;
     return Model::Beat->new(number => $self->number, numerator => $self->numerator, denominator => $self->denominator);
+}
+
+sub to_int {
+	my $self =shift;
+	return $self->numerator + $self->number * $self->denominator;
 }
 1;

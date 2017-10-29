@@ -158,23 +158,48 @@ sub events2notes {
     my @notes = @$notes;
     my $denominator = Model::Beat->new(denominator=>$self->denominator);
     for my $note(@notes) {
-        $note->value($self->_calc_length($note->length));
+        my ($length_name, $length_numerator) = $self->_calc_length( { time => $note->length } );
+        $note->length_name($length_name);
+        $note->length_numerator($length_numerator);
         #step up beat
         my $numerator = int( 1/2 + $note->delta_time / $self->shortest_note_time );
         $denominator = $denominator + $numerator;
         $note->place_beat($denominator->clone);
     }
-    @notes = sort {sprintf('%03d%02d%03d',$a->place_beat->beat_no, $a->place_beat->beat_numinator,$a->pitch) cmp sprintf('%03d%02d%03d',$b->place_beat->beat_no, $b->place_beat->beat_numinator,$b->pitch) } @notes;
+    @notes = sort {sprintf('%03d%02d%03d',$a->place_beat->number, $a->place_beat->numerator,128 - $a->pitch) 
+               cmp sprintf('%03d%02d%03d',$b->place_beat->number, $b->place_beat->numerator,128 - $b->pitch) } @notes;
+
+    #loop another time through notes to calc delta_place_numerator after notes is sorted.
+    my $prev_note = Model::Note->new(place_beat=>Model::Beat->new(number=>0, numerator=>0));
+    for my $note(@notes) {
+      my $tb = $note->place_beat - $prev_note->place_beat;
+      $note->delta_place_numerator($tb->to_int);
+
+      $prev_note = $note;
+    }
+
     $self->notes(\@notes);
 
     return $self;
 }
 
+# name _calc_length
+# takes hash_ref (time=>100,numerator=4)
+# Return (length_name,numerator) i.e. ('1/4',2)
+
 sub _calc_length {
     my $self=shift;
-    my $time=shift;
-    
-     my $p = int($time / $self->shortest_note_time + 6/10);
+    my $input=shift;
+    my $numerator;
+    if (exists $input->{'time'} ) {
+      my $time = $input->{'time'};
+       $numerator = int($time / $self->shortest_note_time + 6/10);
+    } elsif(exists $input->{'numerator'}) {
+      $numerator= $input->{'numerator'};
+    } else {
+      die 'Expect hash ref one key = (time|numerator)'
+    }
+     my $p = $numerator;
      my $s = $self->denominator;
      if ($s % 3 == 0) {
         $s=4 * $s / 3
@@ -183,7 +208,7 @@ sub _calc_length {
          $p = $p /2;
          $s = $s /2;
      }
-     return sprintf "%d/%d",$p,$s;
+     return (sprintf("%d/%d",$p,$s), $numerator);
 
 }
 
@@ -198,8 +223,34 @@ sub clean {
 
     my $self = shift;
     my $opts = shift;
-    ...;
-    retrun $self;
+    my $place_beat = Model::Beat->new(denominator=>$self->denominator);
+    if ($opts) {
+      my $extend;
+      if ($opts->extend) {
+        @$extend = split(/\,/,$opts->extend);
+      }
+      my @notes = @{ $self->notes };
+      for my $note(@notes) {
+        if (defined $extend) {
+          for my $t(@$extend) {
+            if ( $note->delta_place_numerator == $t )  {
+              $note->delta_place_numerator($note->delta_place_numerator+1);
+            }
+            if ( $note->length_numerator == $t ) {
+              $note->length_numerator($note->length_numerator+1);
+              my ($ln,undef) = $self->_calc_length({numerator => $note->length_numerator});
+              $note->length_name($ln);
+            }
+          }
+
+        }
+        $place_beat = $place_beat + $note->delta_place_numerator;
+        $note->place_beat($place_beat->clone);
+      }
+      $self->notes(\@notes);
+    }
+
+    return $self;
 }
 
 sub to_string {
