@@ -164,6 +164,9 @@ sub events2notes {
         $denominator = $denominator + $numerator;
         $note->place_beat($denominator->clone);
     }
+    @notes = sort {sprintf('%03d%02d%03d',$a->place_beat->beat_no, $a->place_beat->beat_numinator,$a->pitch) cmp sprintf('%03d%02d%03d',$b->place_beat->beat_no, $b->place_beat->beat_numinator,$b->pitch) } @notes;
+    $self->notes(\@notes);
+
     return $self;
 }
 
