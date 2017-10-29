@@ -3,9 +3,11 @@ use Mojo::Base -base;
 use Data::Dumper;
 use Clone;
 
-has beat_no => 0;
-has beat_part => 0;
-has beat_size => 8;
+#  numerator and denominator
+
+has number => 0;
+has numerator => 0;
+has denominator => 8;
 
 use overload
     '""' => sub { shift->to_string }, fallback => 1,
@@ -14,7 +16,7 @@ use overload
 
 sub to_string {
   my $self = shift;
-      return sprintf "%d.%d",$self->beat_no,$self->beat_part;
+      return sprintf "%d.%d",$self->number,$self->numerator;
       # time, length,note
       # 3.8;1/4;C4
    
@@ -22,25 +24,25 @@ sub to_string {
 
 sub add {
   my ($self, $other,$swap) = @_;;
-	my $beat_no = $self->beat_no;
-  my $beat_part = $self->beat_part;
+	my $number = $self->number;
+  my $numerator = $self->numerator;
 	if (ref $other eq __PACKAGE__ ) {
-			$beat_no += $other->beat_no;
-			$beat_part += $other->beat_part;
+			$number += $other->number;
+			$numerator += $other->numerator;
 	} elsif($other=~/^\d+$/)	{
-		$beat_part += $other;
+		$numerator += $other;
 	} else {
 		die ref $other .'  '. $other;
 	}
-	 while ($beat_part>=$self->beat_size) {
-		$beat_no++;
-        $beat_part -= $self->beat_size;
+	 while ($numerator>=$self->denominator) {
+		$number++;
+        $numerator -= $self->denominator;
 	}
-	return Model::Beat->new(beat_no => $beat_no, beat_part => $beat_part, beat_size => $self->beat_size);
+	return Model::Beat->new(number => $number, numerator => $numerator, denominator => $self->denominator);
 }
 
 sub clone {
     my $self = shift;
-    return Model::Beat->new(beat_no => $self->beat_no, beat_part => $self->beat_part, beat_size => $self->beat_size);
+    return Model::Beat->new(number => $self->number, numerator => $self->numerator, denominator => $self->denominator);
 }
 1;

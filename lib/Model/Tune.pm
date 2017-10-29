@@ -9,7 +9,7 @@ use overload
 has 'events';
 has length => 0;
 has shortest_note_time => 0;
-has beat => 4;
+has denominator => 4;
 has time_diff =>100000000;
 has 'notes';
 has file => '';
@@ -109,9 +109,9 @@ sub calc_shortest_note {
 
 	$self->shortest_note_time($try);
     if ($try>=96) {
-        $self->beat(4);
+        $self->denominator(4);
     } elsif($try<96) {
-        $self->beat(8);
+        $self->denominator(8);
     } 
 	return $self;
 }
@@ -133,10 +133,10 @@ sub _calc_time_diff {
 			$d2 = abs( $nd - $try*$i );
             $i++;
 		}
-        warn ":$i - nd:$nd - d1:$d1 - d2:$d2 - try:$try";
+#        warn ":$i - nd:$nd - d1:$d1 - d2:$d2 - try:$try";
 		$return += $d1;
 	}
-	warn "$try - $return";
+#	warn "$try - $return";
 	return $return;
 }
 
@@ -144,7 +144,7 @@ sub _calc_time_diff {
 
 Calculate notes as: point in time, length, sound
 i.e 
- beat:4
+ denominator:4
  0.0;0.1;C4
  0.1;0.1;D4
 ...
@@ -153,19 +153,16 @@ i.e
 
 sub events2notes {
     my $self = shift;
-    die "Missing beat" if !$self->beat;
+    die "Missing denominator" if !$self->denominator;
     my $notes = $self->notes;
     my @notes = @$notes;
-    my $beat = Model::Beat->new(beat_size=>$self->beat);
+    my $denominator = Model::Beat->new(denominator=>$self->denominator);
     for my $note(@notes) {
-      $note->value($self->_calc_length($note->length));
-			
-			#step up beat
-			my $beat_part = int( 1/2 + $note->delta_time / $self->shortest_note_time );
-			warn $beat;
-			$beat = $beat + $beat_part;
-			warn $beat;
-			$note->place_beat($beat->clone);
+        $note->value($self->_calc_length($note->length));
+        #step up beat
+        my $numerator = int( 1/2 + $note->delta_time / $self->shortest_note_time );
+        $denominator = $denominator + $numerator;
+        $note->place_beat($denominator->clone);
     }
     return $self;
 }
@@ -175,16 +172,31 @@ sub _calc_length {
     my $time=shift;
     
      my $p = int($time / $self->shortest_note_time + 6/10);
-     my $s = $self->beat;
+     my $s = $self->denominator;
      if ($s % 3 == 0) {
         $s=4 * $s / 3
      }
-     if ($p %2 == 0 && $s % 2 == 0) {
+     while ($p %2 == 0 && $s % 2 == 0) {
          $p = $p /2;
          $s = $s /2;
      }
      return sprintf "%d/%d",$p,$s;
 
+}
+
+=head2 clean
+
+Modify tune after sertant rules like extend periods defined in opts argument.
+Opts is a has ref, can have these options: extend, nobeattresspass, upgrade 0/1.
+
+=cut
+
+sub clean {
+
+    my $self = shift;
+    my $opts = shift;
+    ...;
+    retrun $self;
 }
 
 sub to_string {
