@@ -3,6 +3,7 @@ use Mojo::Base -base;
 use Model::Note;
 use Model::Beat;
 use Data::Dumper;
+use Carp;
 use List::Util qw/min max/;
 use overload
     '""' => sub { shift->to_string }, fallback => 1;
@@ -91,26 +92,42 @@ sub calc_shortest_note {
 	my $self =shift;
 	my $numnotes = $self->notes;
 
-    my $try = max grep{$_&& $_>=30} map{ $_->{delta_time} } @$numnotes;;
-	my $best_diff = 10000000;
+    my $max_try = max grep{$_&& $_>=30} map{ $_->{delta_time} } @$numnotes;
+    my $try = $max_try;
+	my $best = {period=>1000, value=>10000000};
 	
-	my $diff = $self->_calc_time_diff($try);
-	my $new_try=$try-1;
+#	my $new_try=$try-1;
 	
-	while ($diff >= $self->_calc_time_diff($new_try)) {
-		$diff= $self->_calc_time_diff($new_try);
-		$try=$new_try;
-		$new_try--;
+	$numnotes = scalar @$numnotes;
+	while ($try>15) {
+        #$diff >= $self->_calc_time_diff($new_try) || $diff / $numnotes > 14
+		my $diff= $self->_calc_time_diff($try);
+        if ($diff/$try < $best->{'value'}) {
+            $best = {value => $diff/$try, 'period'=>$try};
+        }
+		$try--;
 
 	}
-	$self->time_diff($diff);
-	$numnotes = scalar @$numnotes;
-	printf "%s -%s - %d - %d\n",$try,$diff, $numnotes, $diff / $numnotes;
+	$self->time_diff($best->{'value'} * $best->{'period'});
+	printf "method 1: d:%s - nn:%s - dv:%2.2f - p:%d\n",$self->time_diff, $numnotes, $best->{value} / $numnotes, $best->{'period'};
 
-	$self->shortest_note_time($try);
-    if ($try>=96) {
+    if ($best->{value} / $numnotes >=0.1 ) {
+       $try = $best->{'period'};
+	my $diff = $self->_calc_time_diff($try);
+       my $new_try=$try-1;                                                                                                          
+       while ($diff >= $self->_calc_time_diff($new_try)) {                                                                          
+               $diff= $self->_calc_time_diff($new_try);                                                                             
+               $try=$new_try;                                                                                                       
+               $new_try--;     
+		}
+		$best={'period' => $try};
+       $self->time_diff($diff);
+       printf "method 2: p:%s -d:%s - nn:%d - dd:%d\n",$try,$diff, $numnotes, $diff / $numnotes;
+	}
+	$self->shortest_note_time($best->{'period'});
+    if ( $best->{'period'} >= 96 ) {
         $self->denominator(4);
-    } elsif($try<96) {
+    } elsif( $best->{'period'} < 96 ) {
         $self->denominator(8);
     } 
 	return $self;
@@ -119,7 +136,7 @@ sub calc_shortest_note {
 sub _calc_time_diff {
 	my $self = shift;
   
-  my $try = shift||die;
+  my $try = shift||confess"Miss try";
 	my $notes = $self->notes;
 	my @notes = @$notes;
 	my $return=0;
