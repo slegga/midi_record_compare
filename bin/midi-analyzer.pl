@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 use FindBin;
 use lib "$FindBin::Bin/../../utillities-perl/lib";
 use lib '/media/data/perlbrew/perls/perl-5.26.0/lib/site_perl/5.26.0/';

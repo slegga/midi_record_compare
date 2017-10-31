@@ -93,7 +93,7 @@ sub calc_shortest_note {
 	my $numnotes = $self->notes;
 
     my $max_try = max grep{$_&& $_>=30} map{ $_->{delta_time} } @$numnotes;
-    my $try = $max_try;
+    my $try = int($max_try / 2);
 	my $best = {period=>1000, value=>10000000};
 	
 #	my $new_try=$try-1;
