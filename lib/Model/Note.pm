@@ -26,9 +26,8 @@ sub to_string {
   die Dumper $self if ! defined $self->pitch;
   return '' if $self->length<3;
   if ($self->place_beat)  {
-      return sprintf "%s;%s;%s   #%s-%s-%s-%s\n",$self->delta_place_numerator,$self->length_name,$MIDI::number2note{ $self->pitch() },$self->place_beat,$self->time,$self->length, $self->delta_time;
-  }  elsif ($self->length_name) {
-    return sprintf ";%s;%s   %s-%s-%s-%s\n",$self->length_name,$MIDI::number2note{ $self->pitch() },$self->time,$self->length,$self->volume,$self->delta_time;
+		my $core = sprintf "%s;%s;%s",$self->delta_place_numerator,$self->length_numerator,$MIDI::number2note{ $self->pitch() };
+      return sprintf "%-15s  #%4s-%s-%4d-%3d-%3d\n",$core,$self->place_beat,$self->length_name,$self->time,$self->length, $self->delta_time;
   }
   else  {
       return sprintf ";%s   %s-%s-%s-%s\n",$MIDI::number2note{ $self->pitch() },$self->time,$self->length,$self->volume,$self->delta_time;

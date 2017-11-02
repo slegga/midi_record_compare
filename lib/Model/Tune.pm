@@ -11,7 +11,7 @@ has 'events';
 has length => 0;
 has shortest_note_time => 0;
 has denominator => 4;
-has time_diff =>100000000;
+has beat_interval =>100000000;
 has 'notes';
 has file => '';
 
@@ -38,7 +38,7 @@ sub data2events {
   if ($self->file) {
     my $opus = MIDI::Opus->new({ 'from_file' => $self->file, 'no_parse' => 1 });
     my @tracks = $opus->tracks;
-    print $self->file . " has ", scalar( @tracks ). " tracks\n";
+    # print $self->file . " has ", scalar( @tracks ). " tracks\n";
     my $data = $tracks[0]->data;
     $self->events(MIDI::Event::decode( \$data ));
   }
@@ -108,8 +108,8 @@ sub calc_shortest_note {
 		$try--;
 
 	}
-	$self->time_diff($best->{'value'} * $best->{'period'});
-	printf "method 1: d:%s - nn:%s - dv:%2.2f - p:%d\n",$self->time_diff, $numnotes, $best->{value} / $numnotes, $best->{'period'};
+	$self->beat_interval($best->{'value'} * $best->{'period'});
+	printf "# d:%s - nn:%s - dv:%2.2f - p:%d\n",$self->beat_interval, $numnotes, $best->{value} / $numnotes, $best->{'period'};
 
     if ($best->{value} / $numnotes >=0.1 ) {
        $try = $best->{'period'};
@@ -121,7 +121,7 @@ sub calc_shortest_note {
                $new_try--;     
 		}
 		$best={'period' => $try};
-       $self->time_diff($diff);
+       $self->beat_interval($diff);
        printf "method 2: p:%s -d:%s - nn:%d - dd:%d\n",$try,$diff, $numnotes, $diff / $numnotes;
 	}
 	$self->shortest_note_time($best->{'period'});
@@ -273,7 +273,9 @@ sub clean {
 sub to_string {
   my $self = shift;
   my @notes = map{"$_"} grep {$_} @{$self->notes};
-  return join('',@notes);
+	my $return= sprintf "denominator=%s\n", $self->denominator;
+	$return .=  sprintf "shortest_note_time=%s\n", $self->shortest_note_time;
+  return $return . join('',@notes)."\n";
 }
 
 
