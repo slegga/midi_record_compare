@@ -3,8 +3,6 @@
 use FindBin;
 use lib "$FindBin::Bin/../../utillities-perl/lib";
 use lib "$FindBin::Bin/../lib";
-use lib '/media/data/perlbrew/perls/perl-5.26.0/lib/site_perl/5.26.0/';
-use lib '/home/bruker/perl5/perlbrew/perls/perl-5.26.0/lib/site_perl/5.26.0/';
 use SH::Script qw/options_and_usage/;
 
 use Mojo::Base -strict;
