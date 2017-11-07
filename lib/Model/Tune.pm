@@ -14,7 +14,11 @@ has shortest_note_time => 0;
 has denominator => 4;
 has beat_interval =>100000000;
 has 'notes';
-has file => '';
+has midi_file  => '';
+has note_file  => '';
+has beat_score => 0;
+
+
 
 =head1 DESCRIPTION
 
@@ -27,61 +31,111 @@ Generate notes from file or events;
 
 =cut
 
-=head2 data2events
+=head2 from_midi_file
 
 Take mididata and create events and create point in time from dtime
 
 =cut
 
 
-sub data2events {
-  my $self = shift;
-  if ($self->file) {
-    my $opus = MIDI::Opus->new({ 'from_file' => $self->file, 'no_parse' => 1 });
-    my @tracks = $opus->tracks;
-    # print $self->file . " has ", scalar( @tracks ). " tracks\n";
-    my $data = $tracks[0]->data;
-    $self->events(MIDI::Event::decode( \$data ));
-  }
-  if (@{$self->events}) {
-    my $time = 0;
-    my @times=map{0} 0..127;
-    my @volumes=map{0} 0..127;
-    my @notes;
-    for my $event(@{$self->events}) {#0=type,pitch,dtime,0,volumne
-      next if $event->[0] !~ /^note_o(n|ff)/;
-#      printf "%s %s %s %s %s\n",@$event;
-
-      next if @$event<5;
-      $time += $event->[1];
-      if ($event->[4]) {
-        $times[$event->[3]] = $time;
-        $volumes[$event->[3]] = $event->[4];
-      } else {
-        push @notes, Model::Note->new(time => $times[$event->[3]]
-        , pitch =>$event->[3],length =>$time - $times[$event->[3]], volume =>$volumes[$event->[3]]);
-
-      }
+sub from_midi_file {
+    my $class = shift;
+    my $midi_filename = shift;
+    my $self = Model::Tune->new(midi_file => $midi_filename);
+    if ($self->midi_file) {
+        my $opus = MIDI::Opus->new({ 'from_file' => $self->midi_file, 'no_parse' => 1 });
+        my @tracks = $opus->tracks;
+        # print $self->file . " has ", scalar( @tracks ). " tracks\n";
+        my $data = $tracks[0]->data;
+        $self->events(MIDI::Event::decode( \$data ));
     }
-#    warn Dumper \@notes;
-    @notes = sort { $a->{'time'} <=> $b->{'time'} }  @notes;
-
-    $self->notes(\@notes);
-		my $pre_time;
-		for my $note (@notes) {
-			if (! defined $pre_time) {
-				$pre_time = $note->time;
-				next;
-			}
-			$note->delta_time($note->time - $pre_time);
-			$pre_time = $note->time;
-
+    if (@{$self->events}) {
+		my $time = 0;
+		my @times=map{0} 0..127;
+		my @volumes=map{0} 0..127;
+		my @notes;
+		for my $event(@{$self->events}) {#0=type,pitch,dtime,0,volumne
+		  next if $event->[0] !~ /^note_o(n|ff)/;
+		#      printf "%s %s %s %s %s\n",@$event;
+		
+		  next if @$event<5;
+		  $time += $event->[1];
+		  if ($event->[4]) {
+		    $times[$event->[3]] = $time;
+		    $volumes[$event->[3]] = $event->[4];
+		  } else {
+		    push @notes, Model::Note->new(time => $times[$event->[3]]
+		    , pitch =>$event->[3],length =>$time - $times[$event->[3]], volume =>$volumes[$event->[3]]);
+		
+		  }
 		}
-  } else {
+		#    warn Dumper \@notes;
+		@notes = sort { $a->{'time'} <=> $b->{'time'} }  @notes;
+		
+		$self->notes(\@notes);
+    	my $pre_time;
+    	for my $note (@notes) {
+    		if (! defined $pre_time) {
+    			$pre_time = $note->time;
+    			next;
+    		}
+    		$note->delta_time($note->time - $pre_time);
+    		$pre_time = $note->time;
+
+    	}
+    } else {
     confess("Nothing to do");
-  }
-  return $self;
+    }
+    return $self;
 }
+
+=head1 from_note_file
+
+Create a new Model::Tune object baset on note file.
+Dies if not file is set.
+
+=cut
+
+sub from_note_file {
+    my $class = shift;
+    my $self = $class->new(note_file => shift);
+    die "note_file is not set" if ! $self->note_file;
+    die "Cant be midi file" if $self->note_file =~/.midi?$/i;
+    my $path = path( $self->note_file );
+
+    # remove old comments
+    my $content = $path->slurp;
+    my $newcont='';
+    my %input;
+    my @notes = ();
+    my $beat = Model::Beat->new(denominator=>$self->denominator);
+    # Remove comments and add new
+    for my $line (split/\n/,$content) {
+      $line =~ s/\s*\#.*$//;
+      next if ! $line;
+      if ($line=~/([\w\_\-]+)\s*=\s*(.+)$/) {
+          $self->$1($2);
+      } else {
+          my ($delta_place_numerator, $length_numerator, $note_name) = split(/\;/,$line);
+          $beat = $beat + $delta_place_numerator;
+          push(@notes,Model::Note->new(delta_place_numerator => $delta_place_numerator,
+          length_numerator => $length_numerator,
+          note_name => $note_name,
+          denominator => $self->denominator//4, place_beat =>$beat->clone,
+          )->compile);
+      }
+
+    #      $newcont .= Model::Note->new(delta_place_numinator => $val[0], length_numerator => $val[1], pitch => $val[2])
+    #          ->to_string({expand=>1,denominator=>$input{denominator}});
+    }
+    say Dumper @notes;
+    @notes = grep { defined $_ } @notes;
+    die"No notes" if ! @notes;
+    $self->notes(\@notes);
+    return $self;
+}
+
+
 
 =head2 calc_shortest_note
 
@@ -111,6 +165,15 @@ sub calc_shortest_note {
 	}
 	$self->beat_interval($best->{'value'} * $best->{'period'});
 	printf "# d:%s - nn:%s - dv:%2.2f - p:%d\n",$self->beat_interval, $numnotes, $best->{value} / $numnotes, $best->{'period'};
+    my $tmp = ($best->{value} / $numnotes);
+    warn $tmp;
+    $tmp *=100;
+    warn $tmp;
+    $tmp=25 - $tmp;
+    warn $tmp;
+    $tmp=$tmp*4;
+    warn $tmp;
+    $self->beat_score( int ((25 -(100 * ($best->{value} / $numnotes)))*4 ));
 
     if ($best->{value} / $numnotes >=0.1 ) {
        $try = $best->{'period'};
@@ -230,6 +293,27 @@ sub _calc_length {
 
 }
 
+=head2 notes2midi
+
+Converts notes to events and data.
+(No writing to file)
+
+=cut
+
+sub notes2events {
+	my $self = shift;
+	my @notes = @{ $self->notes };
+
+	# Convert notes 2 score 2 events
+
+	# Convert notes 2 score
+	
+	
+
+	return $self;
+}
+
+
 =head2 clean
 
 Modify tune after sertant rules like extend periods defined in opts argument.
@@ -276,50 +360,20 @@ sub to_string {
   my @notes = map{"$_"} grep {$_} @{$self->notes};
 	my $return= sprintf "denominator=%s\n", $self->denominator if $self->denominator;
 	$return .=  sprintf "shortest_note_time=%s\n", $self->shortest_note_time if $self->shortest_note_time;
+    $return .=  sprintf "beat_score=%s\n", $self->beat_score if $self->beat_score;
   return $return . join('',@notes)."\n";
 }
 
-=head1 notes_from_file
-
-Import notes from a note file. file is defined in new or as aparameter.
-Dies if not file is set.
-
-=cut
-
-sub notes_from_file {
-  my $self = shift;
-  die "file is not set" if ! $self->file;
-  die "Cant be midi file" if $self->file =~/.midi?$/i;
-  my $path = path( $self->file );
-
-  # remove old comments
-  my $content = $path->slurp;
-  my $newcont='';
-  my %input;
-  my @notes = ();
-  # Remove comments and add new
-  for my $line (split/\n/,$content) {
-      $line =~ s/\s*\#.*$//;
-      next if ! $line;
-      if ($line=~/([\w\_\-]+)\s*=\s*(.+)$/) {
-          $self->$1($2);
-      } else {
-          my ($delta_place_numinator, $length_numerator, $note_name) = split(/\;/,$line);
-          push(@notes,Model::Note->new(delta_place_numinator => $delta_place_numinator,
-          length_numerator => $length_numerator,
-          note_name => $note_name,
-          denominator => $self->denominator//4,
-          )->compile);
-      }
-
-#      $newcont .= Model::Note->new(delta_place_numinator => $val[0], length_numerator => $val[1], pitch => $val[2])
-#          ->to_string({expand=>1,denominator=>$input{denominator}});
-  }
-  say Dumper @notes;
-    @notes = grep { defined $_ } @notes;
-  die"No notes" if ! @notes;
-    $self->notes(\@notes);
-    say "$self";
+sub to_note_file {
+    my $self =shift;
+    my $note_file = shift;
+    $note_file = $self->note_file if ! $note_file;
+    my $file =  path($note_file);
+    say $file;
+    my $content = $self->to_string;
+    die "No content" if ! $content;
+    $file->spurt($content);
+    return $self;
 }
 
 1;

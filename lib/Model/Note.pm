@@ -30,19 +30,18 @@ sub to_string {
 #  return '' if $self->length<3;
   if ($self->place_beat)  {
 		my $core = sprintf "%s;%s;%s",$self->delta_place_numerator,$self->length_numerator,$MIDI::number2note{ $self->pitch() };
-      return sprintf "%-12s  #%4s-%s-%4d-%3d-%3d\n",$core,$self->place_beat,$self->length_name,$self->time,$self->length, $self->delta_time;
-  }
-  else  {
-      return sprintf ";%s   %s-%s-%s-%s\n",$MIDI::number2note{ $self->pitch() },$self->time//'',$self->length,$self->volume,$self->delta_time;
-      # time, length,note
-      # 1 3/8;2/8;C4
-      # opts={beatpart=>(12348)}
 
+      $return =  sprintf "%-12s  #%4s",$core,$self->place_beat;
+      if ($self->length) {
+          $return .= sprintf "-%s-%4d-%3d-%3d",$self->length_name,$self->time,$self->length, $self->delta_time;
+      }
+  } else {
+      ...;
   }
-  return $return;
+  return $return."\n";
 }
 
-=head1
+=head2 compile
 
 Calculate and fill missing values if able.
 

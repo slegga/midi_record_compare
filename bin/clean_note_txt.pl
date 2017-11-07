@@ -29,10 +29,10 @@ my ( $opts, $usage, $argv ) =
 
 
 
-my $tune = Model::Tune->new(file=>$ARGV[0]);
-$tune->notes_from_file;
+my $tune = Model::Tune->from_note_file($ARGV[0]);
 #$tune->spurt;
 say "$tune";
+$tune->to_note_file;
 
 __END__
 #!/usr/bin/env perl
