@@ -48,6 +48,7 @@ sub from_midi_file {
         # print $self->file . " has ", scalar( @tracks ). " tracks\n";
         my $data = $tracks[0]->data;
         $self->events(MIDI::Event::decode( \$data ));
+        print Dumper MIDI::Score::events_r_to_score_r( $self->events );
     }
     if (@{$self->events}) {
 		my $time = 0;
@@ -57,7 +58,7 @@ sub from_midi_file {
 		for my $event(@{$self->events}) {#0=type,pitch,dtime,0,volumne
 		  next if $event->[0] !~ /^note_o(n|ff)/;
 		#      printf "%s %s %s %s %s\n",@$event;
-		
+
 		  next if @$event<5;
 		  $time += $event->[1];
 		  if ($event->[4]) {
@@ -66,12 +67,12 @@ sub from_midi_file {
 		  } else {
 		    push @notes, Model::Note->new(time => $times[$event->[3]]
 		    , pitch =>$event->[3],length =>$time - $times[$event->[3]], volume =>$volumes[$event->[3]]);
-		
+
 		  }
 		}
 		#    warn Dumper \@notes;
 		@notes = sort { $a->{'time'} <=> $b->{'time'} }  @notes;
-		
+
 		$self->notes(\@notes);
     	my $pre_time;
     	for my $note (@notes) {
@@ -264,6 +265,26 @@ sub events2notes {
     return $self;
 }
 
+=head1 to_midi_file_from_notes
+
+Must either convert from events to score for the hole project or
+do all in a function
+Uses the note data to generate midi data as first MIDI::Score then events and then data
+
+=cut
+
+sub to_midi_file_from_notes {
+	my $self = shift;
+    my @notes = @ { $self->notes };
+
+    # generate a temporary MIDI
+    #(place_beat,length_numerator,pitch) => ()
+    for my $note (@notes) {
+        $note->gen_
+    }
+	return $self;
+}
+
 # name _calc_length
 # takes hash_ref (time=>100,numerator=4)
 # Return (length_name,numerator) i.e. ('1/4',2)
@@ -307,8 +328,8 @@ sub notes2events {
 	# Convert notes 2 score 2 events
 
 	# Convert notes 2 score
-	
-	
+
+
 
 	return $self;
 }
