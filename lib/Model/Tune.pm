@@ -8,7 +8,7 @@ use Carp;
 use List::Util qw/min max/;
 use overload
     '""' => sub { shift->to_string }, fallback => 1;
-has 'events';
+has 'score';
 has length => 0;
 has shortest_note_time => 0;
 has denominator => 4;
@@ -41,52 +41,40 @@ Take mididata and create events and create point in time from dtime
 sub from_midi_file {
     my $class = shift;
     my $midi_filename = shift;
+    my $events;
+    my @notes;
     my $self = Model::Tune->new(midi_file => $midi_filename);
     if ($self->midi_file) {
         my $opus = MIDI::Opus->new({ 'from_file' => $self->midi_file, 'no_parse' => 1 });
         my @tracks = $opus->tracks;
         # print $self->file . " has ", scalar( @tracks ). " tracks\n";
         my $data = $tracks[0]->data;
-        $self->events(MIDI::Event::decode( \$data ));
-        print Dumper MIDI::Score::events_r_to_score_r( $self->events );
+        $events = MIDI::Event::decode( \$data );
+        $self->score( MIDI::Score::events_r_to_score_r( $events ));
     }
-    if (@{$self->events}) {
-		my $time = 0;
-		my @times=map{0} 0..127;
-		my @volumes=map{0} 0..127;
-		my @notes;
-		for my $event(@{$self->events}) {#0=type,pitch,dtime,0,volumne
-		  next if $event->[0] !~ /^note_o(n|ff)/;
-		#      printf "%s %s %s %s %s\n",@$event;
-
-		  next if @$event<5;
-		  $time += $event->[1];
-		  if ($event->[4]) {
-		    $times[$event->[3]] = $time;
-		    $volumes[$event->[3]] = $event->[4];
-		  } else {
-		    push @notes, Model::Note->new(time => $times[$event->[3]]
-		    , pitch =>$event->[3],length =>$time - $times[$event->[3]], volume =>$volumes[$event->[3]]);
+    if (@{$self->score}) { #('note', starttime, duration, channel, note, velocity)
+        my $tune_start;
+		for my $sp(@{$self->score}) {#0=type,note,dtime,0,volumne
+            next if $sp->[0] ne 'note';
+            $tune_start=$sp->[1] if ! defined $tune_start;
+		    push @notes, Model::Note->new(starttime => $sp->[1] - $tune_start
+            , duration => $sp->[2], note =>$sp->[4], velocity =>$sp->[5]);
 
 		  }
+	}
+	#    warn Dumper \@notes;
+	@notes = sort { $a->{'starttime'} <=> $b->{'starttime'} }  @notes;
+
+	$self->notes(\@notes);
+	my $pre_time;
+	for my $note (@notes) {
+		if (! defined $pre_time) {
+			$pre_time = $note->starttime;
+			next;
 		}
-		#    warn Dumper \@notes;
-		@notes = sort { $a->{'time'} <=> $b->{'time'} }  @notes;
-
-		$self->notes(\@notes);
-    	my $pre_time;
-    	for my $note (@notes) {
-    		if (! defined $pre_time) {
-    			$pre_time = $note->time;
-    			next;
-    		}
-    		$note->delta_time($note->time - $pre_time);
-    		$pre_time = $note->time;
-
-    	}
-    } else {
-    confess("Nothing to do");
-    }
+		$note->delta_time($note->starttime - $pre_time);
+		$pre_time = $note->starttime;
+	}
     return $self;
 }
 
@@ -126,7 +114,7 @@ sub from_note_file {
           )->compile);
       }
 
-    #      $newcont .= Model::Note->new(delta_place_numinator => $val[0], length_numerator => $val[1], pitch => $val[2])
+    #      $newcont .= Model::Note->new(delta_place_numinator => $val[0], length_numerator => $val[1], note => $val[2])
     #          ->to_string({expand=>1,denominator=>$input{denominator}});
     }
     say Dumper @notes;
@@ -240,7 +228,7 @@ sub events2notes {
     my @notes = @$notes;
     my $denominator = Model::Beat->new(denominator=>$self->denominator);
     for my $note(@notes) {
-        my ($length_name, $length_numerator) = $self->_calc_length( { time => $note->length } );
+        my ($length_name, $length_numerator) = $self->_calc_length( { time => $note->duration } );
         $note->length_name($length_name);
         $note->length_numerator($length_numerator);
         #step up beat
@@ -248,8 +236,8 @@ sub events2notes {
         $denominator = $denominator + $numerator;
         $note->place_beat($denominator->clone);
     }
-    @notes = sort {sprintf('%03d%02d%03d',$a->place_beat->number, $a->place_beat->numerator,128 - $a->pitch)
-               cmp sprintf('%03d%02d%03d',$b->place_beat->number, $b->place_beat->numerator,128 - $b->pitch) } @notes;
+    @notes = sort {sprintf('%03d%02d%03d',$a->place_beat->number, $a->place_beat->numerator,128 - $a->note)
+               cmp sprintf('%03d%02d%03d',$b->place_beat->number, $b->place_beat->numerator,128 - $b->note) } @notes;
 
     #loop another time through notes to calc delta_place_numerator after notes is sorted.
     my $prev_note = Model::Note->new(place_beat=>Model::Beat->new(number=>0, numerator=>0));
@@ -278,7 +266,7 @@ sub to_midi_file_from_notes {
     my @notes = @ { $self->notes };
 
     # generate a temporary MIDI
-    #(place_beat,length_numerator,pitch) => ()
+    #(place_beat,length_numerator,note) => ()
     for my $note (@notes) {
         $note->gen_
     }

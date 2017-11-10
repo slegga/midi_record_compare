@@ -5,12 +5,12 @@ use Data::Dumper;
 use Clone;
 
 # midi
-has time => 0;
-has pitch => 0;
-has note_name =>'';
-has length =>0;
-has volume => 0;
+has starttime => 0;
+has duration => 0;
+has note => 0;
+has velocity => 0;
 has delta_time => 0;
+has note_name =>'';
 
 
 # note
@@ -26,14 +26,14 @@ sub to_string {
   my $self = shift;
   my $opts = shift;
   my $return = '';
-  die "Missing pitch" . Dumper $self if ! defined $self->pitch;
+  die "Missing note" . Dumper $self if ! defined $self->note;
 #  return '' if $self->length<3;
   if ($self->place_beat)  {
-		my $core = sprintf "%s;%s;%s",$self->delta_place_numerator,$self->length_numerator,$MIDI::number2note{ $self->pitch() };
+		my $core = sprintf "%s;%s;%s",$self->delta_place_numerator,$self->length_numerator,$MIDI::number2note{ $self->note() };
 
       $return =  sprintf "%-12s  #%4s",$core,$self->place_beat;
-      if ($self->length) {
-          $return .= sprintf "-%s-%4d-%3d-%3d",$self->length_name,$self->time,$self->length, $self->delta_time;
+      if ($self->duration) {
+          $return .= sprintf "-%s-%4d-%3d-%3d",$self->length_name,$self->starttime,$self->duration, $self->delta_time;
       }
   } else {
       ...;
@@ -49,11 +49,11 @@ Calculate and fill missing values if able.
 
 sub compile {
     my $self = shift;
-    if (! $self->pitch) {
+    if (! $self->note) {
         if ($self->note_name) {
-            $self->pitch($MIDI::note2number{$self->note_name});
+            $self->note($MIDI::note2number{$self->note_name});
         } else {
-            die"Must have pitch";
+            die"Must have note";
         }
     }
     return $self;
