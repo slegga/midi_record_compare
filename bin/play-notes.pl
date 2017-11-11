@@ -31,6 +31,6 @@ die "File $note_file does not exists" if ! -e $note_file;
 
 my $tmpfile = tempfile;
 my $tune = Model::Tune->from_note_file($ARGV[0]);
-$tune->notes2midi;
+$tune->notes2score;
 $tune->to_midi_file($tmpfile);
 `timidity $tmpfile`;

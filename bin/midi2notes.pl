@@ -29,6 +29,6 @@ my ( $opts, $usage, $argv ) =
 
 my $tune = Model::Tune->from_midi_file($ARGV[0]);
 $tune->calc_shortest_note;
-$tune->events2notes;
+$tune->score2notes;
 $tune->clean($opts);
 say "$tune";
