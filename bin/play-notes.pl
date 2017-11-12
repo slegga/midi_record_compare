@@ -11,6 +11,7 @@ use Data::Dumper;
 #use Carp::Always;
 use Model::Tune;
 use Mojo::File qw/path tempfile/;
+use Carp::Always;
 
 =head1 DESCRIPTION
 
@@ -29,8 +30,9 @@ my ( $opts, $usage, $argv ) =
 my $note_file = $ARGV[0] or die "Did not get a filename";
 die "File $note_file does not exists" if ! -e $note_file;
 
-my $tmpfile = tempfile;
+my $tmpfile = tempfile(DIR=>'/tmp');
 my $tune = Model::Tune->from_note_file($ARGV[0]);
 $tune->notes2score;
-$tune->to_midi_file($tmpfile);
-`timidity $tmpfile`;
+$tune->to_midi_file("$tmpfile");
+
+print `timidity $tmpfile`;

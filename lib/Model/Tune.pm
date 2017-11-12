@@ -144,7 +144,7 @@ sub from_midi_file {
     my @notes;
     my $self = Model::Tune->new(midi_file => $midi_filename);
     if ($self->midi_file) {
-        my $opus = MIDI::Opus->new({ 'from_file' => $self->midi_file });#, 'no_parse' => 1
+        my $opus = MIDI::Opus->new({ 'from_file' => $self->midi_file, 'no_parse' => 1 });#
         my @tracks = $opus->tracks;
         # print $self->file . " has ", scalar( @tracks ). " tracks\n";
         my $data = $tracks[0]->data;
@@ -303,7 +303,6 @@ sub to_midi_file {
     } else {
         $self->midi_file($midi_file);
     }
-    die "Missing midi_file. Do not know what todo";
 
     my $file = path($midi_file);
     say $file;
@@ -314,6 +313,18 @@ sub to_midi_file {
     }
     my $events_r = MIDI::Score::score_r_to_events_r( $score_r );
 
+    # Put on defaults
+	unshift @$events_r, ['set_tempo',0,500000], ['time_signature',0,4,2,24,8],
+['patch_change',	1,	0,	0],
+['pitch_wheel_change',	1,	0,	0],
+['set_tempo',	327,	500000];
+
+	my $one_track = MIDI::Track->new;
+	$one_track->events( @$events_r );
+	my $opus = MIDI::Opus->new(
+	 {  'format' => 1,  'ticks' => $self->shortest_note_time, 'tracks' => [ $one_track ] }	);
+        die "Missing midi_file. Do not know what todo" if (! $midi_file);
+	$opus->write_to_file($midi_file);
     return $self;
 }
 
