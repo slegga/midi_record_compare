@@ -226,6 +226,37 @@ sub from_note_file {
 
 
 
+=head1 notes2score
+
+Must either convert from events to score for the hole project or
+do all in a function
+Uses the note data to generate midi data as first MIDI::Score then events and then data
+'note', starttime, duration, channel, note, velocity
+
+=cut
+
+sub notes2score {
+	my $self = shift;
+    my @notes = @ { $self->notes };
+
+    # generate a temporary MIDI
+    #(startbeat,length_numerator) => (starttime, duration)
+    my @new_notes;
+    my $prev_stime=0;
+    for my $note (@notes) {
+	    my $num = $note->startbeat->to_int;
+# warn $num." * ".$self->shortest_note_time ;
+
+        $note->starttime($note->startbeat->to_int * $self->shortest_note_time); #or shortest_note_time?
+        $note->duration($note->length_numerator * $self->shortest_note_time - 5); #or shortest_note_time?
+        $note->delta_time( $note->starttime - $prev_stime );
+        $prev_stime = $note->starttime;
+        push(@new_notes, $note);
+    }
+    $self->notes(\@new_notes);
+	return $self;
+}
+
 =head2 score2notes
 
 Calculate notes as: point in time, length, sound
@@ -244,26 +275,27 @@ sub score2notes {
     die "Missing denominator" if !$self->denominator;
     my $notes = $self->notes;
     my @notes = @$notes;
-    my $denominator = Model::Beat->new(denominator=>$self->denominator);
+    my $startbeat = Model::Beat->new(denominator=>$self->denominator);
     for my $note(@notes) {
         my ($length_name, $length_numerator) = $self->_calc_length( { time => $note->duration } );
         $note->length_name($length_name);
         $note->length_numerator($length_numerator);
         #step up beat
         my $numerator = int( 1/2 + $note->delta_time / $self->shortest_note_time );
-        $denominator = $denominator + $numerator;
-        $note->startbeat($denominator->clone);
+        $startbeat = $startbeat + $numerator;
+        $note->startbeat($startbeat->clone);
     }
     @notes = sort {sprintf('%03d%02d%03d',$a->startbeat->number, $a->startbeat->numerator,128 - $a->note)
                cmp sprintf('%03d%02d%03d',$b->startbeat->number, $b->startbeat->numerator,128 - $b->note) } @notes;
 
     #loop another time through notes to calc delta_place_numerator after notes is sorted.
     my $prev_note = Model::Note->new(startbeat=>Model::Beat->new(number=>0, numerator=>0));
+#    my @new_notes=();
     for my $note(@notes) {
-      my $tb = $note->startbeat - $prev_note->startbeat;
-      $note->delta_place_numerator($tb->to_int);
-
-      $prev_note = $note;
+		my $tb = $note->startbeat - $prev_note->startbeat;
+		$note->delta_place_numerator($tb->to_int);
+#		push(@new_notes, $note);
+		$prev_note = $note;
     }
 
     $self->notes(\@notes);
@@ -271,29 +303,13 @@ sub score2notes {
     return $self;
 }
 
-=head1 notes2score
 
-Must either convert from events to score for the hole project or
-do all in a function
-Uses the note data to generate midi data as first MIDI::Score then events and then data
-'note', starttime, duration, channel, note, velocity
+=head2 to_midi_file
+
+Takes midi filename. If none use $class->midi_file instead.
+Write midi file to disk.
 
 =cut
-
-sub notes2score {
-	my $self = shift;
-    my @notes = @ { $self->notes };
-
-    # generate a temporary MIDI
-    #(startbeat,length_numerator) => (starttime, duration)
-    for my $note (@notes) {
-
-        $note->starttime($note->startbeat * $self->shortest_note_time); #or shortest_note_time?
-        $note->duration($note->length_numerator * $self->shortest_note_time - 5); #or shortest_note_time?
-    }
-    $self->notes(\@notes);
-	return $self;
-}
 
 sub to_midi_file {
     my $self =shift;

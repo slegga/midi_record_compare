@@ -34,10 +34,10 @@ sub to_string {
   if ($self->startbeat)  {
 		my $core = sprintf "%s;%s;%s",$self->delta_place_numerator,$self->length_numerator,$MIDI::number2note{ $self->note() };
 
-      $return =  sprintf "%-12s  #%4s",$core,$self->startbeat;
-      if ($self->duration) {
-          $return .= sprintf "-%s-%4d-%3d-%3d",$self->length_name,$self->starttime,$self->duration, $self->delta_time;
-      }
+      $return =  sprintf "%-12s  #%4s-%s",$core,$self->startbeat,$self->length_name;
+#      if ($self->duration) {
+#          $return .= sprintf "-%s-%4d-%3d-%3d",$self->length_name,$self->starttime,$self->duration, $self->delta_time;
+#      }
   } else {
       ...;
   }
