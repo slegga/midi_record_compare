@@ -26,22 +26,22 @@ use overload
     '""' => sub { shift->to_string }, fallback => 1;
 
 sub to_string {
-  my $self = shift;
-  my $opts = shift;
-  my $return = '';
-  die "Missing note" . Dumper $self if ! defined $self->note;
-#  return '' if $self->length<3;
-  if ($self->startbeat)  {
+	my $self = shift;
+	my $opts = shift;
+	my $return = '';
+	die "Missing note" . Dumper $self if ! defined $self->note;
+	#  return '' if $self->length<3;
+	if ($self->startbeat)  {
 		my $core = sprintf "%s;%s;%s",$self->delta_place_numerator,$self->length_numerator,$MIDI::number2note{ $self->note() };
 
-      $return =  sprintf "%-12s  #%4s-%s",$core,$self->startbeat,$self->length_name;
-#      if ($self->duration) {
-#          $return .= sprintf "-%s-%4d-%3d-%3d",$self->length_name,$self->starttime,$self->duration, $self->delta_time;
-#      }
-  } else {
-      ...;
-  }
-  return $return."\n";
+	    $return =  sprintf "%-12s  #%4s-%s",$core,$self->startbeat,$self->length_name;
+	#      if ($self->duration) {
+	#          $return .= sprintf "-%s-%4d-%3d-%3d",$self->length_name,$self->starttime,$self->duration, $self->delta_time;
+	#      }
+	} else {
+	    ...;
+	}
+	return $return."\n";
 }
 
 =head2 compile
