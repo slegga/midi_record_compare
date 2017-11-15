@@ -93,7 +93,8 @@ sub calc_shortest_note {
 	my $numnotes = $self->notes;
 
     my $max_try = max grep{$_&& $_>=30} map{ $_->{delta_time} } @$numnotes;
-    my $try = int($max_try / 2);
+    my $min_try = min grep{$_&& $_>=10} map{ $_->{delta_time} } @$numnotes;
+    my $try = int(($min_try+$max_try) / 2);
 	my $best = {period=>1000, value=>10000000};
 	
 #	my $new_try=$try-1;
@@ -111,19 +112,6 @@ sub calc_shortest_note {
 	$self->time_diff($best->{'value'} * $best->{'period'});
 	printf "method 1: d:%s - nn:%s - dv:%2.2f - p:%d\n",$self->time_diff, $numnotes, $best->{value} / $numnotes, $best->{'period'};
 
-    if ($best->{value} / $numnotes >=0.1 ) {
-       $try = $best->{'period'};
-	my $diff = $self->_calc_time_diff($try);
-       my $new_try=$try-1;                                                                                                          
-       while ($diff >= $self->_calc_time_diff($new_try)) {                                                                          
-               $diff= $self->_calc_time_diff($new_try);                                                                             
-               $try=$new_try;                                                                                                       
-               $new_try--;     
-		}
-		$best={'period' => $try};
-       $self->time_diff($diff);
-       printf "method 2: p:%s -d:%s - nn:%d - dd:%d\n",$try,$diff, $numnotes, $diff / $numnotes;
-	}
 	$self->shortest_note_time($best->{'period'});
     if ( $best->{'period'} >= 96 ) {
         $self->denominator(4);
