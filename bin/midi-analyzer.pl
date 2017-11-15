@@ -21,12 +21,12 @@ foreach my $one (@ARGV) {
     my @tracks = $opus->tracks;
     print "$one has ", scalar( @tracks ). " tracks\n";
     my $data = $tracks[0]->data;
-    my @events = MIDI::Event::decode( \$data, {exclude=>['control_change','set_tempo','sysex_f0'] } );
+    my @events = MIDI::Event::decode( \$data, {exclude=>['control_change', 'sysex_f0'] } );
 #   print Dumper @tracks;
     say ref $events[0] ;
     SH::PrettyPrint::print_arrayofarrays $_ for @events;
 #    print Dumper @events;
  print     $opus->dump( { flat=>1} );
-   print Dumper  \%MIDI::number2note;
+#   print Dumper  \%MIDI::number2note;
 }
 exit;
