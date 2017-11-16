@@ -238,6 +238,7 @@ sub notes2score {
         $note->starttime($note->startbeat->to_int * $self->shortest_note_time); #or shortest_note_time?
         $note->duration($note->length_numerator * $self->shortest_note_time - 5); #or shortest_note_time?
         $note->delta_time( $note->starttime - $prev_stime );
+        $note->velocity(96); #hardcoded for now
         $prev_stime = $note->starttime;
         push(@new_notes, $note);
     }
@@ -324,10 +325,12 @@ sub to_midi_file {
 ['set_tempo',	327,	500000];
 
 	my $one_track = MIDI::Track->new;
-	$one_track->events( @$events_r );
+	$one_track->events_r( $events_r );
 	my $opus = MIDI::Opus->new(
 	 {  'format' => 1,  'ticks' => $self->shortest_note_time, 'tracks' => [ $one_track ] }	);
         die "Missing midi_file. Do not know what todo" if (! $midi_file);
+    $opus->dump;
+    print '['.join (', ',@$_)."]\n" for  $opus->tracks_r()->[0]->events;
 	$opus->write_to_file($midi_file);
     return $self;
 }
