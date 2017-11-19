@@ -6,6 +6,22 @@ use FindBin;
 use lib "$FindBin::Bin/../lib";
 
 # This method will run once at server start
+
+=head1 NAME
+
+MidiRecordCompare
+
+=head1 DESCRIPTION
+
+
+=head1 METHODS
+
+=head2 startup
+
+app startup
+
+=cut
+
 sub startup {
   my $self = shift;
 
@@ -15,7 +31,7 @@ sub startup {
   # Documentation browser under "/perldoc"
   $self->plugin('PODRenderer') if $config->{perldoc};
 
-  
+
   # Router
   my $r = $self->routes;
 

@@ -25,6 +25,15 @@ has length_name => '';
 use overload
     '""' => sub { shift->to_string }, fallback => 1;
 
+=head1 METHOD
+
+=head2 to_string
+
+Print a line representing a note. delta_place_numerator,length_numerator,note.
+Additional comment is startbeat-length_name
+
+=cut
+
 sub to_string {
 	my $self = shift;
 	my $opts = shift;
@@ -61,6 +70,12 @@ sub compile {
     }
     return $self;
 }
+
+=head2 clone
+
+Clone. Copy and return a new object.
+
+=cut
 
 sub clone {
 	my $self = shift;

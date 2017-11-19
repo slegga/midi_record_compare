@@ -6,6 +6,7 @@ use Model::Beat;
 use Data::Dumper;
 use Carp;
 use List::Util qw/min max/;
+use Algorithm::Diff qw/diff/;
 use overload
     '""' => sub { shift->to_string }, fallback => 1;
 has length => 0;
@@ -24,7 +25,10 @@ has beat_score => 0;
 ('note_off', dtime, channel, note, velocity)
 ('note_on',  dtime, channel, note, velocity)
 
-=cut
+
+
+
+=head1 METHODS
 
 =head2 calc_shortest_note
 
@@ -117,6 +121,39 @@ sub clean {
     return $self;
 }
 
+=head evaluate_with_blueprint
+
+Compare notes with notes.
+Self is the played tune in note format and the argument is a Model::Tune which is the blueprint.
+This method should give an over all score and partly socres for corerect played notes, correct beat, correct note length++.
+And the diff between the blueprint and the played should show what should be played better to get an higher score.
+
+Return by default a text - evaluation. With options {output=>hash} this method will return an hash ref with data from the evaluation.
+
+=cut
+
+sub evaluate_with_blueprint {
+	my $self = shift;
+	my $blueprint = shift;
+	my $options = shift;
+	my $result={};
+	my @played_note_values = map{$_->note} @{ $self->notes};
+	my @blueprint_note_values = map{$_->note} @{ $blueprint->notes};
+	my $diff = diff( \@played_note_values, \@blueprint_note_values );
+
+	# remove first araay_ref layer from diff
+
+	# Calculate a note map
+
+	# Calculate a note score
+
+	# Calculate note length score
+
+	# Calculate dalta_note_beat score
+
+	return
+}
+
 =head2 from_midi_file
 
 Take mididata and create events and create point in time from dtime
@@ -165,7 +202,7 @@ sub from_midi_file {
     return $self;
 }
 
-=head1 from_note_file
+=head2 from_note_file
 
 Create a new Model::Tune object baset on note file.
 Dies if not file is set.
@@ -214,7 +251,7 @@ sub from_note_file {
 
 
 
-=head1 notes2score
+=head2 notes2score
 
 Must either convert from events to score for the hole project or
 do all in a function
@@ -255,7 +292,6 @@ i.e
  0.1;0.1;D4
 ...
 Could maybe be replaced with MIDI::Score::quantize( $score_r )?
-
 
 =cut
 
@@ -335,6 +371,11 @@ sub to_midi_file {
     return $self;
 }
 
+=head2 to_note_file
+
+Write tune to note file
+
+=cut
 
 sub to_note_file {
     my $self =shift;
@@ -347,6 +388,12 @@ sub to_note_file {
     $file->spurt($content);
     return $self;
 }
+
+=head2 to_string
+
+Return a text with all notes and some general variables for the tune.
+
+=cut
 
 
 sub to_string {
