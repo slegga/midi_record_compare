@@ -6,7 +6,7 @@ use Model::Beat;
 use Data::Dumper;
 use Carp;
 use List::Util qw/min max/;
-use Algorithm::Diff qw/diff/;
+use Algorithm::Diff qw/diff compact_diff/;
 use overload
     '""' => sub { shift->to_string }, fallback => 1;
 has length => 0;
@@ -17,7 +17,7 @@ has 'notes';
 has midi_file  => '';
 has note_file  => '';
 has beat_score => 0;
-
+has note_score => 0;
 
 
 =head1 DESCRIPTION
@@ -141,14 +141,40 @@ sub evaluate_with_blueprint {
 	my @blueprint_note_values = map{$_->note} @{ $blueprint->notes};
 	my $diff = diff( \@played_note_values, \@blueprint_note_values );
 
-	# remove first araay_ref layer from diff
+	# remove first array_ref layer from diff
+#	say Dumper $diff;
+	my $wrongs=[];
+	if (@$diff) {
+		for my $area(@$diff){
+			push @$wrongs, @$area;
+		}
+	}
+	say Dumper $wrongs;
+	# Calculate a note score
+	my $n = ( (scalar @{ $blueprint->notes } - scalar @$wrongs)/scalar @{ $blueprint->notes })*100;
+	$self->note_score($n);
+	say "Note score: ". $self->note_score;
 
 	# Calculate a note map
+	my $cdiff = compact_diff(\@played_note_values, \@blueprint_note_values);
+	say Dumper $cdiff;
+	my %map;
+	for ( my $i = 0; $i < @$cdiff; $i += 4) {
+		next if ($cdiff->[$i] == $cdiff->[$i+2]);
+		for my $j(0 .. ($cdiff->[$i+2] - $cdiff->[$i] -1)){
+			$map{$cdiff->[$i]+$j} = $cdiff->[$i+1]+$j;
+		}
 
-	# Calculate a note score
-
+	}
+	say Dumper \%map;
 	# Calculate note length score
-
+	my $rln=0;# right length numerator
+	for my $key(keys %map) {
+		$rln++ if $self->notes->[$key]->length_numerator == $blueprint->notes->[$map{$key}]->length_numerator;
+		$rln++ if $self->notes->[$key]->delta_place_numerator == $blueprint->notes->[$map{$key}]->delta_place_numerator;
+	}
+	my $ls = 100*$rln/scalar @{ $blueprint->notes };
+	say "Length score: ". $ls;
 	# Calculate dalta_note_beat score
 
 	return
@@ -241,7 +267,7 @@ sub from_note_file {
     #      $newcont .= Model::Note->new(delta_place_numinator => $val[0], length_numerator => $val[1], note => $val[2])
     #          ->to_string({expand=>1,denominator=>$input{denominator}});
     }
-    say Dumper @notes;
+    #say Dumper @notes;
     @notes = grep { defined $_ } @notes;
     die"No notes" if ! @notes;
     $self->notes(\@notes);
