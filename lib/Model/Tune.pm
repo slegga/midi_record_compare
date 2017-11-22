@@ -169,14 +169,17 @@ sub evaluate_with_blueprint {
 	say Dumper \%map;
 	# Calculate note length score
 	my $rln=0;# right length numerator
+    my $rdb=0;# right delta beat
 	for my $key(keys %map) {
 		$rln++ if $self->notes->[$key]->length_numerator == $blueprint->notes->[$map{$key}]->length_numerator;
-		$rln++ if $self->notes->[$key]->delta_place_numerator == $blueprint->notes->[$map{$key}]->delta_place_numerator;
+		$rdb++ if $self->notes->[$key]->delta_place_numerator == $blueprint->notes->[$map{$key}]->delta_place_numerator;
 	}
 	my $ls = 100*$rln/scalar @{ $blueprint->notes };
 	say "Length score: ". $ls;
 	# Calculate dalta_note_beat score
 
+    my $bs = 100*$rdb/scalar @{ $blueprint->notes };
+    say "Delta beat score: ". $bs;
 	return
 }
 
