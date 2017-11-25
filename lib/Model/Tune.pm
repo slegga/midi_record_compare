@@ -121,7 +121,7 @@ sub clean {
     return $self;
 }
 
-=head evaluate_with_blueprint
+=head2 evaluate_with_blueprint
 
 Compare notes with notes.
 Self is the played tune in note format and the argument is a Model::Tune which is the blueprint.
