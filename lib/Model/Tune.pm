@@ -16,8 +16,13 @@ has beat_interval =>100000000;
 has 'notes';
 has midi_file  => '';
 has note_file  => '';
+
+# points:
 has beat_score => 0;
 has note_score => 0;
+has length_score =>0;
+has delta_beat_score =>0;
+has total_score => 0;
 
 
 =head1 DESCRIPTION
@@ -151,9 +156,8 @@ sub evaluate_with_blueprint {
 	}
 	say Dumper $wrongs;
 	# Calculate a note score
-	my $n = ( (scalar @{ $blueprint->notes } - scalar @$wrongs)/scalar @{ $blueprint->notes })*100;
+	my $n = ( abs(scalar @{ $blueprint->notes } - scalar @$wrongs * 4)/(scalar @{ $blueprint->notes }))*100;
 	$self->note_score($n);
-	say "Note score: ". $self->note_score;
 
 	# Calculate a note map
 	my $cdiff = compact_diff(\@played_note_values, \@blueprint_note_values);
@@ -169,15 +173,44 @@ sub evaluate_with_blueprint {
 	say Dumper \%map;
 	# Calculate note length score
 	my $rln=0;# right length numerator
+	my $rdb=0;# right delta beat
 	for my $key(keys %map) {
 		$rln++ if $self->notes->[$key]->length_numerator == $blueprint->notes->[$map{$key}]->length_numerator;
-		$rln++ if $self->notes->[$key]->delta_place_numerator == $blueprint->notes->[$map{$key}]->delta_place_numerator;
+		$rdb++ if $self->notes->[$key]->delta_place_numerator == $blueprint->notes->[$map{$key}]->delta_place_numerator;
 	}
-	my $ls = 100*$rln/scalar @{ $blueprint->notes };
-	say "Length score: ". $ls;
-	# Calculate dalta_note_beat score
+	$self->length_score(    100*$rln/scalar @{ $blueprint->notes });
+	$self->delta_beat_score(100*$rdb/scalar @{ $blueprint->notes });
 
-	return
+	printf "%-16s %3.1f%%\n", "Beat score:",	   $self->beat_score;
+	printf "%-16s %3.1f%%\n", "Note score:",       $self->note_score;
+	printf "%-16s %3.1f%%\n", "Length score:",     $self->length_score;
+	printf "%-16s %3.1f%%\n", "Delta beat score:", $self->delta_beat_score;
+	printf "%-16s %3.1f%%\n", "Total score:", (3 * $self->note_score + $self->length_score + $self->delta_beat_score + $self->beat_score)/6;
+	# Calculate dalta_note_beat score
+	say '';
+
+	# create array for print. Each entry has [diff_code,midi_note_place,blueprint_note_place]
+	my $i=0;
+	my $j=0;
+	my @note_diff;
+	while (my ($m,$b)=each %map) {
+		if ($i == $m && $j == $b) {
+			push @note_diff, ['100',$i,$j];
+			$i++;$j++;
+		} elsif ( $i < $m && $j < $b ) {
+			while( $i < $m && $j < $b ) {
+				push @note_diff, ['0',$i,$j];
+				$i++;$j++;
+			}
+		} elsif ( $i == $m && $j < $b ) {
+			while( $i == $m && $j < $b ) {
+				push @note_diff, ['0',$i,$j];
+				$j++;
+			}
+		}
+		...; # write missing and an else with error
+	}
+	return $self;
 }
 
 =head2 from_midi_file
