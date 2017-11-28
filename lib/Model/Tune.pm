@@ -126,7 +126,7 @@ sub clean {
     return $self;
 }
 
-=head evaluate_with_blueprint
+=head2 evaluate_with_blueprint
 
 Compare notes with notes.
 Self is the played tune in note format and the argument is a Model::Tune which is the blueprint.
@@ -173,7 +173,7 @@ sub evaluate_with_blueprint {
 	say Dumper \%map;
 	# Calculate note length score
 	my $rln=0;# right length numerator
-	my $rdb=0;# right delta beat
+    my $rdb=0;# right delta beat
 	for my $key(keys %map) {
 		$rln++ if $self->notes->[$key]->length_numerator == $blueprint->notes->[$map{$key}]->length_numerator;
 		$rdb++ if $self->notes->[$key]->delta_place_numerator == $blueprint->notes->[$map{$key}]->delta_place_numerator;
