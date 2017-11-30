@@ -193,23 +193,41 @@ sub evaluate_with_blueprint {
 	my $i=0;
 	my $j=0;
 	my @note_diff;
-	while (my ($m,$b)=each %map) {
+	my @maps = map { $_, $map{$_} } sort {$a <=> $b} keys %map;
+	while ( my ($m,$b) = (shift(@maps),shift(@maps) )) {
+		last if ! defined $m && ! defined $b;
+		print "ETTER WHILE $i,$j $m,$b\n";
 		if ($i == $m && $j == $b) {
 			push @note_diff, ['100',$i,$j];
 			$i++;$j++;
 		} elsif ( $i < $m && $j < $b ) {
 			while( $i < $m && $j < $b ) {
-				push @note_diff, ['0',$i,$j];
+				print "$i,$j $m,$b\n";
+				push @note_diff, ['1',$i,$j];
 				$i++;$j++;
 			}
 		} elsif ( $i == $m && $j < $b ) {
 			while( $i == $m && $j < $b ) {
-				push @note_diff, ['0',$i,$j];
+				push @note_diff, ['2',$i,$j];
 				$j++;
 			}
+		} elsif ( $i < $m && $j == $b ) {
+			while( $i < $m && $j == $b ) {
+				push @note_diff, ['3',$i,$j];
+				$i++;
+			}
+		} else {
+			print Dumper @note_diff;
+			die "TELLER FEIL. SKAL IKKE KOMME HIT $i,$j $m,$b";
 		}
-		...; # write missing and an else with error
 	}
+	#Register errous notes at the end.
+	if ($i != $#{$self->notes} || $j != $#{$blueprint->notes}) {
+		printf "%d=%d %d=%d\n",$i,$#{$self->notes},$j,$#{$blueprint->notes};
+		...;
+	}
+
+	print Dumper @note_diff;
 	return $self;
 }
 
