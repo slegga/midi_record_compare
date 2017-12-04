@@ -9,6 +9,7 @@ use List::Util qw/min max/;
 use Algorithm::Diff qw/diff compact_diff/;
 use overload
     '""' => sub { shift->to_string }, fallback => 1;
+
 has length => 0;
 has shortest_note_time => 0;
 has denominator => 4;
@@ -18,6 +19,8 @@ has midi_file  => '';
 has note_file  => '';
 
 # points:
+has blueprint_file =>'';
+has 'note_diff';
 has beat_score => 0;
 has note_score => 0;
 has length_score =>0;
@@ -141,6 +144,7 @@ sub evaluate_with_blueprint {
 	my $self = shift;
 	my $blueprint = shift;
 	my $options = shift;
+    $self->blueprint_file($blueprint->note_file);
 	my $result={};
 	my @played_note_values = map{$_->note} @{ $self->notes};
 	my @blueprint_note_values = map{$_->note} @{ $blueprint->notes};
@@ -208,12 +212,12 @@ sub evaluate_with_blueprint {
 			}
 		} elsif ( $i == $m && $j < $b ) {
 			while( $i == $m && $j < $b ) {
-				push @note_diff, ['2',$i,$j];
+				push @note_diff, ['2',undef,$j];
 				$j++;
 			}
 		} elsif ( $i < $m && $j == $b ) {
 			while( $i < $m && $j == $b ) {
-				push @note_diff, ['3',$i,$j];
+				push @note_diff, ['3',$i,undef];
 				$i++;
 			}
 		} else {
@@ -224,9 +228,21 @@ sub evaluate_with_blueprint {
 	#Register errous notes at the end.
 	if ($i != $#{$self->notes} || $j != $#{$blueprint->notes}) {
 		printf "%d=%d %d=%d\n",$i,$#{$self->notes},$j,$#{$blueprint->notes};
-		...;
+        $i = undef if $i>$#{$self->notes};
+        $j = undef if $i>$#{$blueprint->notes};
+        push @note_diff,['4',$i,$j];
+		while ($#{$self->notes} > ($i//$#{$self->notes}) || $#{$blueprint->notes} > ($j//$#{$blueprint->notes})){
+            $i++ if defined $i && $#{$self->notes} >$i;
+            $j++ if defined $j && $#{$blueprint->notes} >$j;
+            push @note_diff,['4',$i,$j];
+        }
 	}
-
+    for my $n (@note_diff) {
+        next if $n->[0]<50;
+        $n->[0] -= 25 if $self->notes->[$n->[1]]->length_numerator ne $blueprint->notes->[$n->[2]]->length_numerator;
+        $n->[0] -= 20 if $self->notes->[$n->[1]]->delta_place_numerator ne $blueprint->notes->[$n->[2]]->delta_place_numerator;
+    }
+    $self->note_diff(\@note_diff);
 	print Dumper @note_diff;
 	return $self;
 }
