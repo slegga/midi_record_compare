@@ -31,6 +31,7 @@ $tune_play->calc_shortest_note;
 $tune_play->score2notes;
 my $tune_blueprint= Model::Tune->from_note_file($ARGV[1]);
 
-print $tune_play->evaluate_with_blueprint($tune_blueprint);
+$tune_play->evaluate_with_blueprint($tune_blueprint);
+# print $tune_play->evaluation;
 
 __END__

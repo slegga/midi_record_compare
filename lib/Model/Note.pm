@@ -23,7 +23,7 @@ has delta_place_numerator => 0;
 has length_name => '';
 
 use overload
-    '""' => sub { shift->to_string }, fallback => 1;
+    '""' => sub { shift->to_string({end=>"\n"}) }, fallback => 1;
 
 =head1 METHOD
 
@@ -42,15 +42,16 @@ sub to_string {
 	#  return '' if $self->length<3;
 	if ($self->startbeat)  {
 		my $core = sprintf "%s;%s;%s",$self->delta_place_numerator,$self->length_numerator,$MIDI::number2note{ $self->note() };
-
-	    $return =  sprintf "%-12s  #%4s-%s",$core,$self->startbeat,$self->length_name;
-	#      if ($self->duration) {
-	#          $return .= sprintf "-%s-%4d-%3d-%3d",$self->length_name,$self->starttime,$self->duration, $self->delta_time;
-	#      }
+		if (! exists $opts->{no_comment} || ! $opts->{no_comment}) {
+		    $return =  sprintf "%-12s  #%4s-%s",$core,$self->startbeat,$self->length_name;
+		}
+		else {
+			$return =  $core;
+		}
 	} else {
 	    ...;
 	}
-	return $return."\n";
+	return $return.(exists $opts->{end}? $opts->{end}: '');
 }
 
 =head2 compile

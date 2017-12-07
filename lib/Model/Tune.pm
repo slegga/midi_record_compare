@@ -6,9 +6,10 @@ use Model::Beat;
 use Data::Dumper;
 use Carp;
 use List::Util qw/min max/;
+use Term::ANSIColor;
 use Algorithm::Diff qw/diff compact_diff/;
 use overload
-    '""' => sub { shift->to_string }, fallback => 1;
+    '""' => sub { shift->to_string({end=>"\n"}) }, fallback => 1;
 
 has length => 0;
 has shortest_note_time => 0;
@@ -167,14 +168,15 @@ sub evaluate_with_blueprint {
 	my $cdiff = compact_diff(\@played_note_values, \@blueprint_note_values);
 	say Dumper $cdiff;
 	my %map;
-	for ( my $i = 0; $i < @$cdiff; $i += 4) {
+	for ( my $i = 0;$i < $#{$cdiff}-3; $i += 4) {
+#		last if $i >= $#{$cdiff};
 		next if ($cdiff->[$i] == $cdiff->[$i+2]);
 		for my $j(0 .. ($cdiff->[$i+2] - $cdiff->[$i] -1)){
 			$map{$cdiff->[$i]+$j} = $cdiff->[$i+1]+$j;
 		}
 
 	}
-	say Dumper \%map;
+#	say Dumper \%map;
 	# Calculate note length score
 	my $rln=0;# right length numerator
     my $rdb=0;# right delta beat
@@ -200,7 +202,7 @@ sub evaluate_with_blueprint {
 	my @maps = map { $_, $map{$_} } sort {$a <=> $b} keys %map;
 	while ( my ($m,$b) = (shift(@maps),shift(@maps) )) {
 		last if ! defined $m && ! defined $b;
-		print "ETTER WHILE $i,$j $m,$b\n";
+#		print "ETTER WHILE $i,$j $m,$b\n";
 		if ($i == $m && $j == $b) {
 			push @note_diff, ['100',$i,$j];
 			$i++;$j++;
@@ -229,7 +231,7 @@ sub evaluate_with_blueprint {
 	if ($i != $#{$self->notes} || $j != $#{$blueprint->notes}) {
 		printf "%d=%d %d=%d\n",$i,$#{$self->notes},$j,$#{$blueprint->notes};
         $i = undef if $i>$#{$self->notes};
-        $j = undef if $i>$#{$blueprint->notes};
+        $j = undef if defined $i && $i>$#{$blueprint->notes};
         push @note_diff,['4',$i,$j];
 		while ($#{$self->notes} > ($i//$#{$self->notes}) || $#{$blueprint->notes} > ($j//$#{$blueprint->notes})){
             $i++ if defined $i && $#{$self->notes} >$i;
@@ -243,7 +245,31 @@ sub evaluate_with_blueprint {
         $n->[0] -= 20 if $self->notes->[$n->[1]]->delta_place_numerator ne $blueprint->notes->[$n->[2]]->delta_place_numerator;
     }
     $self->note_diff(\@note_diff);
-	print Dumper @note_diff;
+	for my $n(@note_diff) {
+		if (defined $n->[1] && defined $n->[2]) {
+			if ($n->[0] > 90) {
+				print color('green');
+			} else {
+				print color('yellow');
+			}
+			printf "%4s %-15s %s\n",$n->[0],$self->notes->[$n->[1]]->to_string( {no_comment=>1} )
+			, $blueprint->notes->[$n->[2]]->to_string;
+		}
+		elsif (! defined $n->[1] && defined $n->[2]) {
+			print color('red');
+			printf "%4s %-15s %s\n",$n->[0],''
+						, $blueprint->notes->[$n->[2]]->to_string;
+		}
+		elsif (! defined $n->[2] && defined $n->[1]) {
+			print color('red');
+			printf "%4s %-15s %s\n",$n->[0],$self->notes->[$n->[1]]->to_string( {no_comment=>1} )
+						,'';
+		}
+		else {
+			...;
+		}
+		print color('reset');
+	}
 	return $self;
 }
 
@@ -324,8 +350,10 @@ sub from_note_file {
       } else {
           my ($delta_place_numerator, $length_numerator, $note_name) = split(/\;/,$line);
           $beat = $beat + $delta_place_numerator;
+          my ($ln,undef) = $self->_calc_length({numerator =>$length_numerator});
           push(@notes,Model::Note->new(delta_place_numerator => $delta_place_numerator,
           length_numerator => $length_numerator,
+          length_name => $ln,
           note_name => $note_name,
           denominator => $self->denominator//4, startbeat =>$beat->clone,
           )->compile);
@@ -476,7 +504,7 @@ sub to_note_file {
     $note_file = $self->note_file if ! $note_file;
     my $file =  path($note_file);
     say $file;
-    my $content = $self->to_string;
+    my $content = $self->to_string({end=>"\n"});
     die "No content" if ! $content;
     $file->spurt($content);
     return $self;
