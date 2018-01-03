@@ -11,7 +11,7 @@ my $mm = new MIDI::Music('tempo'    => 120, # These parameters
                          'realtime' => 1,   # can be passed to
                          );                 # the constructor
 
-# Record some MIDI data from
+:# Record some MIDI data from
 # an external device..
 $mm->init('mode' => O_RDONLY) || die $mm->errstr;
 my $i=0;
