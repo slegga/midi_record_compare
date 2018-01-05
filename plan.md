@@ -1,5 +1,7 @@
 PLAN
 ====
+* od -A x -t x1z -v midi/T6ng-000.MID
+* * 90 = note_on, se MIDI/Event
 * script Enkel avspiller timidity for notes filer
 
 * Prøv først MIDI::ALSA for å lese input
