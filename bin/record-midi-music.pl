@@ -1,36 +1,85 @@
 #!/usr/bin/env perl
-use Mojo::Base  -strict;
-use MIDI::ALSA (':CONSTS');
-use MIDI;
+use Mojo::Base '-base';
+
+use Mojo::Asset::File;
 use Mojo::IOLoop;
-use Fcntl;
+use Mojo::IOLoop::Stream;
 
-MIDI::ALSA::client( 'Perl MIDI::ALSA client', 1, 1, 0 );
-MIDI::ALSA::connectfrom( 0, 20, 0 );  # input port is lower (0)
+use Mojo::Loader 'data_section';
 
-my $opus  = MIDI::Opus->new();
-my $track = MIDI::Track->new();
+has file_count => 0;
 
+has file  => sub { shift->file_start('0_START.pgm') };
+has loop  => sub { Mojo::IOLoop->singleton };
+has stdin => sub { Mojo::IOLoop::Stream->new(\*STDIN)->timeout(0) };
 
-:# Record some MIDI data from
-# an external device..
+__PACKAGE__->new->main;
 
-#MIDI::A
-#Mojo::IOLoop->recurring(0 => sub {
-#	;
-#});
-#Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
-# Turn file descriptor into handle and watch if it becomes readable
-my $handle = IO::Handle->new_from_fd( MIDI::ALSA::fd(), 'r');
-Mojo::IOLoop->singleton->reactor->io($handle => sub {
-  my ($reactor, $writable) = @_;
-  say $writable ? 'Handle is writable' : 'Handle is readable';
-  if (!$writable) {
-       my @alsaevent = MIDI::ALSA::input();
-        print "Alsa event: " . Dumper(\@alsaevent);
+sub main {
+  my $self = shift;
+  $self->stdin->on(read => sub { $self->stdin_read(@_) });
+  $self->stdin->start;
+  $self->loop->start unless $self->loop->is_running;
+}
 
+sub file_start {
+  my ($self, $path) = @_;
+  $self->file_count($self->file_count + 1);
+  return Mojo::Asset::File->new(path => $path)->cleanup(0)->add_chunk(
+    data_section(__PACKAGE__, 'pgm_header'),
+  );
+};
+
+sub stdin_read {
+  my ($self, $stream, $bytes) = @_;
+
+  foreach my $packet (split /\n/, $bytes) {
+    my $chunk = join ' ', (
+      map { sprintf '%03i', hex($_) } split /:/, $packet
+    );
+    $self->file->add_chunk($chunk . "\n");
   }
-})->watch($handle, 1, 0);
+}
 
-#$opus->tracks($track);
-#$opus->write_to_file('bar.mid');
+__DATA__
+
+@@ pgm_header
+P2
+00000000 00000000
+255
+
+@@ instructions
+1 Prepare for instructions, cherished aide!
+3 Steady
+
+2 Prep Yaw
+5 Start Yaw
+1 Stop Yaw
+3 Steady
+
+2 Prep Pitch
+5 Start Pitch
+1 Stop Pitch
+3 Steady
+
+2 Prep Roll
+5 Start Roll
+1 Stop Roll
+3 Steady
+
+2 Prep Sway
+5 Start Sway
+1 Stop Sway
+3 Steady
+
+2 Prep Surge
+5 Start Surge
+1 Stop Surge
+3 Steady
+
+2 Prep Heave
+5 Start Heave
+1 Stop Heave
+3 Steady
+
+0 The End Of Instructions. Thank you, generous one!
