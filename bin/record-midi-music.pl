@@ -4,19 +4,24 @@ use Mojo::Base '-base';
 use Mojo::Asset::File;
 use Mojo::IOLoop;
 use Mojo::IOLoop::Stream;
-
+use Mojo::Util 'dumper';
 use Mojo::Loader 'data_section';
 
 has file_count => 0;
 
 has file  => sub { shift->file_start('0_START.pgm') };
 has loop  => sub { Mojo::IOLoop->singleton };
-has stdin => sub { Mojo::IOLoop::Stream->new(\*STDIN)->timeout(0) };
+has alsa_fileno => sub {my $con =`aconnect -o`;
+    (map{/(\d+)/} grep {$_=~/client \d+.+\Wmidi/i} split(/\n/, $con))[0]};
+has alsa_stream => sub {my $r = IO::Handle->new;$r->fdopen(shift->alsa_fileno,'w');warn $r->error;return $r};
+has stdin => sub { my $self=shift;Mojo::IOLoop::Stream->new($self->alsa_stream)->timeout(0) };
 
 __PACKAGE__->new->main;
 
 sub main {
   my $self = shift;
+  say $self->alsa_fileno;
+  say dumper $self->alsa_stream;
   $self->stdin->on(read => sub { $self->stdin_read(@_) });
   $self->stdin->start;
   $self->loop->start unless $self->loop->is_running;
