@@ -6,24 +6,41 @@ use Mojo::IOLoop;
 use Mojo::IOLoop::Stream;
 use Mojo::Util 'dumper';
 use Mojo::Loader 'data_section';
+use MIDI::ALSA(':CONSTS');
+
+=head1 NAME
+
+=head1 DESCRIPTION
+
+=head1 INSTALL GUIDE
+
+sudo apt install libasound2-dev
+
+cpanm MIDI::ALSA
+
+=cut
 
 has file_count => 0;
 
 has file  => sub { shift->file_start('0_START.pgm') };
 has loop  => sub { Mojo::IOLoop->singleton };
-has alsa_fileno => sub {my $con =`aconnect -o`;
+has alsa_port => sub {my $con =`aconnect -o`;
     (map{/(\d+)/} grep {$_=~/client \d+.+\Wmidi/i} split(/\n/, $con))[0]};
-has alsa_stream => sub {my $r = IO::Handle->new;$r->fdopen(shift->alsa_fileno,'w');warn $r->error;return $r};
-has stdin => sub { my $self=shift;Mojo::IOLoop::Stream->new($self->alsa_stream)->timeout(0) };
+has alsa_stream => sub {my $r = IO::Handle->new;$r->fdopen(MIDI::ALSA::fd(),'r'); warn $r->error if $r->error;return $r};
+has alsa => sub { my $self=shift;Mojo::IOLoop::Stream->new($self->alsa_stream)->timeout(0) };
 
 __PACKAGE__->new->main;
 
 sub main {
   my $self = shift;
-  say $self->alsa_fileno;
+  say $self->alsa_port;
+  MIDI::ALSA::client( 'Perl MIDI::ALSA client', 1, 1, 0 );
+  MIDI::ALSA::connectfrom( 0, $self->alsa_port, 0 );  # input port is lower (0)
   say dumper $self->alsa_stream;
-  $self->stdin->on(read => sub { $self->stdin_read(@_) });
-  $self->stdin->start;
+  $self->alsa->on(read => sub {
+    my @alsaevent = MIDI::ALSA::input();
+print "Alsa event: " . Dumper(\@alsaevent) });
+  $self->alsa->start;
   $self->loop->start unless $self->loop->is_running;
 }
 
