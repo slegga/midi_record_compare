@@ -273,9 +273,50 @@ sub evaluate_with_blueprint {
 	return $self;
 }
 
+=head2 from_midi_events
+
+Take an array_ref of (MIDI) events and return a new Model::Tune object
+
+=cut
+
+sub from_midi_events {
+    my $class = shift;
+    my $events = shift;
+    my $options =shift;
+    die '\$vents must be a array ref' if ! ref $events eq 'ARRAY' ;
+    my $score = MIDI::Score::events_r_to_score_r( $events );
+    my $tune_start;
+    my@notes;
+    for my $sp(@$score) {#0=type,note,dtime,0,volumne
+        next if $sp->[0] ne 'note';
+        $tune_start=$sp->[1] if ! defined $tune_start;
+        push @notes, Model::Note->new(starttime => $sp->[1] - $tune_start
+        , duration => $sp->[2], note =>$sp->[4], velocity =>$sp->[5]);
+
+    }
+        warn Dumper \@notes;
+    @notes = sort { $a->{'starttime'} <=> $b->{'starttime'} }  @notes;
+
+    my $self = $class->new(%$options);
+
+    $self->notes(\@notes);
+    my $pre_time;
+    for my $note (@notes) {
+        if (! defined $pre_time) {
+            $pre_time = $note->starttime;
+            next;
+        }
+        $note->delta_time($note->starttime - $pre_time);
+        $pre_time = $note->starttime;
+    }
+    return $self;
+
+}
+
 =head2 from_midi_file
 
-Take mididata and create events and create point in time from dtime
+Take midifilename read it. Create a new Model::Tune object. Populate notes
+ with score data(starttime,duration,note,velocity)
 
 =cut
 
@@ -283,47 +324,25 @@ Take mididata and create events and create point in time from dtime
 sub from_midi_file {
     my $class = shift;
     my $midi_filename = shift;
+    die "\$midi_filename is not defined" if ! defined $midi_filename;
+    die "The file $midi_filename does not exists." if ! -e $midi_filename;
     my $events;
     my $score;
     my @notes;
-    my $self = Model::Tune->new(midi_file => $midi_filename);
-    if ($self->midi_file) {
-        my $opus = MIDI::Opus->new({ 'from_file' => $self->midi_file, 'no_parse' => 1 });#
-        my @tracks = $opus->tracks;
-        # print $self->file . " has ", scalar( @tracks ). " tracks\n";
-        my $data = $tracks[0]->data;
-        $events = MIDI::Event::decode( \$data );
-        $score = MIDI::Score::events_r_to_score_r( $events );
-    }
-    if (@$score) { #('note', starttime, duration, channel, note, velocity)
-        my $tune_start;
-		for my $sp(@$score) {#0=type,note,dtime,0,volumne
-            next if $sp->[0] ne 'note';
-            $tune_start=$sp->[1] if ! defined $tune_start;
-		    push @notes, Model::Note->new(starttime => $sp->[1] - $tune_start
-            , duration => $sp->[2], note =>$sp->[4], velocity =>$sp->[5]);
+    my $opus = MIDI::Opus->new({ 'from_file' => $midi_filename, 'no_parse' => 1 });#
+    my @tracks = $opus->tracks;
+    # print $self->file . " has ", scalar( @tracks ). " tracks\n";
+    my $data = $tracks[0]->data;
+    $events = MIDI::Event::decode( \$data );
+    return $class->from_midi_events($events, {midi_file => $midi_filename});
 
-		  }
-	}
-	#    warn Dumper \@notes;
-	@notes = sort { $a->{'starttime'} <=> $b->{'starttime'} }  @notes;
-
-	$self->notes(\@notes);
-	my $pre_time;
-	for my $note (@notes) {
-		if (! defined $pre_time) {
-			$pre_time = $note->starttime;
-			next;
-		}
-		$note->delta_time($note->starttime - $pre_time);
-		$pre_time = $note->starttime;
-	}
-    return $self;
 }
 
 =head2 from_note_file
 
 Create a new Model::Tune object baset on note file.
+Notes is registered with notefile data like (numerator,delta_place_numerator
+, length_numerator, length_name, note_name, denominator)
 Dies if not file is set.
 
 =cut
@@ -374,10 +393,9 @@ sub from_note_file {
 
 =head2 notes2score
 
-Must either convert from events to score for the hole project or
-do all in a function
-Uses the note data to generate midi data as first MIDI::Score then events and then data
-'note', starttime, duration, channel, note, velocity
+Generate score data from notefile data.
+Notefile data is: startbeat, length_numerator
+score data is: 'note', starttime, duration, channel, note, velocity
 
 =cut
 
@@ -406,13 +424,15 @@ sub notes2score {
 
 =head2 score2notes
 
-Calculate notes as: point in time, length, sound
+
+Enrich notes with: point in time, length, sound
+
+Prepare output at notefile.
 i.e
  denominator:4
  0.0;0.1;C4
  0.1;0.1;D4
 ...
-Could maybe be replaced with MIDI::Score::quantize( $score_r )?
 
 =cut
 
