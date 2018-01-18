@@ -70,7 +70,7 @@ sub stdin_read {
     $tune->calc_shortest_note;
     $tune->score2notes;
     print $tune->to_string;
-
+	$self->midi_events([]); # clear history
 }
 
 __DATA__
