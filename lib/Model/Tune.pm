@@ -49,6 +49,9 @@ Guess the shorest note. If shorter than 96 it is a 1/8 else 1/4.
 sub calc_shortest_note {
 	my $self =shift;
 	my $numnotes = $self->notes;
+    if(! @$numnotes) {
+        return $self;
+    }
 
     my $max_try = max grep{$_&& $_>=30} map{ $_->{delta_time} } @$numnotes;
     my $min_try = min grep{$_&& $_>=10} map{ $_->{delta_time} } @$numnotes;

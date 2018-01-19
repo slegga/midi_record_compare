@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 use Mojo::Base '-base';
-
+use Model::Tune;
 use Mojo::Asset::File;
 use Mojo::IOLoop;
 use Mojo::IOLoop::Stream;
@@ -26,7 +26,12 @@ has file  => sub { shift->file_start('0_START.pgm') };
 has loop  => sub { Mojo::IOLoop->singleton };
 has alsa_port => sub {my $con =`aconnect -i`;
     (map{/(\d+)/} grep {$_=~/client \d+.+\Wmidi/i} grep {$_!~/\sThrough/} split(/\n/, $con))[0]};
-has alsa_stream => sub {my $r = IO::Handle->new;$r->fdopen(MIDI::ALSA::fd(),'r'); warn $r->error if $r->error;return $r};
+has alsa_stream => sub {
+    my $r = IO::Handle->new;
+    $r->fdopen(MIDI::ALSA::fd(),'r');
+    warn $r->error if $r->error;
+    return $r
+};
 has alsa_loop  => sub { my $self=shift;Mojo::IOLoop::Stream->new($self->alsa_stream)->timeout(0) };
 has stdin_loop => sub { Mojo::IOLoop::Stream->new(\*STDIN)->timeout(0) };
 has tune => sub {Model::Tune->new};
@@ -40,14 +45,15 @@ sub main {
   die "Did not find the midi input stream! Need port number." if ! defined $self->alsa_port;
   MIDI::ALSA::client( 'Perl MIDI::ALSA client', 1, 1, 0 );
   MIDI::ALSA::connectfrom( 0, $self->alsa_port, 0 );  # input port is lower (0)
-  say dumper $self->alsa_stream;
+  # say dumper $self->alsa_stream;
 
   $self->alsa_loop->on( read => sub { $self->alsa_read(@_)  });
   $self->alsa_loop->start;
-
-  $self->stdin_loop->on(read => sub { $self->stdin_read(@_) });
-  $self->stdin_loop->start;
-
+  if (1) {
+    # $self->loop->start unless $self->loop->is_running;
+    $self->stdin_loop->on(read => sub { $self->stdin_read(@_) });
+    $self->stdin_loop->start;
+    }
   $self->loop->start unless $self->loop->is_running;
 
 }
@@ -55,13 +61,15 @@ sub main {
 # Read note pressed.
 sub alsa_read {
     my ($self, $stream, $bytes) = @_;
-    while (MIDI::ALSA::inputpending()) {
+    say "hey".MIDI::ALSA::inputpending();
+#    while (MIDI::ALSA::inputpending()) {
 	    my @alsaevent = MIDI::ALSA::input();
 	    print "Alsa event: " . dumper(\@alsaevent);
-	    my $event = MIDI::ALSA::alsa2scoreevent( @alsaevent );
+	    my $event;
+        @$event = MIDI::ALSA::alsa2scoreevent( @alsaevent );
 	    push( @{$self->midi_events}, $event);
 	    print dumper $event;
-	}
+#	}
 }
 
 # Stop existing tune
@@ -77,6 +85,75 @@ sub stdin_read {
 	$self->midi_events([]); # clear history
 }
 
+sub myalsa2event {
+    my $asla_event = shift;
+    my $events;
+#     hey0
+# Alsa event: [
+#   7,
+#   0,
+#   0,
+#   253,
+#   0,
+#   [
+#     20,
+#     0
+#   ],
+#   [
+#     128,
+#     0
+#   ],
+#   [
+#     0,
+#     72,
+#     71,
+#     0,
+#     0
+#   ]
+# ]
+# [
+#   "note",
+#   0,
+#   0,
+#   0,
+#   72,
+#   43
+# ]
+# hey0
+# Alsa event: [
+#   7,
+#   0,
+#   0,
+#   253,
+#   0,
+#   [
+#     20,
+#     0
+#   ],
+#   [
+#     128,
+#     0
+#   ],
+#   [
+#     0,
+#     74,
+#     76,
+#     0,
+#     0
+#   ]
+# ]
+# [
+#   "note",
+#   0,
+#   0,
+#   0,
+#   74,
+#   34
+# ]
+#
+
+    return $events;
+}
 
 __END__
 use MIDI;
