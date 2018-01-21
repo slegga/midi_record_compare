@@ -21,7 +21,6 @@ cpanm MIDI::ALSA
 =cut
 
 has file_count => 0;
-has exists_tune => 0;
 has file  => sub { shift->file_start('0_START.pgm') };
 has loop  => sub { Mojo::IOLoop->singleton };
 has alsa_port => sub {my $con =`aconnect -i`;
@@ -62,13 +61,15 @@ sub main {
 sub alsa_read {
     my ($self, $stream, $bytes) = @_;
     say "hey".MIDI::ALSA::inputpending();
+    my $now_fractions = Time::HiRes::time;
 #    while (MIDI::ALSA::inputpending()) {
 	    my @alsaevent = MIDI::ALSA::input();
 	    print "Alsa event: " . dumper(\@alsaevent);
 	    my $event;
-        @$event = MIDI::ALSA::alsa2scoreevent( @alsaevent );
-	    push( @{$self->midi_events}, $event);
-	    print dumper $event;
+        #@$event = MIDI::ALSA::alsa2scoreevent( @alsaevent );
+        my $note = $self->tune->alsaevent2note();
+        push @{ $self->tune->notes }, $note;
+	    print $note->to_string;
 #	}
 }
 
@@ -88,69 +89,6 @@ sub stdin_read {
 sub myalsa2event {
     my $asla_event = shift;
     my $events;
-#     hey0
-# Alsa event: [
-#   7,
-#   0,
-#   0,
-#   253,
-#   0,
-#   [
-#     20,
-#     0
-#   ],
-#   [
-#     128,
-#     0
-#   ],
-#   [
-#     0,
-#     72,
-#     71,
-#     0,
-#     0
-#   ]
-# ]
-# [
-#   "note",
-#   0,
-#   0,
-#   0,
-#   72,
-#   43
-# ]
-# hey0
-# Alsa event: [
-#   7,
-#   0,
-#   0,
-#   253,
-#   0,
-#   [
-#     20,
-#     0
-#   ],
-#   [
-#     128,
-#     0
-#   ],
-#   [
-#     0,
-#     74,
-#     76,
-#     0,
-#     0
-#   ]
-# ]
-# [
-#   "note",
-#   0,
-#   0,
-#   0,
-#   74,
-#   34
-# ]
-#
 
     return $events;
 }
