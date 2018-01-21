@@ -39,21 +39,7 @@ has total_score => 0;
 
 =head1 METHODS
 
-=head2 alsaevent2note
 
-Read input from the MIDI::ALSA::input method. With HiRes tune_start,on and off
-Return note.
-
-=cut
-
-sub alsaevent2note {
-    ...;
-}
-
-#                   'duration' => 115,
-#                   'starttime' => 0,
-#                   'note' => 60,
-#                   'velocity' => 96
 
 
 =head2 calc_shortest_note

@@ -4,6 +4,10 @@ use MIDI;
 use Data::Dumper;
 use Clone;
 
+my $ALSA_CODE = {'SND_SEQ_EVENT_SYSTEM'=>0,'SND_SEQ_EVENT_RESULT'=>1
+,'SND_SEQ_EVENT_NOTE'=>5,'SND_SEQ_EVENT_NOTEON'=>6,'SND_SEQ_EVENT_NOTEOFF'=>7};
+
+
 # score
 has starttime => 0;
 has duration => 0;
@@ -33,6 +37,36 @@ Print a line representing a note. delta_place_numerator,length_numerator,note.
 Additional comment is startbeat-length_name
 
 =cut
+
+=head2 from_alsaevent
+
+Read input from the MIDI::ALSA::input method. With HiRes tune_start,on and off
+Return note.
+
+#                   'duration' => 115,
+#                   'starttime' => 0,
+#                   'note' => 60,
+#                   'velocity' => 96
+#('note_off', dtime, channel, note, velocity)
+#('note_on', dtime, channel, note, velocity)
+
+=cut
+
+sub from_alsaevent {
+    my ($class,$type, $flags, $tag, $queue, $time, $source, $destination, $data, $opts) =@_;
+    #@source = ( $src_client,  $src_port )
+    # @destination = ( $dest_client,  $dest_port )
+    # @data = ( varies depending on type )
+    # score
+    if (   $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEON }
+        || $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEOFF} ) {
+        my $self = $class->new({starttime => $opts->{starttime}, duration=>$opts->{duration},
+        note=>$data->[1],velocity=>$data->[2]});
+        return $self;
+    }
+    return;
+}
+
 
 sub to_string {
 	my $self = shift;

@@ -7,7 +7,7 @@ use Mojo::IOLoop::Stream;
 use Mojo::Util 'dumper';
 use Mojo::Loader 'data_section';
 use MIDI::ALSA(':CONSTS');
-
+use Time::HiRes;
 =head1 NAME
 
 =head1 DESCRIPTION
@@ -31,6 +31,7 @@ has alsa_stream => sub {
     warn $r->error if $r->error;
     return $r
 };
+has tune_starttime => 0;
 has alsa_loop  => sub { my $self=shift;Mojo::IOLoop::Stream->new($self->alsa_stream)->timeout(0) };
 has stdin_loop => sub { Mojo::IOLoop::Stream->new(\*STDIN)->timeout(0) };
 has tune => sub {Model::Tune->new};
@@ -61,16 +62,19 @@ sub main {
 sub alsa_read {
     my ($self, $stream, $bytes) = @_;
     say "hey".MIDI::ALSA::inputpending();
-    my $now_fractions = Time::HiRes::time;
-#    while (MIDI::ALSA::inputpending()) {
-	    my @alsaevent = MIDI::ALSA::input();
-	    print "Alsa event: " . dumper(\@alsaevent);
-	    my $event;
-        #@$event = MIDI::ALSA::alsa2scoreevent( @alsaevent );
-        my $note = $self->tune->alsaevent2note();
+    my $on_time = Time::HiRes::time;
+    my @alsaevent = MIDI::ALSA::input();
+    my $off_time = Time::HiRes::time;
+    print "Alsa event: " . dumper(\@alsaevent);
+    $self->starttime($on_time) if ! $self->starttime;
+    my $event;
+    #@$event = MIDI::ALSA::alsa2scoreevent( @alsaevent );
+    my $note = Model::Note->from_alsaevent(@alsaevent,
+    {starttime=>(Time::HiRes::time - $on_time), duration=>{$off_time - $on_time}});
+    if (defined $note) {
         push @{ $self->tune->notes }, $note;
-	    print $note->to_string;
-#	}
+        print $note->to_string;
+    }
 }
 
 # Stop existing tune
@@ -78,12 +82,13 @@ sub alsa_read {
 # print
 sub stdin_read {
     my ($self, $stream, $bytes) = @_;
-    my $tune = Model::Tune->from_midi_events($self->midi_events,{});
     say "Got input!";
     $tune->calc_shortest_note;
     $tune->score2notes;
     print $tune->to_string;
 	$self->midi_events([]); # clear history
+    $self->starttime(undef);
+
 }
 
 sub myalsa2event {
