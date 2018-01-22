@@ -60,10 +60,11 @@ sub from_alsaevent {
     # score
     if (   $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEON }
         || $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEOFF} ) {
-        my $self = $class->new({starttime => $opts->{starttime}, duration=>$opts->{duration},
-        note=>$data->[1],velocity=>$data->[2]});
+        my $self = $class->new(starttime => $opts->{starttime}, duration=>$opts->{duration},
+        note=>$data->[1],velocity=>$data->[2]);
         return $self;
     }
+    warn "type = $type";
     return;
 }
 

@@ -66,7 +66,7 @@ sub alsa_read {
     my @alsaevent = MIDI::ALSA::input();
     my $off_time = Time::HiRes::time;
     print "Alsa event: " . dumper(\@alsaevent);
-    $self->starttime($on_time) if ! $self->starttime;
+    $self->tune_starttime($on_time) if ! $self->tune_starttime;
     my $event;
     #@$event = MIDI::ALSA::alsa2scoreevent( @alsaevent );
     my $note = Model::Note->from_alsaevent(@alsaevent,
@@ -87,7 +87,7 @@ sub stdin_read {
     $self->tune->score2notes;
     print $self->tune->to_string;
 	$self->midi_events([]); # clear history
-    $self->starttime(undef);
+    $self->tune_starttime(undef);
 
 }
 
