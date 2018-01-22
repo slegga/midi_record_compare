@@ -20,6 +20,8 @@ MidiRecordCompare
 
 app startup
 
+sudo apt-get install libasound2-dev
+
 =cut
 
 sub startup {

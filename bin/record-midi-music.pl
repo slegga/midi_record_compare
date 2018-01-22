@@ -83,9 +83,9 @@ sub alsa_read {
 sub stdin_read {
     my ($self, $stream, $bytes) = @_;
     say "Got input!";
-    $tune->calc_shortest_note;
-    $tune->score2notes;
-    print $tune->to_string;
+    $self->tune->calc_shortest_note;
+    $self->tune->score2notes;
+    print $self->tune->to_string;
 	$self->midi_events([]); # clear history
     $self->starttime(undef);
 
