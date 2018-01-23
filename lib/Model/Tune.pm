@@ -15,7 +15,7 @@ has length => 0;
 has shortest_note_time => 0;
 has denominator => 4;
 has beat_interval =>100000000;
-has 'notes';
+has 'notes' =>sub {return []};
 has midi_file  => '';
 has note_file  => '';
 

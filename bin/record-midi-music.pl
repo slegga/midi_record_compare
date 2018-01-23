@@ -70,7 +70,7 @@ sub alsa_read {
     my $event;
     #@$event = MIDI::ALSA::alsa2scoreevent( @alsaevent );
     my $note = Model::Note->from_alsaevent(@alsaevent,
-    {starttime=>(Time::HiRes::time - $on_time), duration=>{$off_time - $on_time}});
+    {starttime=>(Time::HiRes::time - $on_time), duration=>($off_time - $on_time)});
     if (defined $note) {
         push @{ $self->tune->notes }, $note;
         print $note->to_string;

@@ -25,6 +25,7 @@ has length_numerator => 0;
 #note help
 has delta_place_numerator => 0;
 has length_name => '';
+#has tickpersec =>96;
 
 use overload
     '""' => sub { shift->to_string({end=>"\n"}) }, fallback => 1;
@@ -60,7 +61,7 @@ sub from_alsaevent {
     # score
     if (   $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEON }
         || $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEOFF} ) {
-        my $self = $class->new(starttime => $opts->{starttime}, duration=>$opts->{duration},
+        my $self = $class->new(starttime => int($opts->{starttime} * 96), duration=>int($opts->{duration} *96),
         note=>$data->[1],velocity=>$data->[2]);
         return $self;
     }
