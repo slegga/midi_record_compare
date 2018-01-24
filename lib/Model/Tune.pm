@@ -587,6 +587,7 @@ sub _calc_time_diff {
 sub _calc_length {
     my $self=shift;
     my $input=shift;
+    die "Calculate shortest_note_time before calling _calc_length" if ! $self->shortest_note_time;
     my $numerator;
     if (exists $input->{'time'} ) {
       my $time = $input->{'time'};

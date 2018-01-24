@@ -35,7 +35,7 @@ has tune_starttime => 0;
 has alsa_loop  => sub { my $self=shift;Mojo::IOLoop::Stream->new($self->alsa_stream)->timeout(0) };
 has stdin_loop => sub { Mojo::IOLoop::Stream->new(\*STDIN)->timeout(0) };
 has tune => sub {Model::Tune->new};
-has midi_events => sub {[]};
+has midi_score => sub {[]};
 
 __PACKAGE__->new->main;
 
@@ -67,8 +67,6 @@ sub alsa_read {
     my $off_time = Time::HiRes::time;
     print "Alsa event: " . dumper(\@alsaevent);
     $self->tune_starttime($on_time) if ! $self->tune_starttime;
-    my $event;
-    #@$event = MIDI::ALSA::alsa2scoreevent( @alsaevent );
     my $note = Model::Note->from_alsaevent(@alsaevent,
     {starttime=>(Time::HiRes::time - $on_time), duration=>($off_time - $on_time)});
     if (defined $note) {
@@ -83,19 +81,20 @@ sub alsa_read {
 sub stdin_read {
     my ($self, $stream, $bytes) = @_;
     say "Got input!";
+    $self->tune->from_midi_score($self->score);
     $self->tune->calc_shortest_note;
     $self->tune->score2notes;
     print $self->tune->to_string;
-	$self->midi_events([]); # clear history
+	$self->midi_score([]); # clear history
     $self->tune_starttime(undef);
 
 }
 
-sub myalsa2event {
+sub myalsa2score {
     my $asla_event = shift;
-    my $events;
-
-    return $events;
+    my $score;
+	...;
+    return $score;
 }
 
 __END__
