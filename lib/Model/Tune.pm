@@ -279,18 +279,20 @@ sub evaluate_with_blueprint {
 	return $self;
 }
 
+
 =head2 from_midi_events
+
+TODO: endre fra form_midi_events til from_midi_score
 
 Take an array_ref of (MIDI) events and return a new Model::Tune object
 
 =cut
 
-sub from_midi_events {
+sub from_midi_score {
     my $class = shift;
-    my $events = shift;
+    my $score = shift;
     my $options =shift;
-    die '\$vents must be a array ref' if ! ref $events eq 'ARRAY' ;
-    my $score = MIDI::Score::events_r_to_score_r( $events );
+    die '\$score must be a array ref' if ! ref $score eq 'ARRAY' ;
     my $tune_start;
     my@notes;
     for my $sp(@$score) {#0=type,note,dtime,0,volumne
@@ -319,6 +321,8 @@ sub from_midi_events {
 
 }
 
+
+
 =head2 from_midi_file
 
 Take midifilename read it. Create a new Model::Tune object. Populate notes
@@ -340,7 +344,8 @@ sub from_midi_file {
     # print $self->file . " has ", scalar( @tracks ). " tracks\n";
     my $data = $tracks[0]->data;
     $events = MIDI::Event::decode( \$data );
-    return $class->from_midi_events($events, {midi_file => $midi_filename});
+    my $score = MIDI::Score::events_r_to_score_r( $events );
+    return $class->from_midi_score($score, {midi_file => $midi_filename});
 
 }
 
