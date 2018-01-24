@@ -30,14 +30,11 @@ has length_name => '';
 use overload
     '""' => sub { shift->to_string({end=>"\n"}) }, fallback => 1;
 
+# TODO Flytt from_alsaevent ut i egen modul og endre navn til alsaevent2score
+# returnerer en note i score format til bruk i Model::Tune->from_score
+
 =head1 METHOD
 
-=head2 to_string
-
-Print a line representing a note. delta_place_numerator,length_numerator,note.
-Additional comment is startbeat-length_name
-
-=cut
 
 =head2 from_alsaevent
 
@@ -69,6 +66,12 @@ sub from_alsaevent {
     return;
 }
 
+=head2 to_string
+
+Print a line representing a note. delta_place_numerator,length_numerator,note.
+Additional comment is startbeat-length_name
+
+=cut
 
 sub to_string {
 	my $self = shift;

@@ -52,12 +52,12 @@ Guess the shorest note. If shorter than 96 it is a 1/8 else 1/4.
 sub calc_shortest_note {
 	my $self =shift;
 	my $numnotes = $self->notes;
-    if(! @$numnotes) {
-        return $self;
+    if(! @$numnotes || @$numnotes == 1) {
+    	die "Zero or one note is not a tune";
     }
-
-    my $max_try = max grep{$_&& $_>=30} map{ $_->{delta_time} } @$numnotes;
-    my $min_try = min grep{$_&& $_>=10} map{ $_->{delta_time} } @$numnotes;
+	my ($min_try,$max_try)=(0,200);
+    $max_try = max grep{$_ && $_>=30} map{ $_->{delta_time} } @$numnotes;
+    $min_try = min grep{$_ && $_>=10} map{ $_->{delta_time} } @$numnotes;
     my $try = int(($min_try+$max_try) / 2);
 	my $best = {period=>1000, value=>10000000};
 
@@ -280,11 +280,10 @@ sub evaluate_with_blueprint {
 }
 
 
-=head2 from_midi_events
+=head2 from_midi_score
 
-TODO: endre fra form_midi_events til from_midi_score
 
-Take an array_ref of (MIDI) events and return a new Model::Tune object
+Take an array_ref of (MIDI) score and return a new Model::Tune object
 
 =cut
 
@@ -336,14 +335,11 @@ sub from_midi_file {
     my $midi_filename = shift;
     die "\$midi_filename is not defined" if ! defined $midi_filename;
     die "The file $midi_filename does not exists." if ! -e $midi_filename;
-    my $events;
-    my $score;
-    my @notes;
     my $opus = MIDI::Opus->new({ 'from_file' => $midi_filename, 'no_parse' => 1 });#
     my @tracks = $opus->tracks;
     # print $self->file . " has ", scalar( @tracks ). " tracks\n";
     my $data = $tracks[0]->data;
-    $events = MIDI::Event::decode( \$data );
+    my $events = MIDI::Event::decode( \$data );
     my $score = MIDI::Score::events_r_to_score_r( $events );
     return $class->from_midi_score($score, {midi_file => $midi_filename});
 

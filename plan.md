@@ -1,5 +1,6 @@
 PLAN
 ====
+* flytt Model::Note->from_alsaevent ut til f.eks Model::Util og endre til å returnere MIDI::Score note
 * od -A x -t x1z -v midi/T6ng-000.MID
 * * 90 = note_on, se MIDI/Event
 * script Enkel avspiller timidity for notes filer
