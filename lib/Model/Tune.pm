@@ -53,7 +53,8 @@ sub calc_shortest_note {
 	my $self =shift;
 	my $numnotes = $self->notes;
     if(! @$numnotes || @$numnotes == 1) {
-    	die "Zero or one note is not a tune";
+        warn Dumper \@$numnotes;
+    	die "Zero or one note is not a tune.";
     }
 	my ($min_try,$max_try)=(0,200);
     $max_try = max grep{$_ && $_>=30} map{ $_->{delta_time} } @$numnotes;
@@ -76,13 +77,13 @@ sub calc_shortest_note {
 	$self->beat_interval($best->{'value'} * $best->{'period'});
 	printf "# d:%s - nn:%s - dv:%2.2f - p:%d\n",$self->beat_interval, $numnotes, $best->{value} / $numnotes, $best->{'period'};
     my $tmp = ($best->{value} / $numnotes);
-    warn $tmp;
+#    warn $tmp;
     $tmp *=100;
-    warn $tmp;
+#    warn $tmp;
     $tmp=25 - $tmp;
-    warn $tmp;
+#    warn $tmp;
     $tmp=$tmp*4;
-    warn $tmp;
+#    warn $tmp;
     $self->beat_score( int ((25 -(100 * ($best->{value} / $numnotes)))*4 ));
 
 	$self->shortest_note_time($best->{'period'});
@@ -301,21 +302,23 @@ sub from_midi_score {
         , duration => $sp->[2], note =>$sp->[4], velocity =>$sp->[5]);
 
     }
-        warn Dumper \@notes;
+        # warn Dumper \@notes;
     @notes = sort { $a->{'starttime'} <=> $b->{'starttime'} }  @notes;
 
     my $self = $class->new(%$options);
 
-    $self->notes(\@notes);
     my $pre_time;
     for my $note (@notes) {
         if (! defined $pre_time) {
             $pre_time = $note->starttime;
-            next;
+            $note->delta_time(0);
+        } else {
+            $note->delta_time($note->starttime - $pre_time);
+            $pre_time = $note->starttime;
         }
-        $note->delta_time($note->starttime - $pre_time);
-        $pre_time = $note->starttime;
+        push @{$self->notes}, $note;
     }
+    warn Dumper $self->notes;
     return $self;
 
 }

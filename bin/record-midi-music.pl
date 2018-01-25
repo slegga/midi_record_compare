@@ -7,7 +7,11 @@ use Mojo::IOLoop::Stream;
 use Mojo::Util 'dumper';
 use Mojo::Loader 'data_section';
 use MIDI::ALSA(':CONSTS');
+use Model::Utils;
 use Time::HiRes;
+use Mojo::JSON qw(encode_json);
+
+
 =head1 NAME
 
 =head1 DESCRIPTION
@@ -67,11 +71,11 @@ sub alsa_read {
     my $off_time = Time::HiRes::time;
     print "Alsa event: " . dumper(\@alsaevent);
     $self->tune_starttime($on_time) if ! $self->tune_starttime;
-    my $note = Model::Note->from_alsaevent(@alsaevent,
+    my $score_n = Model::Utils::alsaevent2scorenote(@alsaevent,
     {starttime=>(Time::HiRes::time - $on_time), duration=>($off_time - $on_time)});
-    if (defined $note) {
-        push @{ $self->tune->notes }, $note;
-        print $note->to_string;
+    if (defined $score_n) {
+        push @{ $self->midi_score }, $score_n;
+        say encode_json($score_n);
     }
 }
 
@@ -81,7 +85,7 @@ sub alsa_read {
 sub stdin_read {
     my ($self, $stream, $bytes) = @_;
     say "Got input!";
-    $self->tune->from_midi_score($self->score);
+    $self->tune = Model::Tune->from_midi_score($self->score);
     $self->tune->calc_shortest_note;
     $self->tune->score2notes;
     print $self->tune->to_string;
@@ -89,37 +93,3 @@ sub stdin_read {
     $self->tune_starttime(undef);
 
 }
-
-sub myalsa2score {
-    my $asla_event = shift;
-    my $score;
-	...;
-    return $score;
-}
-
-__END__
-use MIDI;
-use strict;
-use warnings;
-my @events = (
-  ['text_event',0, 'MORE COWBELL'],
-  ['set_tempo', 0, 450_000], # 1qn = .45 seconds
-);
-
-for (1 .. 20) {
-  push @events,
-    ['note_on' , 90,  9, 56, 127],
-    ['note_off',  6,  9, 56, 127],
-  ;
-}
-foreach my $delay (reverse(1..96)) {
-  push @events,
-    ['note_on' ,      0,  9, 56, 127],
-    ['note_off', $delay,  9, 56, 127],
-  ;
-}
-
-my $cowbell_track = MIDI::Track->new({ 'events' => \@events });
-my $opus = MIDI::Opus->new(
- { 'format' => 0, 'ticks' => 96, 'tracks' => [ $cowbell_track ] } );
-$opus->write_to_file( 'cowbell.mid' );
