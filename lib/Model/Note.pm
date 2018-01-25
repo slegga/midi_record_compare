@@ -36,35 +36,6 @@ use overload
 =head1 METHOD
 
 
-=head2 from_alsaevent
-
-Read input from the MIDI::ALSA::input method. With HiRes tune_start,on and off
-Return note.
-
-#                   'duration' => 115,
-#                   'starttime' => 0,
-#                   'note' => 60,
-#                   'velocity' => 96
-#('note_off', dtime, channel, note, velocity)
-#('note_on', dtime, channel, note, velocity)
-
-=cut
-
-sub from_alsaevent {
-    my ($class,$type, $flags, $tag, $queue, $time, $source, $destination, $data, $opts) =@_;
-    #@source = ( $src_client,  $src_port )
-    # @destination = ( $dest_client,  $dest_port )
-    # @data = ( varies depending on type )
-    # score
-    if (   $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEON }
-        || $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEOFF} ) {
-        my $self = $class->new(starttime => int($opts->{starttime} * 96), duration=>int($opts->{duration} *96),
-        note=>$data->[1],velocity=>$data->[2]);
-        return $self;
-    }
-    warn "type = $type";
-    return;
-}
 
 =head2 to_string
 
