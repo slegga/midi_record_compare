@@ -69,10 +69,10 @@ sub alsa_read {
     my $on_time = Time::HiRes::time;
     my @alsaevent = MIDI::ALSA::input();
     my $off_time = Time::HiRes::time;
-    print "Alsa event: " . dumper(\@alsaevent);
+    push @alsaevent,{starttime=>(Time::HiRes::time - $on_time), duration=>($off_time - $on_time)};
+    printf "Alsa event: %s\n", encode_json(\@alsaevent);
     $self->tune_starttime($on_time) if ! $self->tune_starttime;
-    my $score_n = Model::Utils::alsaevent2scorenote(@alsaevent,
-    {starttime=>(Time::HiRes::time - $on_time), duration=>($off_time - $on_time)});
+    my $score_n = Model::Utils::alsaevent2scorenote(@alsaevent);
     if (defined $score_n) {
         push @{ $self->midi_score }, $score_n;
         say encode_json($score_n);
@@ -85,7 +85,7 @@ sub alsa_read {
 sub stdin_read {
     my ($self, $stream, $bytes) = @_;
     say "Got input!";
-    $self->tune = Model::Tune->from_midi_score($self->score);
+    $self->tune = Model::Tune->from_midi_score($self->midi_score);
     $self->tune->calc_shortest_note;
     $self->tune->score2notes;
     print $self->tune->to_string;
