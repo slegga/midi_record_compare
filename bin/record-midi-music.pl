@@ -85,7 +85,7 @@ sub alsa_read {
 sub stdin_read {
     my ($self, $stream, $bytes) = @_;
     say "Got input!";
-    $self->tune = Model::Tune->from_midi_score($self->midi_score);
+    $self->tune(Model::Tune->from_midi_score($self->midi_score));
     $self->tune->calc_shortest_note;
     $self->tune->score2notes;
     print $self->tune->to_string;
