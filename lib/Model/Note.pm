@@ -35,7 +35,39 @@ use overload
 
 =head1 METHOD
 
+=head2 from_score {
 
+Take an score-note as an array_ref.
+
+Do calculate notes values (see Model::Tune::notes2score)
+Return a new Model::Note object.
+
+=cut
+
+sub from_score {
+    my $class = shift;
+    my $score = shift;
+    my $options = shift;
+    if ($score->[0] ne 'note') {
+        warn Dumper $score;
+        return;
+    }
+    my $self =  $class->new(starttime => $score->[1] - $options->{tune_starttime}
+    , duration => $score->[2], note =>$score->[4], velocity =>$score->[5]);
+    my ($length_name, $length_numerator) =
+        $self->_calc_length( { time => $self->duration } );
+    $self->length_name($length_name);
+    $self->length_numerator($length_numerator);
+    #step up beat
+    my $numerator = int( 1/2 + $self->delta_time / $self->shortest_note_time );
+    my $startbeat = Model::Beat->new(denominator=>$options->denominator);
+    $startbeat = $startbeat + $numerator;
+    $self->startbeat($startbeat->clone);
+    say Dumper $self;
+    my $delta = $startbeat - $options->{prev_startbeat};
+    $self->delta_place_numerator($delta->to_int);
+    return $self;
+}
 
 =head2 to_string
 

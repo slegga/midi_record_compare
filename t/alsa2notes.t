@@ -38,4 +38,5 @@ $tune->calc_shortest_note;
 warn "finish calc_shortest_note";
 $tune->score2notes;
 is($tune->notes->[1]->to_string, "1;1;D6        # 0.1-1/8", 'Expected');
+is(Model::Note->from_score($score[1])->to_string, 'x','Not working yet');
 done_testing;

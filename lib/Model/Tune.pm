@@ -435,7 +435,7 @@ sub notes2score {
 =head2 score2notes
 
 
-Enrich notes with: point in time, length, sound
+Enrich notes with: point in startbeat,delta_place_numerator, length_numerator,length_name, sound
 
 Prepare output at notefile.
 i.e

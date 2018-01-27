@@ -1,16 +1,17 @@
 #!/usr/bin/env perl
 use Mojo::Base '-base';
-use Model::Tune;
 use Mojo::Asset::File;
 use Mojo::IOLoop;
 use Mojo::IOLoop::Stream;
 use Mojo::Util 'dumper';
 use Mojo::Loader 'data_section';
 use MIDI::ALSA(':CONSTS');
-use Model::Utils;
 use Time::HiRes;
 use Mojo::JSON qw(encode_json);
-
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+use Model::Utils;
+use Model::Tune;
 
 =head1 NAME
 
@@ -36,6 +37,7 @@ has alsa_stream => sub {
     return $r
 };
 has tune_starttime => 0;
+has denominator =>0;
 has alsa_loop  => sub { my $self=shift;Mojo::IOLoop::Stream->new($self->alsa_stream)->timeout(0) };
 has stdin_loop => sub { Mojo::IOLoop::Stream->new(\*STDIN)->timeout(0) };
 has tune => sub {Model::Tune->new};
@@ -69,13 +71,17 @@ sub alsa_read {
     my $on_time = Time::HiRes::time;
     my @alsaevent = MIDI::ALSA::input();
     my $off_time = Time::HiRes::time;
-    push @alsaevent,{starttime=>(Time::HiRes::time - $on_time), duration=>($off_time - $on_time)};
+    $self->tune_starttime($on_time) if ! $self->tune_starttime();
+    push @alsaevent,{starttime=>($on_time - $self->tune_starttime()), duration=>($off_time - $on_time)};
     printf "Alsa event: %s\n", encode_json(\@alsaevent);
-    $self->tune_starttime($on_time) if ! $self->tune_starttime;
     my $score_n = Model::Utils::alsaevent2scorenote(@alsaevent);
     if (defined $score_n) {
         push @{ $self->midi_score }, $score_n;
-        say encode_json($score_n);
+        say Model::Note->from_score($score_n
+        , {shortest_note_time=>($self->shortest_note_time || 48 )
+            , denominator=>($self->denominator||8)
+            , tune_starttime=>$self->tune_starttime
+        })->to_string;
     }
 }
 
