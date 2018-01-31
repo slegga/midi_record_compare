@@ -35,4 +35,40 @@ sub alsaevent2scorenote {
     warn "type = $type";
     return [$type, $flags, $tag, $queue, $time, $data, $opts ];
 }
+
+=head2 calc_length
+
+Takes hash_ref (time=>100,numerator=4),
+and options {shortest_note_time=>..., denominator=>...}
+Return (length_name,numerator) i.e. ('1/4',2)
+
+=cut
+
+sub calc_length {
+    my $input=shift;
+    my $options = shift; #{shortest_note_time=>...,denominator=>...}
+    die "Calculate shortest_note_time before calling _calc_length" if ! $options->{shortest_note_time};
+    die "Calculate denominator before calling _calc_length" if ! $options->{denominator};
+    my $numerator;
+    if (exists $input->{'time'} ) {
+      my $time = $input->{'time'};
+       $numerator = int($time / $options->{shortest_note_time} + 6/10);
+    } elsif(exists $input->{'numerator'}) {
+      $numerator= $input->{'numerator'};
+    } else {
+      die 'Expect hash ref one key = (time|numerator)'
+    }
+     my $p = $numerator;
+     my $s = $options->{denominator};
+     if ($s % 3 == 0) {
+        $s=4 * $s / 3
+     }
+     while ($p %2 == 0 && $s % 2 == 0) {
+         $p = $p /2;
+         $s = $s /2;
+     }
+     return (sprintf("%d/%d",$p,$s), $numerator);
+
+}
+
 1;

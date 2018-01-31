@@ -3,6 +3,7 @@ use Mojo::Base -base;
 use Mojo::File 'path';
 use Model::Note;
 use Model::Beat;
+use Model::Utils;
 use Data::Dumper;
 use Carp;
 use List::Util qw/min max/;
@@ -122,7 +123,8 @@ sub clean {
             }
             if ( $note->length_numerator == $t ) {
               $note->length_numerator($note->length_numerator+1);
-              my ($ln,undef) = $self->_calc_length({numerator => $note->length_numerator});
+              my ($ln,undef) = Model::Utils::calc_length({numerator => $note->length_numerator}
+              ,,{shortest_note_time=>$self->shortest_note_time, denominator=>$self->denominator});
               $note->length_name($ln);
             }
           }
@@ -379,7 +381,8 @@ sub from_note_file {
       } else {
           my ($delta_place_numerator, $length_numerator, $note_name) = split(/\;/,$line);
           $beat = $beat + $delta_place_numerator;
-          my ($ln,undef) = $self->_calc_length({numerator =>$length_numerator});
+          my ($ln,undef) = Model::Utils::calc_length({numerator =>$length_numerator}
+            ,{shortest_note_time=>$self->shortest_note_time, denominator=>$self->denominator});
           push(@notes,Model::Note->new(delta_place_numerator => $delta_place_numerator,
           length_numerator => $length_numerator,
           length_name => $ln,
@@ -453,7 +456,8 @@ sub score2notes {
     my @notes = @$notes;
     my $startbeat = Model::Beat->new(denominator=>$self->denominator);
     for my $note(@notes) {
-        my ($length_name, $length_numerator) = $self->_calc_length( { time => $note->duration } );
+        my ($length_name, $length_numerator) = Model::Utils::calc_length( { time => $note->duration }
+            ,{shortest_note_time=>$self->shortest_note_time, denominator=>$self->denominator} );
         $note->length_name($length_name);
         $note->length_numerator($length_numerator);
         #step up beat
@@ -584,34 +588,5 @@ sub _calc_time_diff {
 	return $return;
 }
 
-# name _calc_length
-# takes hash_ref (time=>100,numerator=4)
-# Return (length_name,numerator) i.e. ('1/4',2)
-
-sub _calc_length {
-    my $self=shift;
-    my $input=shift;
-    die "Calculate shortest_note_time before calling _calc_length" if ! $self->shortest_note_time;
-    my $numerator;
-    if (exists $input->{'time'} ) {
-      my $time = $input->{'time'};
-       $numerator = int($time / $self->shortest_note_time + 6/10);
-    } elsif(exists $input->{'numerator'}) {
-      $numerator= $input->{'numerator'};
-    } else {
-      die 'Expect hash ref one key = (time|numerator)'
-    }
-     my $p = $numerator;
-     my $s = $self->denominator;
-     if ($s % 3 == 0) {
-        $s=4 * $s / 3
-     }
-     while ($p %2 == 0 && $s % 2 == 0) {
-         $p = $p /2;
-         $s = $s /2;
-     }
-     return (sprintf("%d/%d",$p,$s), $numerator);
-
-}
 
 1;

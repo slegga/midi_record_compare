@@ -23,12 +23,12 @@ my @alsaevents = ([
 ]);
 my $res = Model::Utils::alsaevent2scorenote(@{$alsaevents[0]});
 #warn "0event: ".Dumper $alsaevents[0];
-warn Dumper $res;
+# warn Dumper $res;
 my @score=();
 is(encode_json($res), '["note",115,171,0,72,71]');
 push @score, $res;
 push @score, Model::Utils::alsaevent2scorenote(@{$alsaevents[1]});
-warn Dumper @score;
+# warn Dumper @score;
 my $tune = Model::Tune->from_midi_score(\@score);
 $tune->calc_shortest_note;
 $tune->score2notes;
@@ -38,5 +38,7 @@ $tune->calc_shortest_note;
 warn "finish calc_shortest_note";
 $tune->score2notes;
 is($tune->notes->[1]->to_string, "1;1;D6        # 0.1-1/8", 'Expected');
-is(Model::Note->from_score($score[1])->to_string, 'x','Not working yet');
+is(Model::Note->from_score($score[1],{tune_starttime=>$alsaevents[0][8]->{starttime}
+,shortest_note_time=>$alsaevents[0][8]->{starttime}, denominator=>4}
+    )->to_string, '0;63;D6       # 0.0-63/4','Not working yet');
 done_testing;

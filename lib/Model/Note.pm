@@ -38,6 +38,7 @@ use overload
 =head2 from_score {
 
 Take an score-note as an array_ref.
+options {shortest_note_time=>..., denominator}
 
 Do calculate notes values (see Model::Tune::notes2score)
 Return a new Model::Note object.
@@ -52,19 +53,21 @@ sub from_score {
         warn Dumper $score;
         return;
     }
+    die "Need tune_starttime" if ! $options->{tune_starttime};
+    my $prev_startbeat = $options->{prev_startbeat} || 0;
     my $self =  $class->new(starttime => $score->[1] - $options->{tune_starttime}
     , duration => $score->[2], note =>$score->[4], velocity =>$score->[5]);
     my ($length_name, $length_numerator) =
-        $self->_calc_length( { time => $self->duration } );
+        Model::Utils::calc_length( { time => $self->duration }, $options );
     $self->length_name($length_name);
     $self->length_numerator($length_numerator);
     #step up beat
-    my $numerator = int( 1/2 + $self->delta_time / $self->shortest_note_time );
-    my $startbeat = Model::Beat->new(denominator=>$options->denominator);
+    my $numerator = int( 1/2 + $self->delta_time / $options->{shortest_note_time} );
+    my $startbeat = Model::Beat->new(denominator=>$options->{denominator});
     $startbeat = $startbeat + $numerator;
     $self->startbeat($startbeat->clone);
     say Dumper $self;
-    my $delta = $startbeat - $options->{prev_startbeat};
+    my $delta = $startbeat - $prev_startbeat;
     $self->delta_place_numerator($delta->to_int);
     return $self;
 }
