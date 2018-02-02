@@ -66,7 +66,7 @@ sub from_score {
     my $startbeat = Model::Beat->new(denominator=>$options->{denominator});
     $startbeat = $startbeat + $numerator;
     $self->startbeat($startbeat->clone);
-    say Dumper $self;
+#    say Dumper $self;
     my $delta = $startbeat - $prev_startbeat;
     $self->delta_place_numerator($delta->to_int);
     return $self;

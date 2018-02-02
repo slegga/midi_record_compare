@@ -37,11 +37,12 @@ has alsa_stream => sub {
     return $r
 };
 has tune_starttime => 0;
-has denominator =>0;
+has denominator =>8;
 has alsa_loop  => sub { my $self=shift;Mojo::IOLoop::Stream->new($self->alsa_stream)->timeout(0) };
 has stdin_loop => sub { Mojo::IOLoop::Stream->new(\*STDIN)->timeout(0) };
 has tune => sub {Model::Tune->new};
 has midi_score => sub {[]};
+has shortest_note_time => 24;
 
 __PACKAGE__->new->main;
 
@@ -95,6 +96,8 @@ sub stdin_read {
     $self->tune->calc_shortest_note;
     $self->tune->score2notes;
     print $self->tune->to_string;
+    $self->shortest_note_time($self->tune->shortest_note_time);
+    $self->denominator($self->tune->denominator);
 	$self->midi_score([]); # clear history
     $self->tune_starttime(undef);
 
