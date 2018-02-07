@@ -365,6 +365,9 @@ sub from_note_file {
     die "note_file is not set" if ! $self->note_file;
     die "Cant be midi file" if $self->note_file =~/.midi?$/i;
     my $path = path( $self->note_file );
+    if (!-e $path) {
+        warn "Unknown file ".$path->to_abs;
+    }
 
     # remove old comments
     my $content = $path->slurp;

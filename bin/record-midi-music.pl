@@ -7,6 +7,7 @@ use Mojo::Loader 'data_section';
 use MIDI::ALSA(':CONSTS');
 use Time::HiRes;
 use Mojo::JSON qw(encode_json);
+use Mojo::File 'tempfile';
 use FindBin;
 use lib "$FindBin::Bin/../../utillities-perl/lib";
 use lib "$FindBin::Bin/../lib";
@@ -24,9 +25,9 @@ Read midi signal from a USB-cable.
 
 =head1 INSTALL GUIDE
 
-sudo apt install libasound2-dev
-
-cpanm MIDI::ALSA
+ sudo apt install libasound2-dev
+ sudo apt-get install timidity timidity-interfaces-extra
+ cpanm MIDI::ALSA
 
 =head1 USAGE
 
@@ -50,11 +51,12 @@ has alsa_loop  => sub { my $self=shift;Mojo::IOLoop::Stream->new($self->alsa_str
 has stdin_loop => sub { Mojo::IOLoop::Stream->new(\*STDIN)->timeout(0) };
 has tune => sub {Model::Tune->new};
 has midi_score => sub {[]};
-has shortest_note_time => 24;
+has shortest_note_time => 12
+;
 
 my ( $opts, $usage, $argv ) =
     options_and_usage( $0, \@ARGV, "%c %o",
-    [ 'facit=f', 'Set default facit when compering' ],
+    [ 'facit|f=s', 'Set default facit when compering' ],
 ,{return_uncatched_arguments => 1});
 
 
@@ -82,13 +84,13 @@ sub main {
 # Read note pressed.
 sub alsa_read {
     my ($self, $stream, $bytes) = @_;
-    say "hey".MIDI::ALSA::inputpending();
+    #say "hey".MIDI::ALSA::inputpending();
     my $on_time = Time::HiRes::time;
     my @alsaevent = MIDI::ALSA::input();
     my $off_time = Time::HiRes::time;
     $self->tune_starttime($on_time) if ! $self->tune_starttime();
     push @alsaevent,{starttime=>($on_time - $self->tune_starttime()), duration=>($off_time - $on_time)};
-    printf "Alsa event: %s\n", encode_json(\@alsaevent);
+    #printf "Alsa event: %s\n", encode_json(\@alsaevent);
     my $score_n = Model::Utils::alsaevent2scorenote(@alsaevent);
     if (defined $score_n) {
         push @{ $self->midi_score }, $score_n;
@@ -107,7 +109,7 @@ sub stdin_read {
     my ($self, $stream, $bytes) = @_;
     say "Got input!";
     chomp $bytes;
-    my ($cmd, $name)=split /\s+/;
+    my ($cmd, $name)=split /\s+/, $bytes;
     if (grep { $cmd eq $_ } ('h','help')) {
         $self->print_help();
     } else {
@@ -118,16 +120,17 @@ sub stdin_read {
             print $self->tune->to_string;
             $self->shortest_note_time($self->tune->shortest_note_time);
             $self->denominator($self->tune->denominator);
+            printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
         }
-
-        if (grep { $cmd eq $_ } ('s','save')) {
-            do_save($name);
+        if(!defined $cmd) {
+        } elsif (grep { $cmd eq $_ } ('s','save')) {
+            $self->do_save($name);
         } elsif (grep { $cmd eq $_} ('p','play')) {
-            do_play($name);
+            $self->do_play($name);
         } elsif (grep {$cmd eq $_} ('l','list')) {
-            do_list($name);
+            $self->do_list($name);
         } elsif (grep {$cmd eq $_} ('c','comp')) {
-            do_comp($name);
+            $self->do_comp($name);
         }
         $self->midi_score([]); # clear history
         $self->tune_starttime(undef);
@@ -147,14 +150,14 @@ sub print_help {
 
 sub do_save {
     my ($self, $name) = @_;
-    $self->to_note_file($name);
+    $self->tune->to_note_file($name);
 }
 
 sub do_play {
     my ($self, $name) = @_;
     my $tmpfile = tempfile(DIR=>'/tmp');
     my $tune;
-    if (- e $name) {
+    if (defined $name && -e $name) {
         $tune = Model::Tune->from_note_file($name);
         $tune->notes2score;
     } else {
@@ -171,5 +174,8 @@ sub do_list {
 
 sub do_comp {
     my ($self, $name) = @_;
-    $self->tune->evaluate_with_blueprint($name||$opts->facit);
+    die "Missing self" if !$self;
+    my $tune_play = $self->tune;
+    my $tune_blueprint= Model::Tune->from_note_file($name||$opts->facit);
+    $tune_play->evaluate_with_blueprint($tune_blueprint);
 }
