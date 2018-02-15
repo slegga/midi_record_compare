@@ -49,6 +49,7 @@ sub remove_comments {
 	my $return='';
 	for my $l(split /\n/, $cont) {
 		$l =~ s/\s*\#.*//;
+		next if ! $l;
 		$return .= $l."\n";
 	}
 	return $return;

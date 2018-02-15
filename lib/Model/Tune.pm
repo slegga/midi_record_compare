@@ -168,30 +168,36 @@ sub evaluate_with_blueprint {
 			push @$wrongs, @$area;
 		}
 	}
-	say Dumper $wrongs;
+	say "171\n".Dumper $wrongs;
 	# Calculate a note score
 	my $n = ( abs(scalar @{ $blueprint->notes } - scalar @$wrongs * 4)/(scalar @{ $blueprint->notes }))*100;
 	$self->note_score($n);
 
 	# Calculate a note map
 	my $cdiff = compact_diff(\@played_note_values, \@blueprint_note_values);
-	say Dumper $cdiff;
+	say "178\n".Dumper $cdiff;
 	my %map;
-	for ( my $i = 0;$i < $#{$cdiff}-3; $i += 4) {
+	for ( my $i = 0;$i < $#{$cdiff}-2; $i += 4) {
 #		last if $i >= $#{$cdiff};
-		next if ($cdiff->[$i] == $cdiff->[$i+2]);
+warn "INSIDE";
+		if ($cdiff->[$i] == $cdiff->[$i+2]) {
+            next;
+        }
+        warn sprintf "i:%s  cdiff:%s\n",$i,($cdiff->[$i+2] - $cdiff->[$i] -1);
 		for my $j(0 .. ($cdiff->[$i+2] - $cdiff->[$i] -1)){
 			$map{$cdiff->[$i]+$j} = $cdiff->[$i+1]+$j;
 		}
 
 	}
-#	say Dumper \%map;
+	say "190\n".Dumper \%map;
 	# Calculate note length score
 	my $rln=0;# right length numerator
     my $rdb=0;# right delta beat
 	for my $key(keys %map) {
-		$rln++ if $self->notes->[$key]->length_numerator == $blueprint->notes->[$map{$key}]->length_numerator;
-		$rdb++ if $self->notes->[$key]->delta_place_numerator == $blueprint->notes->[$map{$key}]->delta_place_numerator;
+		$rln++ if $self->notes->[$key]->length_numerator
+            == $blueprint->notes->[$map{$key}]->length_numerator;
+		$rdb++ if $self->notes->[$key]->delta_place_numerator
+            == $blueprint->notes->[$map{$key}]->delta_place_numerator;
 	}
 	$self->length_score(    100*$rln/scalar @{ $blueprint->notes });
 	$self->delta_beat_score(100*$rdb/scalar @{ $blueprint->notes });
@@ -266,8 +272,10 @@ sub evaluate_with_blueprint {
 		}
 		elsif (! defined $n->[1] && defined $n->[2]) {
 			print color('red');
-			printf "%4s %-15s %s\n",$n->[0],''
-						, $blueprint->notes->[$n->[2]]->to_string;
+            if (defined $blueprint->notes->[$n->[2]]) {
+                printf "%4s %-15s %s\n",$n->[0],''
+					, $blueprint->notes->[$n->[2]]->to_string;
+            }
 		}
 		elsif (! defined $n->[2] && defined $n->[1]) {
 			print color('red');
@@ -320,7 +328,7 @@ sub from_midi_score {
         }
         push @{$self->notes}, $note;
     }
-    warn Dumper $self->notes;
+    # warn Dumper $self->notes;
     return $self;
 
 }
