@@ -304,8 +304,11 @@ sub from_midi_score {
     my $options =shift;
     die '\$score must be a array ref' if ! ref $score eq 'ARRAY' ;
     my $tune_start;
+
+    # Order score_notes on starttime
+    my @score_t = sort {$a->[1] <=> $b->[1]} @$score;
     my@notes;
-    for my $sp(@$score) {#0=type,note,dtime,0,volumne
+    for my $sp(@score_t) {#0=type,note,dtime,0,volumne
         next if $sp->[0] ne 'note';
         $tune_start=$sp->[1] if ! defined $tune_start;
         push @notes, Model::Note->new(starttime => $sp->[1] - $tune_start
