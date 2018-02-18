@@ -39,15 +39,15 @@ Type h + [enter]
 has loop  => sub { Mojo::IOLoop->singleton };
 has alsa_port => sub {my $con =`aconnect -i`;
     (map{/(\d+)/} grep {$_=~/client \d+.+\Wmidi/i} grep {$_!~/\sThrough/} split(/\n/, $con))[0]};
-has alsa_stream => sub {
-    my $r = IO::Handle->new;
-    $r->fdopen(MIDI::ALSA::fd(),'r');
-    warn $r->error if $r->error;
-    return $r
-};
+# has alsa_stream => sub {
+#     my $r = IO::Handle->new;
+#     $r->fdopen(MIDI::ALSA::fd(),'r');
+#     warn $r->error if $r->error;
+#     return $r
+# };
 has tune_starttime => 0;
 has denominator =>8;
-has alsa_loop  => sub { my $self=shift;Mojo::IOLoop::Stream->new($self->alsa_stream)->timeout(0) };
+#has alsa_loop  => sub { my $self=shift;Mojo::IOLoop->new($self->alsa_stream)->timeout(0) };
 has stdin_loop => sub { Mojo::IOLoop::Stream->new(\*STDIN)->timeout(0) };
 has tune => sub {Model::Tune->new};
 has midi_score => sub {[]};
@@ -71,13 +71,13 @@ sub main {
     # say dumper $self->alsa_stream;
 
     #  $self->alsa_loop->on( read => sub { $self->alsa_read(@_)  });
-    $self->alsa_loop->recurring(0 => sub {
+    Mojo::IOLoop->recurring(0 => sub {
         my $self = shift;
         $self->emit('alsaread') if MIDI::ALSA::inputpending();
     });
     #  $self->alsa_loop->on( read => sub { $self->alsa_read(@_)  });
-    $self->alsa_loop->on( alsaread => sub { $self->alsa_read(@_)  });
-    $self->alsa_loop->start;
+    Mojo::IOLoop->( alsaread => sub { $self->alsa_read(@_)  });
+    Mojo::IOLoop->start;
     if (1) {
     # $self->loop->start unless $self->loop->is_running;
     $self->stdin_loop->on(read => sub { $self->stdin_read(@_) });
