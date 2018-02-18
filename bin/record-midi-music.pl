@@ -14,6 +14,7 @@ use lib "$FindBin::Bin/../lib";
 use Model::Utils;
 use Model::Tune;
 use SH::Script qw/options_and_usage/;
+#use Carp::Always;
 
 =head1 NAME
 
@@ -39,18 +40,19 @@ Type h + [enter]
 has loop  => sub { Mojo::IOLoop->singleton };
 has alsa_port => sub {my $con =`aconnect -i`;
     (map{/(\d+)/} grep {$_=~/client \d+.+\Wmidi/i} grep {$_!~/\sThrough/} split(/\n/, $con))[0]};
-# has alsa_stream => sub {
-#     my $r = IO::Handle->new;
-#     $r->fdopen(MIDI::ALSA::fd(),'r');
-#     warn $r->error if $r->error;
-#     return $r
-# };
+has alsa_stream => sub {
+     my $r = IO::Handle->new;
+     $r->fdopen(MIDI::ALSA::fd(),'r');
+     warn $r->error if $r->error;
+     return $r
+ };
 has tune_starttime => 0;
 has denominator =>8;
-#has alsa_loop  => sub { my $self=shift;Mojo::IOLoop->new($self->alsa_stream)->timeout(0) };
+has alsa_loop  => sub { Mojo::IOLoop->singleton };
+#sub { my $self=shift;Mojo::IOLoop::Stream->new($self->alsa_stream)->timeout(0) };
 has stdin_loop => sub { Mojo::IOLoop::Stream->new(\*STDIN)->timeout(0) };
 has tune => sub {Model::Tune->new};
-has midi_score => sub {[]};
+has midi_events => sub {[]};
 has shortest_note_time => 12
 ;
 
@@ -68,16 +70,21 @@ sub main {
     say $self->alsa_port;
     MIDI::ALSA::client( 'Perl MIDI::ALSA client', 1, 1, 0 );
     MIDI::ALSA::connectfrom( 0, $self->alsa_port, 0 );  # input port is lower (0)
-    # say dumper $self->alsa_stream;
+    say dumper $self->alsa_stream;
 
-    #  $self->alsa_loop->on( read => sub { $self->alsa_read(@_)  });
-    Mojo::IOLoop->recurring(0 => sub {
-        my $self = shift;
-        $self->emit('alsaread') if MIDI::ALSA::inputpending();
+    #$self->alsa_loop->on( read => sub { $self->alsa_read(@_)  });
+    $self->alsa_loop->recurring(0 => sub {
+        my ($self) = shift;
+        if (MIDI::ALSA::inputpending()) {
+#            say "HAI";
+            $self->emit('alsaread',$self) ;
+        }
     });
-    #  $self->alsa_loop->on( read => sub { $self->alsa_read(@_)  });
-    Mojo::IOLoop->( alsaread => sub { $self->alsa_read(@_)  });
-    Mojo::IOLoop->start;
+    $self->alsa_loop->on( alsaread => sub {
+        $self->alsa_read(@_)
+#    say "Yo";
+});
+    #$self->alsa_loop->start;
     if (1) {
     # $self->loop->start unless $self->loop->is_running;
     $self->stdin_loop->on(read => sub { $self->stdin_read(@_) });
@@ -91,20 +98,20 @@ sub main {
 sub alsa_read {
     my ($self, $stream, $bytes) = @_;
     #say "hey".MIDI::ALSA::inputpending();
-    my $on_time = Time::HiRes::time;
+#    my $on_time = Time::HiRes::time;
     my @alsaevent = MIDI::ALSA::input();
-    my $off_time = Time::HiRes::time;
-    $self->tune_starttime($on_time) if ! $self->tune_starttime();
-    push @alsaevent,{starttime=>($on_time - $self->tune_starttime()), duration=>($off_time - $on_time)};
+#    my $off_time = Time::HiRes::time;
+#    $self->tune_starttime($on_time) if ! $self->tune_starttime();
+#    push @alsaevent,{starttime=>($on_time - $self->tune_starttime()), duration=>($off_time - $on_time)};
     printf "Alsa event: %s\n", encode_json(\@alsaevent);
-    my $score_n = Model::Utils::alsaevent2scorenote(@alsaevent);
-    if (defined $score_n) {
-        push @{ $self->midi_score }, $score_n;
-        say Model::Note->from_score($score_n
-        , {shortest_note_time=>($self->shortest_note_time || 48 )
-            , denominator=>($self->denominator||8)
-            , tune_starttime=>$self->tune_starttime
-        })->to_string;
+    my $event = Model::Utils::alsaevent2midievent(@alsaevent);
+    if (defined $event) {
+        push @{ $self->midi_events }, $event;
+        #say Model::Note->from_score($score_n
+        #, {shortest_note_time=>($self->shortest_note_time || 48 )
+    #        , denominator=>($self->denominator||8)
+    #        , tune_starttime=>$self->tune_starttime
+    #    })->to_string;
     }
 }
 
@@ -120,7 +127,8 @@ sub stdin_read {
         $self->print_help();
     } else {
         if ( @{$self->midi_score} > 8 ) {
-            $self->tune(Model::Tune->from_midi_score($self->midi_score));
+            my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
+            $self->tune(Model::Tune->from_midi_score($score));
             $self->tune->calc_shortest_note;
             $self->tune->score2notes;
             print $self->tune->to_string;

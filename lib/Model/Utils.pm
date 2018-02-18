@@ -13,33 +13,34 @@ our $ALSA_CODE = {      'SND_SEQ_EVENT_SYSTEM'      => 0
 
 Read input from the MIDI::ALSA::input method. With HiRes tune_start,on and off
 Return score as array_ref
-
- (type, starttime, duration, channel, note, velocity)
- ['note', 0, 96, 1, 25, 96],
+('note_on', dtime, channel, note, velocity)
+ ['note_on', 0, 0, 96, 25],
 
 =cut
 
-sub alsaevent2scorenote {
-    my ($type, $flags, $tag, $queue, $time, $source, $destination, $data, $opts) =@_;
+sub alsaevent2midievent {
+    my ($type, $flags, $tag, $queue, $time, $source, $destination, $data) =@_;
     #@source = ( $src_client,  $src_port )
     # @destination = ( $dest_client,  $dest_port )
     # @data = ( varies depending on type )
     # score
+    warn $time;
     if (   $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEON }) {
             #(type, starttime, duration, channel, note, velocity)
-        warn "NOTE ON";
-        my $starttime = int ($opts->{starttime} * 96);
-        my $duration = int($opts->{duration} *96);
-        return ['note', $starttime, $duration, 0, $data->[1], $data->[2]];
+#        warn "NOTE ON";
+        #my $starttime = int ($opts->{starttime} * 96);
+        #my $duration = int($opts->{duration} *96);
+        # ('note_on', dtime, channel, note, velocity)
+        return ['note_on', $time, 0, $data->[1], $data->[2]];
     }
     if ( $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEOFF} ) {
-        warn "NOTE OFF";
-        my $starttime = int ($opts->{starttime} * 96);
-        my $duration = int($opts->{duration} *96);
-        return ['note', $starttime, $duration, 0, $data->[1], $data->[2]];
+#        warn "NOTE OFF";
+#        my $starttime = int ($opts->{starttime} * 96);
+#        my $duration = int($opts->{duration} *96);
+        return ['note_off', $time, 0, $data->[1], $data->[2]];
     }
     warn "type = $type";
-    return [$type, $flags, $tag, $queue, $time, $data, $opts ];
+    return [$type, $time, 0, @$data ];
 }
 
 =head2 calc_length
