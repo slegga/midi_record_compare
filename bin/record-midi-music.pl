@@ -63,21 +63,27 @@ my ( $opts, $usage, $argv ) =
 __PACKAGE__->new->main;
 
 sub main {
-  my $self = shift;
-  die "Did not find the midi input stream! Need port number." if ! defined $self->alsa_port;
-  say $self->alsa_port;
-  MIDI::ALSA::client( 'Perl MIDI::ALSA client', 1, 1, 0 );
-  MIDI::ALSA::connectfrom( 0, $self->alsa_port, 0 );  # input port is lower (0)
-  # say dumper $self->alsa_stream;
+    my $self = shift;
+    die "Did not find the midi input stream! Need port number." if ! defined $self->alsa_port;
+    say $self->alsa_port;
+    MIDI::ALSA::client( 'Perl MIDI::ALSA client', 1, 1, 0 );
+    MIDI::ALSA::connectfrom( 0, $self->alsa_port, 0 );  # input port is lower (0)
+    # say dumper $self->alsa_stream;
 
-  $self->alsa_loop->on( read => sub { $self->alsa_read(@_)  });
-  $self->alsa_loop->start;
-  if (1) {
+    #  $self->alsa_loop->on( read => sub { $self->alsa_read(@_)  });
+    $self->alsa_loop->recurring(0 => sub {
+        my $self = shift;
+        $self->emit('alsaread') if MIDI::ALSA::inputpending();
+    });
+    #  $self->alsa_loop->on( read => sub { $self->alsa_read(@_)  });
+    $self->alsa_loop->on( alsaread => sub { $self->alsa_read(@_)  });
+    $self->alsa_loop->start;
+    if (1) {
     # $self->loop->start unless $self->loop->is_running;
     $self->stdin_loop->on(read => sub { $self->stdin_read(@_) });
     $self->stdin_loop->start;
     }
-  $self->loop->start unless $self->loop->is_running;
+    $self->loop->start unless $self->loop->is_running;
 
 }
 
@@ -90,7 +96,7 @@ sub alsa_read {
     my $off_time = Time::HiRes::time;
     $self->tune_starttime($on_time) if ! $self->tune_starttime();
     push @alsaevent,{starttime=>($on_time - $self->tune_starttime()), duration=>($off_time - $on_time)};
-    #printf "Alsa event: %s\n", encode_json(\@alsaevent);
+    printf "Alsa event: %s\n", encode_json(\@alsaevent);
     my $score_n = Model::Utils::alsaevent2scorenote(@alsaevent);
     if (defined $score_n) {
         push @{ $self->midi_score }, $score_n;

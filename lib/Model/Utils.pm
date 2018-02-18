@@ -25,9 +25,15 @@ sub alsaevent2scorenote {
     # @destination = ( $dest_client,  $dest_port )
     # @data = ( varies depending on type )
     # score
-    if (   $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEON }
-        || $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEOFF} ) {
+    if (   $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEON }) {
             #(type, starttime, duration, channel, note, velocity)
+        warn "NOTE ON";
+        my $starttime = int ($opts->{starttime} * 96);
+        my $duration = int($opts->{duration} *96);
+        return ['note', $starttime, $duration, 0, $data->[1], $data->[2]];
+    }
+    if ( $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEOFF} ) {
+        warn "NOTE OFF";
         my $starttime = int ($opts->{starttime} * 96);
         my $duration = int($opts->{duration} *96);
         return ['note', $starttime, $duration, 0, $data->[1], $data->[2]];
