@@ -9,7 +9,7 @@ our $ALSA_CODE = {      'SND_SEQ_EVENT_SYSTEM'      => 0
                     ,   'SND_SEQ_EVENT_NOTEOFF'     => 7
                     ,   'SND_SEQ_EVENT_CONTROLLER'  =>10   };
 
-=head2 alsaevent2scorenote
+=head2 alsaevent2midievent
 
 Read input from the MIDI::ALSA::input method. With HiRes tune_start,on and off
 Return score as array_ref
@@ -19,28 +19,28 @@ Return score as array_ref
 =cut
 
 sub alsaevent2midievent {
-    my ($type, $flags, $tag, $queue, $time, $source, $destination, $data) =@_;
+    my ($type, $flags, $tag, $queue, $time, $source, $destination, $data, $extra) =@_;
     #@source = ( $src_client,  $src_port )
     # @destination = ( $dest_client,  $dest_port )
     # @data = ( varies depending on type )
     # score
-    warn $time;
+    my $dtime = $extra->{dtime_sec} * 96;
     if (   $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEON }) {
             #(type, starttime, duration, channel, note, velocity)
 #        warn "NOTE ON";
-        #my $starttime = int ($opts->{starttime} * 96);
+#        my $starttime = int ($extra->{starttime} * 96);
         #my $duration = int($opts->{duration} *96);
         # ('note_on', dtime, channel, note, velocity)
-        return ['note_on', $time, 0, $data->[1], $data->[2]];
+        return ['note_on', $dtime, 0, $data->[1], $data->[2]];
     }
     if ( $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEOFF} ) {
 #        warn "NOTE OFF";
-#        my $starttime = int ($opts->{starttime} * 96);
+#        my $starttime = int ($extra->{starttime} * 96);
 #        my $duration = int($opts->{duration} *96);
-        return ['note_off', $time, 0, $data->[1], $data->[2]];
+        return ['note_off', $dtime, 0, $data->[1], $data->[2]];
     }
     warn "type = $type";
-    return [$type, $time, 0, @$data ];
+    return [$type, $dtime, 0, @$data ];
 }
 
 =head2 calc_length
@@ -54,8 +54,8 @@ Return (length_name,numerator) i.e. ('1/4',2)
 sub calc_length {
     my $input=shift;
     my $options = shift; #{shortest_note_time=>...,denominator=>...}
-    die "Calculate shortest_note_time before calling _calc_length" if ! $options->{shortest_note_time};
-    die "Calculate denominator before calling _calc_length" if ! $options->{denominator};
+    die "ERROR: Calculate shortest_note_time before calling _calc_length" if ! $options->{shortest_note_time};
+    die "ERROR: Calculate denominator before calling _calc_length" if ! $options->{denominator};
     my $numerator;
     if (exists $input->{'time'} ) {
       my $time = $input->{'time'};

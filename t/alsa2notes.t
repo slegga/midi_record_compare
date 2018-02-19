@@ -15,20 +15,20 @@ use Mojo::JSON qw(encode_json);
 my @alsaevents = ([
   6,  0,  0,  253,  0,  [    20,    0  ],
   [    128,    0  ],
-  [    0,    72,    71,    0  ]
+  [    0,    72,    71,    0  ],{dtime_sec=>0}
 ],[
   6,  0,  0,  253,  0,  [    20,    0  ],
   [    128,    0  ],
-  [    0,    74,    76,    0  ]
+  [    0,    74,    76,    0  ],{dtime_sec=>1}
 ],
 [
   7,  0,  0,  253,  0,  [    20,    0  ],
   [    128,    0  ],
-  [    0,    72,    71,    50  ]
+  [    0,    72,    71,    50  ],{dtime_sec=>1.5}
 ],[
   7,  0,  0,  253,  0,  [    20,    0  ],
   [    128,    0  ],
-  [    0,    74,    76,   100  ]
+  [    0,    74,    76,   100  ],{dtime_sec=>0}
 ]);
 my $res = Model::Utils::alsaevent2midievent(@{$alsaevents[0]});
 #warn "0event: ".Dumper $alsaevents[0];
@@ -47,10 +47,10 @@ $tune->score2notes;
 print $tune->to_string;
 
 $tune->calc_shortest_note;
-warn "finish calc_shortest_note";
+say  "# finish calc_shortest_note";
 $tune->score2notes;
-is($tune->notes->[1]->to_string, "1;1;D6        # 0.1-1/8", 'Expected');
-is(Model::Note->from_score($score->[1],{tune_starttime=>$alsaevents[0][8]->{starttime}
-,shortest_note_time=>$alsaevents[0][8]->{starttime}, denominator=>4}
-    )->to_string, '0;63;D6       # 0.0-63/4','Not working yet');
+is($tune->notes->[1]->to_string, "1;2;D6        # 0.1-1/2", 'Expected');
+is(Model::Note->from_score($score->[1],{tune_starttime=>0
+,shortest_note_time=>$tune->shortest_note_time, denominator=>4}
+    )->to_string, '0;2;D6        # 0.0-1/2','Not working yet');
 done_testing;

@@ -53,9 +53,9 @@ sub from_score {
         warn Dumper $score;
         return;
     }
-    die "Need tune_starttime" if ! $options->{tune_starttime};
+#    die "Need tune_starttime" if ! $options->{tune_starttime};
     my $prev_startbeat = $options->{prev_startbeat} || 0;
-    my $self =  $class->new(starttime => $score->[1] - $options->{tune_starttime}
+    my $self =  $class->new(starttime => $score->[1] - ($options->{tune_starttime}//0)
     , duration => $score->[2], note =>$score->[4], velocity =>$score->[5]);
     my ($length_name, $length_numerator) =
         Model::Utils::calc_length( { time => $self->duration }, $options );
