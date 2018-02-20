@@ -104,12 +104,12 @@ sub alsa_read {
 #    my $off_time = Time::HiRes::time;
     $self->tune_starttime($on_time) if ! $self->tune_starttime();
     push @alsaevent,{dtime_sec=>
-    	($on_time - ($self->$self->last_event_starttime||$self->tune_starttime))};
+    	($on_time - ($self->last_event_starttime||$self->tune_starttime))};
     printf "Alsa event: %s\n", encode_json(\@alsaevent);
     my $event = Model::Utils::alsaevent2midievent(@alsaevent);
     if (defined $event) {
         push @{ $self->midi_events }, $event;
-        $self->last_event_starttime=$on_time;
+        $self->last_event_starttime($on_time);
         say to_json($event);
         #say Model::Note->from_score($score_n
         #, {shortest_note_time=>($self->shortest_note_time || 48 )
@@ -130,7 +130,7 @@ sub stdin_read {
     if (grep { $cmd eq $_ } ('h','help')) {
         $self->print_help();
     } else {
-        if ( @{$self->midi_score} > 8 ) {
+        if ( @{$self->midi_events } > 8 ) {
             my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
             $self->tune(Model::Tune->from_midi_score($score));
             $self->tune->calc_shortest_note;
