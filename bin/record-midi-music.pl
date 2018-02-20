@@ -60,7 +60,7 @@ has shortest_note_time => 12
 
 my ( $opts, $usage, $argv ) =
     options_and_usage( $0, \@ARGV, "%c %o",
-    [ 'facit|f=s', 'Set default facit when compering' ],
+    [ 'comp|c=s', 'Compare play with this blueprint' ],
 ,{return_uncatched_arguments => 1});
 
 
@@ -150,7 +150,7 @@ sub stdin_read {
         } elsif (grep {$cmd eq $_} ('c','comp')) {
             $self->do_comp($name);
         }
-        $self->midi_score([]); # clear history
+        $self->midi_events([]); # clear history
         $self->tune_starttime(undef);
     }
 }
@@ -194,6 +194,6 @@ sub do_comp {
     my ($self, $name) = @_;
     die "Missing self" if !$self;
     my $tune_play = $self->tune;
-    my $tune_blueprint= Model::Tune->from_note_file($name||$opts->facit);
+    my $tune_blueprint= Model::Tune->from_note_file($name||$opts->comp);
     $tune_play->evaluate_with_blueprint($tune_blueprint);
 }
