@@ -257,14 +257,15 @@ warn "INSIDE";
 	}
     for my $n (@note_diff) {
         next if $n->[0]<50;
-        $n->[0] -= 25 if $self->notes->[$n->[1]]->length_numerator ne $blueprint->notes->[$n->[2]]->length_numerator;
-        $n->[0] -= 20 if $self->notes->[$n->[1]]->delta_place_numerator ne $blueprint->notes->[$n->[2]]->delta_place_numerator;
+        $n->[0] -= 20 if $self->notes->[$n->[1]]->length_numerator ne $blueprint->notes->[$n->[2]]->length_numerator;
+        $n->[0] -= 25 if $self->notes->[$n->[1]]->delta_place_numerator ne $blueprint->notes->[$n->[2]]->delta_place_numerator;
     }
     $self->note_diff(\@note_diff);
     my $format = "%5s %-15s %s\n";
     say;
+    print color('blue');
     printf $format,"Poeng","Spilt", "Fasit";
-    printf $format,"-----",'-----------','-------';
+    printf $format,"-----",'-----------','-----------';
 	for my $n(@note_diff) {
 		if (defined $n->[1] && defined $n->[2]) {
 			if ($n->[0] > 90) {

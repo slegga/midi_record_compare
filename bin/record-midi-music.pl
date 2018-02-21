@@ -7,7 +7,7 @@ use Mojo::Loader 'data_section';
 use MIDI::ALSA(':CONSTS');
 use Time::HiRes;
 use Mojo::JSON qw(encode_json);
-use Mojo::File 'tempfile';
+use Mojo::File qw(tempfile path);
 use Mojo::JSON 'to_json';
 use FindBin;
 use lib "$FindBin::Bin/../../utillities-perl/lib";
@@ -30,6 +30,7 @@ Read midi signal from a USB-cable.
  sudo apt install libasound2-dev
  sudo apt-get install timidity timidity-interfaces-extra
  cpanm MIDI::ALSA
+ cpanm Mojolicious
 
 =head1 USAGE
 
@@ -175,9 +176,15 @@ sub do_play {
     my ($self, $name) = @_;
     my $tmpfile = tempfile(DIR=>'/tmp');
     my $tune;
-    if (defined $name && -e $name) {
-        $tune = Model::Tune->from_note_file($name);
-        $tune->notes2score;
+    if (defined $name) {
+        if (-e $name) {
+            $tune = Model::Tune->from_note_file($name);
+            $tune->notes2score;
+        } elsif( -e $self->blueprints_dir->child($name)) {
+            ...;
+        } else {
+            $tune = $self->tune;
+        }
     } else {
         $tune = $self->tune;
     }
@@ -187,12 +194,21 @@ sub do_play {
 
 sub do_list {
     my ($self, $name) = @_;
-    ...;
+    say;
+    say "notes";
+    my $notes_dir = path('notes');
+    say $notes_dir->list_tree;
+    say;
+    say "blueprints";
+    my $blueprints_dir = path('notes');
+    say $blueprints_dir->list_tree;
 }
 
 sub do_comp {
     my ($self, $name) = @_;
     die "Missing self" if !$self;
+    my $filename = $name||$opts->facit;
+    $filename ='blueprints/'.$filename if ($filename=~/^$tune_blueprints/);
     my $tune_play = $self->tune;
     my $tune_blueprint= Model::Tune->from_note_file($name||$opts->facit);
     $tune_play->evaluate_with_blueprint($tune_blueprint);
