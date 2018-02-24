@@ -5,6 +5,8 @@ use Model::Note;
 use Model::Beat;
 use Model::Utils;
 use Data::Dumper;
+use Mojo::JSON 'to_json';
+
 use Carp;
 use List::Util qw/min max/;
 use Term::ANSIColor;
@@ -168,28 +170,27 @@ sub evaluate_with_blueprint {
 			push @$wrongs, @$area;
 		}
 	}
-	say "171\n".Dumper $wrongs;
+#	say "171\n".Dumper $wrongs;
 	# Calculate a note score
-	my $n = ( abs(scalar @{ $blueprint->notes } - scalar @$wrongs * 4)/(scalar @{ $blueprint->notes }))*100;
+	my $n = ((scalar @{ $blueprint->notes } - scalar @$wrongs * 4)/(scalar @{ $blueprint->notes }))*100;
+    warn
 	$self->note_score($n);
 
 	# Calculate a note map
 	my $cdiff = compact_diff(\@played_note_values, \@blueprint_note_values);
-	say "178\n".Dumper $cdiff;
+	say "178\n".to_json( $cdiff);
 	my %map;
 	for ( my $i = 0;$i < $#{$cdiff}-2; $i += 4) {
-#		last if $i >= $#{$cdiff};
-warn "INSIDE";
 		if ($cdiff->[$i] == $cdiff->[$i+2]) {
             next;
         }
-        warn sprintf "i:%s  cdiff:%s\n",$i,($cdiff->[$i+2] - $cdiff->[$i] -1);
+        #warn sprintf "i:%s  cdiff:%s\n",$i,($cdiff->[$i+2] - $cdiff->[$i] -1);
 		for my $j(0 .. ($cdiff->[$i+2] - $cdiff->[$i] -1)){
 			$map{$cdiff->[$i]+$j} = $cdiff->[$i+1]+$j;
 		}
 
 	}
-	say "190\n".Dumper %map;
+#	say "190\n".Dumper %map;
 	# Calculate note length score
 	my $rln=0;# right length numerator
     my $rdb=0;# right delta beat
@@ -262,7 +263,7 @@ warn "INSIDE";
     }
     $self->note_diff(\@note_diff);
     my $format = "%5s %-15s %s\n";
-    say;
+    say '';
     print color('blue');
     printf $format,"Poeng","Spilt", "Fasit";
     printf $format,"-----",'-----------','-----------';

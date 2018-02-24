@@ -10,11 +10,13 @@ use Mojo::JSON qw(encode_json);
 use Mojo::File qw(tempfile path);
 use Mojo::JSON 'to_json';
 use FindBin;
+use File::Basename;
 use lib "$FindBin::Bin/../../utillities-perl/lib";
 use lib "$FindBin::Bin/../lib";
 use Model::Utils;
 use Model::Tune;
 use SH::Script qw/options_and_usage/;
+use Carp::Always;
 #use Carp::Always;
 
 =head1 NAME
@@ -56,8 +58,8 @@ has alsa_loop  => sub { Mojo::IOLoop->singleton };
 has stdin_loop => sub { Mojo::IOLoop::Stream->new(\*STDIN)->timeout(0) };
 has tune => sub {Model::Tune->new};
 has midi_events => sub {[]};
-has shortest_note_time => 12
-;
+has shortest_note_time => 12;
+has blueprints_dir => sub {path("$FindBin::Bin/../blueprints")};
 
 my ( $opts, $usage, $argv ) =
     options_and_usage( $0, \@ARGV, "%c %o",
@@ -70,10 +72,9 @@ __PACKAGE__->new->main;
 sub main {
     my $self = shift;
     die "Did not find the midi input stream! Need port number." if ! defined $self->alsa_port;
-    say $self->alsa_port;
+    say "alsa port: ".$self->alsa_port;
     MIDI::ALSA::client( 'Perl MIDI::ALSA client', 1, 1, 0 );
     MIDI::ALSA::connectfrom( 0, $self->alsa_port, 0 );  # input port is lower (0)
-    say dumper $self->alsa_stream;
 
     #$self->alsa_loop->on( read => sub { $self->alsa_read(@_)  });
     $self->alsa_loop->recurring(0 => sub {
@@ -106,7 +107,7 @@ sub alsa_read {
     $self->tune_starttime($on_time) if ! $self->tune_starttime();
     push @alsaevent,{dtime_sec=>
     	($on_time - ($self->last_event_starttime||$self->tune_starttime))};
-    printf "Alsa event: %s\n", encode_json(\@alsaevent);
+    #printf "Alsa event: %s\n", encode_json(\@alsaevent);
     my $event = Model::Utils::alsaevent2midievent(@alsaevent);
     if (defined $event) {
         push @{ $self->midi_events }, $event;
@@ -125,33 +126,38 @@ sub alsa_read {
 # print
 sub stdin_read {
     my ($self, $stream, $bytes) = @_;
-    say "Got input!";
     chomp $bytes;
     my ($cmd, $name)=split /\s+/, $bytes;
-    if (grep { $cmd eq $_ } ('h','help')) {
+    if (defined $cmd && grep { $cmd eq $_ } ('h','help')) {
         $self->print_help();
     } else {
-        if ( @{$self->midi_events } > 8 ) {
-            my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
-            $self->tune(Model::Tune->from_midi_score($score));
-            $self->tune->calc_shortest_note;
-            $self->tune->score2notes;
-            print $self->tune->to_string;
-            $self->shortest_note_time($self->tune->shortest_note_time);
-            $self->denominator($self->tune->denominator);
-            printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
-        }
         if(!defined $cmd) {
-        } elsif (grep { $cmd eq $_ } ('s','save')) {
-            $self->do_save($name);
-        } elsif (grep { $cmd eq $_} ('p','play')) {
-            $self->do_play($name);
-        } elsif (grep {$cmd eq $_} ('l','list')) {
-            $self->do_list($name);
+            if ($opts->facit) {
+                $self->do_comp($opts->facit);
+            }
         } elsif (grep {$cmd eq $_} ('c','comp')) {
             $self->do_comp($name);
+        } else {
+            if ( @{$self->midi_events } > 8 ) {
+                my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
+                $self->tune(Model::Tune->from_midi_score($score));
+                $self->tune->calc_shortest_note;
+                $self->tune->score2notes;
+                print $self->tune->to_string;
+                $self->shortest_note_time($self->tune->shortest_note_time);
+                $self->denominator($self->tune->denominator);
+                printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
+            }
+
+            if (grep { $cmd eq $_ } ('s','save')) {
+                $self->do_save($name);
+            } elsif (grep { $cmd eq $_} ('p','play')) {
+                $self->do_play($name);
+            } elsif (grep {$cmd eq $_} ('l','list')) {
+                $self->do_list($name);
+            }
         }
-        $self->midi_score([]); # clear history
+        $self->midi_events([]); # clear history
         $self->tune_starttime(undef);
     }
 }
@@ -194,22 +200,49 @@ sub do_play {
 
 sub do_list {
     my ($self, $name) = @_;
-    say;
-    say "notes";
-    my $notes_dir = path('notes');
-    say $notes_dir->list_tree;
-    say;
-    say "blueprints";
-    my $blueprints_dir = path('notes');
-    say $blueprints_dir->list_tree;
+    say '';
+    say "notes/";
+    my $notes_dir = path("$FindBin::Bin/../notes");
+    say $notes_dir->list_tree->map(sub{basename($_)})->join("\n");
+    say '';
+    say "blueprints/";
+    say $self->blueprints_dir->list_tree->map(sub{basename($_)})->join("\n");
 }
 
 sub do_comp {
     my ($self, $name) = @_;
     die "Missing self" if !$self;
-    my $filename = $name||$opts->facit;
-    $filename ='blueprints/'.$filename if ($filename=~/^$tune_blueprints/);
+    warn  "COMPARE 0 $name";
+
+    return if ! $name;
+    return if  ( @{$self->midi_events } < 8 );
+    warn  "COMPARE";
+    my $filename = $name;
+    if (! -e $filename) {
+	    my $bluedir = $self->blueprints_dir->to_string;
+        say $bluedir;
+        if (! -e $self->blueprints_dir->child($filename)) {
+            warn "$filename or ".$self->blueprints_dir->child($filename)." not found";
+            return;
+        }
+        $filename = $self->blueprints_dir->child($filename);
+	}
+say "how ".$filename;
+    my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
+    $self->tune(Model::Tune->from_midi_score($score));
+    my $tune_blueprint= Model::Tune->from_note_file($filename);
+    $self->tune->denominator($tune_blueprint->denominator);
+
+    $self->tune->calc_shortest_note;
+
+    $self->tune->score2notes;
+    $self->denominator($self->tune->denominator);
+
+#    print $self->tune->to_string;
+    $self->shortest_note_time($self->tune->shortest_note_time);
+    $self->denominator($self->tune->denominator);
+    printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
+
     my $tune_play = $self->tune;
-    my $tune_blueprint= Model::Tune->from_note_file($name||$opts->facit);
     $tune_play->evaluate_with_blueprint($tune_blueprint);
 }
