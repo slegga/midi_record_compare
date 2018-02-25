@@ -5,6 +5,8 @@ use Model::Note;
 use Model::Beat;
 use Model::Utils;
 use Data::Dumper;
+use Mojo::JSON 'to_json';
+
 use Carp;
 use List::Util qw/min max/;
 use Term::ANSIColor;
@@ -168,28 +170,27 @@ sub evaluate_with_blueprint {
 			push @$wrongs, @$area;
 		}
 	}
-	say "171\n".Dumper $wrongs;
+#	say "171\n".Dumper $wrongs;
 	# Calculate a note score
-	my $n = ( abs(scalar @{ $blueprint->notes } - scalar @$wrongs * 4)/(scalar @{ $blueprint->notes }))*100;
+	my $n = ((scalar @{ $blueprint->notes } - scalar @$wrongs * 4)/(scalar @{ $blueprint->notes }))*100;
+    warn
 	$self->note_score($n);
 
 	# Calculate a note map
 	my $cdiff = compact_diff(\@played_note_values, \@blueprint_note_values);
-	say "178\n".Dumper $cdiff;
+	say "178\n".to_json( $cdiff);
 	my %map;
 	for ( my $i = 0;$i < $#{$cdiff}-2; $i += 4) {
-#		last if $i >= $#{$cdiff};
-warn "INSIDE";
 		if ($cdiff->[$i] == $cdiff->[$i+2]) {
             next;
         }
-        warn sprintf "i:%s  cdiff:%s\n",$i,($cdiff->[$i+2] - $cdiff->[$i] -1);
+        #warn sprintf "i:%s  cdiff:%s\n",$i,($cdiff->[$i+2] - $cdiff->[$i] -1);
 		for my $j(0 .. ($cdiff->[$i+2] - $cdiff->[$i] -1)){
 			$map{$cdiff->[$i]+$j} = $cdiff->[$i+1]+$j;
 		}
 
 	}
-	say "190\n".Dumper \%map;
+#	say "190\n".Dumper %map;
 	# Calculate note length score
 	my $rln=0;# right length numerator
     my $rdb=0;# right delta beat
@@ -215,12 +216,12 @@ warn "INSIDE";
 	my $j=0;
 	my @note_diff;
 	my @maps = map { $_, $map{$_} } sort {$a <=> $b} keys %map;
+
 	while ( my ($m,$b) = (shift(@maps),shift(@maps) )) {
 		last if ! defined $m && ! defined $b;
 #		print "ETTER WHILE $i,$j $m,$b\n";
 		if ($i == $m && $j == $b) {
 			push @note_diff, ['100',$i,$j];
-			$i++;$j++;
 		} elsif ( $i < $m && $j < $b ) {
 			while( $i < $m && $j < $b ) {
 				print "$i,$j $m,$b\n";
@@ -241,6 +242,7 @@ warn "INSIDE";
 			print Dumper @note_diff;
 			die "TELLER FEIL. SKAL IKKE KOMME HIT $i,$j $m,$b";
 		}
+        $i++;$j++;
 	}
 	#Register errous notes at the end.
 	if ($i != $#{$self->notes} || $j != $#{$blueprint->notes}) {
@@ -256,10 +258,15 @@ warn "INSIDE";
 	}
     for my $n (@note_diff) {
         next if $n->[0]<50;
-        $n->[0] -= 25 if $self->notes->[$n->[1]]->length_numerator ne $blueprint->notes->[$n->[2]]->length_numerator;
-        $n->[0] -= 20 if $self->notes->[$n->[1]]->delta_place_numerator ne $blueprint->notes->[$n->[2]]->delta_place_numerator;
+        $n->[0] -= 20 if $self->notes->[$n->[1]]->length_numerator ne $blueprint->notes->[$n->[2]]->length_numerator;
+        $n->[0] -= 25 if $self->notes->[$n->[1]]->delta_place_numerator ne $blueprint->notes->[$n->[2]]->delta_place_numerator;
     }
     $self->note_diff(\@note_diff);
+    my $format = "%5s %-15s %s\n";
+    say '';
+    print color('blue');
+    printf $format,"Poeng","Spilt", "Fasit";
+    printf $format,"-----",'-----------','-----------';
 	for my $n(@note_diff) {
 		if (defined $n->[1] && defined $n->[2]) {
 			if ($n->[0] > 90) {
@@ -267,19 +274,19 @@ warn "INSIDE";
 			} else {
 				print color('yellow');
 			}
-			printf "%4s %-15s %s\n",$n->[0],$self->notes->[$n->[1]]->to_string( {no_comment=>1} )
+			printf $format, $n->[0],$self->notes->[$n->[1]]->to_string( {no_comment=>1} )
 			, $blueprint->notes->[$n->[2]]->to_string;
 		}
 		elsif (! defined $n->[1] && defined $n->[2]) {
 			print color('red');
             if (defined $blueprint->notes->[$n->[2]]) {
-                printf "%4s %-15s %s\n",$n->[0],''
+                printf $format,$n->[0],''
 					, $blueprint->notes->[$n->[2]]->to_string;
             }
 		}
 		elsif (! defined $n->[2] && defined $n->[1]) {
 			print color('red');
-			printf "%4s %-15s %s\n",$n->[0],$self->notes->[$n->[1]]->to_string( {no_comment=>1} )
+			printf $format,$n->[0],$self->notes->[$n->[1]]->to_string( {no_comment=>1} )
 						,'';
 		}
 		else {
