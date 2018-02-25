@@ -51,9 +51,10 @@ has alsa_stream => sub {
      return $r
  };
 has tune_starttime => 0;
-has last_event_starttime =>0;
+has last_event_starttime => 0;
+has silence_timer=> -1;
 has denominator =>8;
-has alsa_loop  => sub { Mojo::IOLoop->singleton };
+has loop  => sub { Mojo::IOLoop->singleton };
 #sub { my $self=shift;Mojo::IOLoop::Stream->new($self->alsa_stream)->timeout(0) };
 has stdin_loop => sub { Mojo::IOLoop::Stream->new(\*STDIN)->timeout(0) };
 has tune => sub {Model::Tune->new};
@@ -63,7 +64,7 @@ has blueprints_dir => sub {path("$FindBin::Bin/../blueprints")};
 
 my ( $opts, $usage, $argv ) =
     options_and_usage( $0, \@ARGV, "%c %o",
-    [ 'facit|f=s', 'Set default facit when compering' ],
+    [ 'comp|c=s', 'Compare play with this blueprint' ],
 ,{return_uncatched_arguments => 1});
 
 
@@ -76,24 +77,30 @@ sub main {
     MIDI::ALSA::client( 'Perl MIDI::ALSA client', 1, 1, 0 );
     MIDI::ALSA::connectfrom( 0, $self->alsa_port, 0 );  # input port is lower (0)
 
-    #$self->alsa_loop->on( read => sub { $self->alsa_read(@_)  });
-    $self->alsa_loop->recurring(0 => sub {
+    $self->loop->recurring(0 => sub {
         my ($self) = shift;
         if (MIDI::ALSA::inputpending()) {
-#            say "HAI";
             $self->emit('alsaread',$self) ;
         }
     });
-    $self->alsa_loop->on( alsaread => sub {
+    $self->loop->on( alsaread => sub {
         $self->alsa_read(@_)
-#    say "Yo";
-});
-    #$self->alsa_loop->start;
-    if (1) {
-    # $self->loop->start unless $self->loop->is_running;
+	});
+    $self->loop->timer(1 => sub {
+
+    	# not active
+    	next if $self->silence_timer == -1;
+
+    	my $t = Time::HiRes::time;
+    	if (! $self->silence_timer ) {
+    		$self->silence_timer($t);
+    	} elsif ($t - Time::HiRes::time >= 2) {
+    		$self->stdin_read();
+    	}
+    });
+
     $self->stdin_loop->on(read => sub { $self->stdin_read(@_) });
     $self->stdin_loop->start;
-    }
     $self->loop->start unless $self->loop->is_running;
 
 }
@@ -102,6 +109,10 @@ sub main {
 sub alsa_read {
     my ($self) = @_;
     my $on_time = Time::HiRes::time;
+
+    # reset timer
+    $self->silence_timer(0);
+
     my @alsaevent = MIDI::ALSA::input();
 #    my $off_time = Time::HiRes::time;
     $self->tune_starttime($on_time) if ! $self->tune_starttime();
@@ -113,11 +124,6 @@ sub alsa_read {
         push @{ $self->midi_events }, $event;
         $self->last_event_starttime($on_time);
         say to_json($event);
-        #say Model::Note->from_score($score_n
-        #, {shortest_note_time=>($self->shortest_note_time || 48 )
-    #        , denominator=>($self->denominator||8)
-    #        , tune_starttime=>$self->tune_starttime
-    #    })->to_string;
     }
 }
 
@@ -127,13 +133,14 @@ sub alsa_read {
 sub stdin_read {
     my ($self, $stream, $bytes) = @_;
     chomp $bytes;
+    $self->silence_timer(-1);
     my ($cmd, $name)=split /\s+/, $bytes;
     if (defined $cmd && grep { $cmd eq $_ } ('h','help')) {
         $self->print_help();
     } else {
         if(!defined $cmd) {
-            if ($opts->facit) {
-                $self->do_comp($opts->facit);
+            if ($opts->comp) {
+                $self->do_comp($opts->comp);
             }
         } elsif (grep {$cmd eq $_} ('c','comp')) {
             $self->do_comp($name);
@@ -168,14 +175,14 @@ sub print_help {
     s,save [NAME]   Save play to disk as notes.
     p,play [NAME]   Play last tune. If none defaults to the not ended play.
     l,list [REGEXP] List saved tunes.
-    c,comp [NAME]   Compare last tune with given name. If not name then test with ARGV[0]
+    c,comp [NAME]   Compare last tune with given name. If not name then test with --comp argument
     defaults        Stop last tune and start on new.
 ';
 }
 
 sub do_save {
     my ($self, $name) = @_;
-    $self->tune->to_note_file($name);
+    $self->tune->to_note_file(local_dir($self->blueprints_dir->sibling('notes'))->child($name));
 }
 
 sub do_play {
@@ -186,10 +193,27 @@ sub do_play {
         if (-e $name) {
             $tune = Model::Tune->from_note_file($name);
             $tune->notes2score;
-        } elsif( -e $self->blueprints_dir->child($name)) {
-            ...;
         } else {
-            $tune = $self->tune;
+        	my $tmp = $self->blueprints_dir->child($name);
+        	if( -e $tmp) {
+	            $tune = Model::Tune->from_note_file($tmp);
+	            $tune->notes2score;
+	        } else {
+	 			$tmp = $self->blueprints_dir->sibling('local','notes')->child($name);
+	 			if (-e $tmp) {
+		            $tune = Model::Tune->from_note_file($tmp);
+		 	        $tune->notes2score;
+		 	    } else {
+	 				$tmp = $self->blueprints_dir->sibling('local','blueprints')->child($name);
+    	 			if (-e $tmp) {
+    		            $tune = Model::Tune->from_note_file($tmp);
+    		 	        $tune->notes2score;
+    		 	    } else {
+    		 	    	warn "Did not find $name. Play stored tune instead.";
+			            $tune = $self->tune;
+    		 	    }
+				}
+			}
         }
     } else {
         $tune = $self->tune;
@@ -204,6 +228,8 @@ sub do_list {
     say "notes/";
     my $notes_dir = path("$FindBin::Bin/../notes");
     say $notes_dir->list_tree->map(sub{basename($_)})->join("\n");
+    say $notes_dir->list_tree->map(sub{basename($_)})->join("\n");
+
     say '';
     say "blueprints/";
     say $self->blueprints_dir->list_tree->map(sub{basename($_)})->join("\n");
@@ -212,22 +238,26 @@ sub do_list {
 sub do_comp {
     my ($self, $name) = @_;
     die "Missing self" if !$self;
-    warn  "COMPARE 0 $name";
 
     return if ! $name;
     return if  ( @{$self->midi_events } < 8 );
-    warn  "COMPARE";
+
     my $filename = $name;
     if (! -e $filename) {
 	    my $bluedir = $self->blueprints_dir->to_string;
         say $bluedir;
-        if (! -e $self->blueprints_dir->child($filename)) {
-            warn "$filename or ".$self->blueprints_dir->child($filename)." not found";
-            return;
+        if ( -e $self->blueprints_dir->child($filename)) {
+	        $filename = $self->blueprints_dir->child($filename);
+        } else {
+        	my $lbf = local_dir($self->blueprints_dir);
+        	if (-e $lbf) {
+        		$filename = $lbf;
+        	} else {
+	            warn "$filename or ".$self->blueprints_dir->child($filename)." or $lbf not found";
+    	        return;
+    	    }
         }
-        $filename = $self->blueprints_dir->child($filename);
 	}
-say "how ".$filename;
     my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
     $self->tune(Model::Tune->from_midi_score($score));
     my $tune_blueprint= Model::Tune->from_note_file($filename);
@@ -240,9 +270,13 @@ say "how ".$filename;
 
 #    print $self->tune->to_string;
     $self->shortest_note_time($self->tune->shortest_note_time);
-    $self->denominator($self->tune->denominator);
     printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
+    $self->tune->evaluate_with_blueprint($tune_blueprint);
+}
 
-    my $tune_play = $self->tune;
-    $tune_play->evaluate_with_blueprint($tune_blueprint);
+sub local_dir {
+	my ($self, $mojofiledir) =@_;
+	my @l = @$mojofiledir;
+	splice(@l,$#$mojofiledir-1,0,'local');
+	return path(@l);
 }

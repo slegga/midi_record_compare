@@ -1,14 +1,22 @@
 PLAN
 ====
 * Finn et bedre navn på hoved script.
-* Print score til slutt etter note utskrift
-* Print tips, mål om det spilles stakato eller ikke.
 * mulig gjør commit fra fredriks maskin
 * Kalkuler en låt vanskelighetsgrad
 * Skriv en bedre read me.
+* Trigge enter hvis stille i 2 sek.
+* Lag database register over låter for å tippe låt automatisk
+	(prøv å lag programmet uavhenig av tastatur)
+* Lag ranking
+* Lag oppstart med navn
+* Renskriv kommentarer script
+* script for renskrivning av låter
+* Kunne bytte toneart etc.
+* Print tips, mål om det spilles stakato eller ikke.
 
 DONE
 ====
+* Print score til slutt etter note utskrift
 * Søk i gjennom blueprints hvis ikke fil finnes hvor angitt for fasit fil
 * Lag liste opsjonen
 * * 90 = note_on, se MIDI/Event
