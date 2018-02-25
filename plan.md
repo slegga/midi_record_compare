@@ -1,14 +1,16 @@
 PLAN
 ====
 * Finn et bedre navn på hoved script.
-* Lag liste opsjonen
-* Søk i gjennom blueprints hvis ikke fil finnes hvor angitt for fasit fil
-
-
+* Print score til slutt etter note utskrift
+* Print tips, mål om det spilles stakato eller ikke.
+* mulig gjør commit fra fredriks maskin
+* Kalkuler en låt vanskelighetsgrad
+* Skriv en bedre read me.
 
 DONE
 ====
-
+* Søk i gjennom blueprints hvis ikke fil finnes hvor angitt for fasit fil
+* Lag liste opsjonen
 * * 90 = note_on, se MIDI/Event
 * script Enkel avspiller timidity for notes filer
 * først manuelt
@@ -21,9 +23,6 @@ DONE
 UTGÅR
 =====
 * [fungerte ikke lyttet kun til /dev/music må lytte til /dev/snd/...] Midi::Music daemon som automatisk lager en midi fil når det er stille i 3 sekunder
-
-
-
 * Copy https://gist.github.com/augensalat/3699443
 
 
