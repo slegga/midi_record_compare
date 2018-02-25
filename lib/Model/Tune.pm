@@ -203,11 +203,6 @@ sub evaluate_with_blueprint {
 	$self->length_score(    100*$rln/scalar @{ $blueprint->notes });
 	$self->delta_beat_score(100*$rdb/scalar @{ $blueprint->notes });
 
-	printf "%-16s %3.1f%%\n", "Beat score:",	   $self->beat_score;
-	printf "%-16s %3.1f%%\n", "Note score:",       $self->note_score;
-	printf "%-16s %3.1f%%\n", "Length score:",     $self->length_score;
-	printf "%-16s %3.1f%%\n", "Delta beat score:", $self->delta_beat_score;
-	printf "%-16s %3.1f%%\n", "Total score:", (3 * $self->note_score + $self->length_score + $self->delta_beat_score + $self->beat_score)/6;
 	# Calculate dalta_note_beat score
 	say '';
 
@@ -271,9 +266,11 @@ sub evaluate_with_blueprint {
 		if (defined $n->[1] && defined $n->[2]) {
 			if ($n->[0] > 90) {
 				print color('green');
-			} else {
+			} elsif ($n->[0] > 45) {
 				print color('yellow');
-			}
+			} else {
+                print color('red');
+            }
 			printf $format, $n->[0],$self->notes->[$n->[1]]->to_string( {no_comment=>1} )
 			, $blueprint->notes->[$n->[2]]->to_string;
 		}
@@ -294,6 +291,12 @@ sub evaluate_with_blueprint {
 		}
 		print color('reset');
 	}
+    say '';
+	printf "%-16s %3.1f%%\n", "Beat score:",	   $self->beat_score;
+	printf "%-16s %3.1f%%\n", "Note score:",       $self->note_score;
+	printf "%-16s %3.1f%%\n", "Length score:",     $self->length_score;
+	printf "%-16s %3.1f%%\n", "Delta beat score:", $self->delta_beat_score;
+	printf "%-16s %3.1f%%\n", "Total score:", (3 * $self->note_score + $self->length_score + $self->delta_beat_score + $self->beat_score)/6;
 	return $self;
 }
 
