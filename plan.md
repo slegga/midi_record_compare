@@ -1,14 +1,21 @@
 PLAN
 ====
 * Finn et bedre navn på hoved script.
-* Lag liste opsjonen
-* Søk i gjennom blueprints hvis ikke fil finnes hvor angitt for fasit fil
-
+* Trigge enter hvis stille i 2 sek.
+* Lag database register over låter for å tippe låt automatisk
+	(prøv å lag programmet uavhenig av tastatur)
+* Lag ranking
+* Lag oppstart med navn
+* Renskriv kommentarer script
+* script for renskrivning av låter
+* Kunne bytte toneart etc.
+* Tenk på en vurdering av vanskelighetgrad av låtene
 
 
 DONE
 ====
-
+* Lag liste opsjonen
+* Søk i gjennom blueprints hvis ikke fil finnes hvor angitt for fasit fil
 * * 90 = note_on, se MIDI/Event
 * script Enkel avspiller timidity for notes filer
 * først manuelt
