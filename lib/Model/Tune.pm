@@ -425,8 +425,19 @@ sub from_note_file {
     return $self;
 }
 
+=head2 get_beat_sum
 
+Sum beat sum of a tune
 
+=cut
+
+sub get_beat_sum {
+	my $self=shift;
+	die "No notes" if ! @{$self->notes};
+	my $end_note = $self->notes->[-1];
+	my $endbeat =$end_note->startbeat+$end_note->length_numerator;
+    return $endbeat->to_int;
+}
 
 =head2 notes2score
 

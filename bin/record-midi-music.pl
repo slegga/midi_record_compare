@@ -86,17 +86,20 @@ sub main {
     $self->loop->on( alsaread => sub {
         $self->alsa_read(@_)
 	});
-    $self->loop->timer(1 => sub {
+    $self->loop->recurring(1 => sub {
 
     	# not active
-    	next if $self->silence_timer == -1;
+    	return if $self->silence_timer == -1;
+#   		warn "Timeout";
 
     	my $t = Time::HiRes::time;
     	if (! $self->silence_timer ) {
     		$self->silence_timer($t);
-    	} elsif ($t - Time::HiRes::time >= 2) {
+    	} elsif ($t - $self->silence_timer >= 2) {
+    		warn "Timeout";
     		$self->stdin_read();
     	}
+#    	print STDERR "Delay: "
     });
 
     $self->stdin_loop->on(read => sub { $self->stdin_read(@_) });
@@ -132,6 +135,7 @@ sub alsa_read {
 # print
 sub stdin_read {
     my ($self, $stream, $bytes) = @_;
+    say $bytes;
     chomp $bytes;
     $self->silence_timer(-1);
     my ($cmd, $name)=split /\s+/, $bytes;
@@ -142,6 +146,8 @@ sub stdin_read {
             if ($opts->comp) {
                 $self->do_comp($opts->comp);
             }
+        }elsif (grep {$cmd eq $_} 'q','quit' ) {
+        	$self->do_quit;
         } elsif (grep {$cmd eq $_} ('c','comp')) {
             $self->do_comp($name);
         } else {
@@ -176,7 +182,9 @@ sub print_help {
     p,play [NAME]   Play last tune. If none defaults to the not ended play.
     l,list [REGEXP] List saved tunes.
     c,comp [NAME]   Compare last tune with given name. If not name then test with --comp argument
+    q,quit			End session.
     defaults        Stop last tune and start on new.
+
 ';
 }
 
@@ -237,6 +245,7 @@ sub do_list {
 
 sub do_comp {
     my ($self, $name) = @_;
+    say "compare $name";
     die "Missing self" if !$self;
 
     return if ! $name;
@@ -266,12 +275,27 @@ sub do_comp {
     $self->tune->calc_shortest_note;
 
     $self->tune->score2notes;
+
+   	my $play_bs = $self->tune->get_beat_sum;
+   	my $blueprint_bs = $tune_blueprint->get_beat_sum;
+   	if ($play_bs*1.5 <$blueprint_bs || $play_bs > 1.5*$blueprint_bs) {
+        $self->tune->beat_score($self->tune->beat_score/2) ; $self->shortest_note_time($self->shortest_note_time * $blueprint_bs / $play_bs);
+    }
+
     $self->denominator($self->tune->denominator);
 
 #    print $self->tune->to_string;
     $self->shortest_note_time($self->tune->shortest_note_time);
     printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
     $self->tune->evaluate_with_blueprint($tune_blueprint);
+
+}
+
+
+sub do_quit {
+	my ($self,$stream,$bytes) =@_;
+	say "Goodbye";
+	$self->loop->stop_gracefully;
 }
 
 sub local_dir {
