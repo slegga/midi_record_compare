@@ -279,7 +279,9 @@ sub do_comp {
    	my $play_bs = $self->tune->get_beat_sum;
    	my $blueprint_bs = $tune_blueprint->get_beat_sum;
    	if ($play_bs*1.5 <$blueprint_bs || $play_bs > 1.5*$blueprint_bs) {
-        $self->tune->beat_score($self->tune->beat_score/2) ; $self->shortest_note_time($self->shortest_note_time * $blueprint_bs / $play_bs);
+        $self->tune->beat_score($self->tune->beat_score/2) ;
+        $self->shortest_note_time($self->shortest_note_time * $play_bs / $blueprint_bs);
+	    $self->tune->score2notes;
     }
 
     $self->denominator($self->tune->denominator);
