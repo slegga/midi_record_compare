@@ -68,15 +68,18 @@ my ( $opts, $usage, $argv ) =
 ,{return_uncatched_arguments => 1});
 
 
-__PACKAGE__->new->main;
+__PACKAGE__->new->main if !caller;
 
 sub main {
     my $self = shift;
-    die "Did not find the midi input stream! Need port number." if ! defined $self->alsa_port;
-    say "alsa port: ".$self->alsa_port;
-    MIDI::ALSA::client( 'Perl MIDI::ALSA client', 1, 1, 0 );
-    MIDI::ALSA::connectfrom( 0, $self->alsa_port, 0 );  # input port is lower (0)
-
+    if (! defined $self->alsa_port
+        && (! exists $ENV{MOJO_MODE} || $ENV{MOJO_MODE} ne 'dry-run')) {
+            die "Did not find the midi input stream! Need port number.";
+    } else {
+        say "alsa port: ".$self->alsa_port;
+        MIDI::ALSA::client( 'Perl MIDI::ALSA client', 1, 1, 0 );
+        MIDI::ALSA::connectfrom( 0, $self->alsa_port, 0 );  # input port is lower (0)
+    }
     $self->loop->recurring(0 => sub {
         my ($self) = shift;
         if (MIDI::ALSA::inputpending()) {
@@ -190,7 +193,7 @@ sub print_help {
 
 sub do_save {
     my ($self, $name) = @_;
-    $self->tune->to_note_file(local_dir($self->blueprints_dir->sibling('notes'))->child($name));
+    $self->tune->to_note_file($self->local_dir($self->blueprints_dir->sibling('notes'))->child($name));
 }
 
 sub do_play {
@@ -249,7 +252,9 @@ sub do_comp {
     die "Missing self" if !$self;
 
     return if ! $name;
-    return if  ( @{$self->midi_events } < 8 );
+    if  ( @{$self->midi_events } < 8 ) {
+        warn "Less than 8 notes. No tune is that short";
+    }
 
     my $filename = $name;
     if (! -e $filename) {
@@ -258,7 +263,7 @@ sub do_comp {
         if ( -e $self->blueprints_dir->child($filename)) {
 	        $filename = $self->blueprints_dir->child($filename);
         } else {
-        	my $lbf = local_dir($self->blueprints_dir);
+        	my $lbf = $self->local_dir($self->blueprints_dir);
         	if (-e $lbf) {
         		$filename = $lbf;
         	} else {
@@ -290,7 +295,7 @@ sub do_comp {
     $self->shortest_note_time($self->tune->shortest_note_time);
     printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
     $self->tune->evaluate_with_blueprint($tune_blueprint);
-
+    return $self;
 }
 
 
@@ -306,3 +311,4 @@ sub local_dir {
 	splice(@l,$#$mojofiledir-1,0,'local');
 	return path(@l);
 }
+1;
