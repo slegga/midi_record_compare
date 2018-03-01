@@ -106,6 +106,8 @@ sub main {
     });
 
     $self->stdin_loop->on(read => sub { $self->stdin_read(@_) });
+
+    MIDI::ALSA::start() or die "start failed";
     $self->stdin_loop->start;
     $self->loop->start unless $self->loop->is_running;
 
@@ -189,6 +191,7 @@ sub print_help {
 sub do_endtune {
     my ($self) = @_;
     return if (@{$self->midi_events}<8);
+    MIDI::ALSA::stop() or die "stop failed";
     my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
     $self->tune(Model::Tune->from_midi_score($score));
     $self->tune->calc_shortest_note;
@@ -197,6 +200,7 @@ sub do_endtune {
     $self->shortest_note_time($self->tune->shortest_note_time);
     $self->denominator($self->tune->denominator);
     printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
+    MIDI::ALSA::start() or die "start failed";
     return $self;
 }
 
