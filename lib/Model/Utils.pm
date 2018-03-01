@@ -24,6 +24,7 @@ sub alsaevent2midievent {
     # @destination = ( $dest_client,  $dest_port )
     # @data = ( varies depending on type )
     # score
+    die '$extra is not defiend ' . join(', ',@_) if ! defined $extra;
     my $dtime = $extra->{dtime_sec} * 96;
     if (   $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEON }) {
             #(type, starttime, duration, channel, note, velocity)
