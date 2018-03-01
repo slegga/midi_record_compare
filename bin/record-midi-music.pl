@@ -138,7 +138,7 @@ sub alsa_read {
 # print
 sub stdin_read {
     my ($self, $stream, $bytes) = @_;
-    say $bytes;
+    say $bytes if defined $bytes;
     chomp $bytes;
     $self->silence_timer(-1);
     my ($cmd, $name)=split /\s+/, $bytes;

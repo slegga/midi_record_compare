@@ -48,7 +48,8 @@ my @alsaevents = ([
   [    128,    0  ],
   [    0,    74,    76,   100  ],{dtime_sec=>0}
 ]);
+my @midievents = map{Model::Utils::alsaevent2midievent($_)} @alsaevents;
 
-$t->midi_events(\@alsaevents);
+$t->midi_events(\@midievents);
 ok($t->do_comp('lista_gikk_til_skolen_en_haand.txt'),'OK');
 done_testing;
