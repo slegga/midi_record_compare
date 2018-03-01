@@ -56,7 +56,7 @@ sub calc_shortest_note {
 	my $self =shift;
 	my $numnotes = $self->notes;
     if(! @$numnotes || @$numnotes == 1) {
-        warn Dumper \@$numnotes;
+#        warn Dumper \@$numnotes;
     	die "Zero or one note is not a tune.";
     }
 	my ($min_try,$max_try)=(0,200);

@@ -39,7 +39,7 @@ sub alsaevent2midievent {
 #        my $duration = int($opts->{duration} *96);
         return ['note_off', $dtime, 0, $data->[1], $data->[2]];
     }
-    warn "type = $type";
+    say "Unregisered type = $type";
     return [$type, $dtime, 0, @$data ];
 }
 

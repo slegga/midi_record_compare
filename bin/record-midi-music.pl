@@ -99,7 +99,7 @@ sub main {
     	if (! $self->silence_timer ) {
     		$self->silence_timer($t);
     	} elsif ($t - $self->silence_timer >= 2) {
-    		warn "Timeout";
+    	#	warn "Timeout";
     		$self->stdin_read();
     	}
 #    	print STDERR "Delay: "
@@ -138,33 +138,28 @@ sub alsa_read {
 # print
 sub stdin_read {
     my ($self, $stream, $bytes) = @_;
-    say $bytes if defined $bytes;
-    chomp $bytes;
+    my ($cmd, $name);
+    if (defined $bytes) {
+        say $bytes ;
+        chomp $bytes;
+        ($cmd, $name)=split /\s+/, $bytes;
+    }
     $self->silence_timer(-1);
-    my ($cmd, $name)=split /\s+/, $bytes;
     if (defined $cmd && grep { $cmd eq $_ } ('h','help')) {
         $self->print_help();
     } else {
         if(!defined $cmd) {
             if ($opts->comp) {
                 $self->do_comp($opts->comp);
+            } else {
+                $self->do_endtune();
             }
         }elsif (grep {$cmd eq $_} 'q','quit' ) {
         	$self->do_quit;
         } elsif (grep {$cmd eq $_} ('c','comp')) {
             $self->do_comp($name);
         } else {
-            if ( @{$self->midi_events } > 8 ) {
-                my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
-                $self->tune(Model::Tune->from_midi_score($score));
-                $self->tune->calc_shortest_note;
-                $self->tune->score2notes;
-                print $self->tune->to_string;
-                $self->shortest_note_time($self->tune->shortest_note_time);
-                $self->denominator($self->tune->denominator);
-                printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
-            }
-
+            $self->do_endtune;
             if (grep { $cmd eq $_ } ('s','save')) {
                 $self->do_save($name);
             } elsif (grep { $cmd eq $_} ('p','play')) {
@@ -189,6 +184,20 @@ sub print_help {
     defaults        Stop last tune and start on new.
 
 ';
+}
+
+sub do_endtune {
+    my ($self) = @_;
+    return if (@{$self->midi_events}<8);
+    my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
+    $self->tune(Model::Tune->from_midi_score($score));
+    $self->tune->calc_shortest_note;
+    $self->tune->score2notes;
+    print $self->tune->to_string;
+    $self->shortest_note_time($self->tune->shortest_note_time);
+    $self->denominator($self->tune->denominator);
+    printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
+    return $self;
 }
 
 sub do_save {
