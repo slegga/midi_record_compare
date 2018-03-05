@@ -159,7 +159,7 @@ sub evaluate_with_blueprint {
     $self->blueprint_file($blueprint->note_file);
 	my $result={};
 	my @played_note_values = map{$_->note} @{ $self->notes};
-	my @blueprint_note_values = map{$_->note} @{ $blueprint->notes};
+	my @blueprint_note_values = map{$_->note + 0} @{ $blueprint->notes};
 	my $diff = diff( \@played_note_values, \@blueprint_note_values );
 
 	# remove first array_ref layer from diff
@@ -178,7 +178,15 @@ sub evaluate_with_blueprint {
 
 	# Calculate a note map
 	my $cdiff = compact_diff(\@played_note_values, \@blueprint_note_values);
-	say "178\n".to_json( $cdiff);
+
+	say "178 - TODO oversett tall til notenavn";
+	say "Spilt:";
+	say to_json \@played_note_values;
+	say "Notefasit:";
+	say to_json \@blueprint_note_values;
+	for ( my $i = 0;$i < $#{$cdiff}-2; $i += 4) {
+		printf "%d,%d;%d,%d\n",$cdiff->[$i],$cdiff->[$i+1],$cdiff->[$i+2],$cdiff->[$i+3];
+	}
 	my %map;
 	for ( my $i = 0;$i < $#{$cdiff}-2; $i += 4) {
 		if ($cdiff->[$i] == $cdiff->[$i+2]) {
