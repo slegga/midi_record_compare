@@ -126,7 +126,7 @@ sub alsa_read {
     $self->tune_starttime($on_time) if ! $self->tune_starttime();
     push @alsaevent,{dtime_sec=>
     	($on_time - ($self->last_event_starttime||$self->tune_starttime))};
-    #printf "Alsa event: %s\n", encode_json(\@alsaevent);
+    printf "Alsa event: %s\n", encode_json(\@alsaevent);
     my $event = Model::Utils::alsaevent2midievent(@alsaevent);
     if (defined $event) {
         push @{ $self->midi_events }, $event;
@@ -266,7 +266,7 @@ sub do_comp {
 
     return if ! $name;
     if  ( @{$self->midi_events } < 8 ) {
-        warn "Less than 8 notes. No tune is that short";
+        say "Less than 8 notes. No tune is that short";
     }
 
     my $filename = $name;
@@ -296,11 +296,13 @@ sub do_comp {
 
    	my $play_bs = $self->tune->get_beat_sum;
    	my $blueprint_bs = $tune_blueprint->get_beat_sum;
+    printf "beatlengde %s,%s\n",$blueprint_bs,$play_bs;
    	if ($play_bs*1.5 <$blueprint_bs || $play_bs > 1.5*$blueprint_bs) {
         $self->tune->beat_score($self->tune->beat_score/2) ;
         $self->shortest_note_time($self->shortest_note_time * $play_bs / $blueprint_bs);
 	    $self->tune->score2notes;
     }
+    printf "beatlengde %s,%s\n",$blueprint_bs,$play_bs;
 
     $self->denominator($self->tune->denominator);
 
