@@ -57,7 +57,9 @@ sub calc_shortest_note {
 	my $numnotes = $self->notes;
     if(! @$numnotes || @$numnotes == 1) {
 #        warn Dumper \@$numnotes;
-    	die "Zero or one note is not a tune.";
+    	say "Zero or one note is not a tune.";
+
+        return;
     }
 	my ($min_try,$max_try)=(0,200);
     $max_try = max grep{$_ && $_>=30} map{ $_->{delta_time} } @$numnotes;
@@ -161,7 +163,9 @@ sub evaluate_with_blueprint {
 	my @played_note_values = map{$_->note} @{ $self->notes};
 	my @blueprint_note_values = map{$_->note + 0} @{ $blueprint->notes};
 	my $diff = diff( \@played_note_values, \@blueprint_note_values );
-
+    say "Sammenligne innput note";
+    say "Spilt:".join(',',@played_note_values );
+    say "Facit:".join(',',@blueprint_note_values );
 	# remove first array_ref layer from diff
 #	say Dumper $diff;
 	my $wrongs=[];
@@ -173,8 +177,7 @@ sub evaluate_with_blueprint {
 #	say "171\n".Dumper $wrongs;
 	# Calculate a note score
 	my $n = ((scalar @{ $blueprint->notes } - scalar @$wrongs * 4)/(scalar @{ $blueprint->notes }))*100;
-    warn
-	$self->note_score($n);
+    warn $self->note_score($n);
 
 	# Calculate a note map
 	my $cdiff = compact_diff(\@played_note_values, \@blueprint_note_values);

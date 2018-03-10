@@ -122,6 +122,7 @@ sub alsa_read {
     $self->silence_timer(0);
 
     my @alsaevent = MIDI::ALSA::input();
+    return if $alsaevent[0] ==10; #ignore pedal
 #    my $off_time = Time::HiRes::time;
     $self->tune_starttime($on_time) if ! $self->tune_starttime();
     push @alsaevent,{dtime_sec=>
@@ -194,6 +195,7 @@ sub do_endtune {
     MIDI::ALSA::stop() or die "stop failed";
     my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
     $self->tune(Model::Tune->from_midi_score($score));
+    say "played score raw:". to_json($score);
     $self->tune->calc_shortest_note;
     $self->tune->score2notes;
     print $self->tune->to_string;
