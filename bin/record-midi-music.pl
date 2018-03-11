@@ -17,7 +17,7 @@ use Model::Utils;
 use Model::Tune;
 use SH::Script qw/options_and_usage/;
 use Carp::Always;
-use utf8::all;
+use utf8;
 #use Carp::Always;
 
 =head1 NAME
@@ -56,7 +56,6 @@ has last_event_starttime => 0;
 has silence_timer=> -1;
 has denominator =>8;
 has loop  => sub { Mojo::IOLoop->singleton };
-#sub { my $self=shift;Mojo::IOLoop::Stream->new($self->alsa_stream)->timeout(0) };
 has stdin_loop => sub { Mojo::IOLoop::Stream->new(\*STDIN)->timeout(0) };
 has tune => sub {Model::Tune->new};
 has midi_events => sub {[]};
@@ -192,7 +191,7 @@ sub print_help {
 
 sub do_endtune {
     my ($self) = @_;
-    return if (@{$self->midi_events}<8);
+    return $self if (@{$self->midi_events}<8);
     MIDI::ALSA::stop() or die "stop failed";
     my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
     $self->tune(Model::Tune->from_midi_score($score));
@@ -290,7 +289,7 @@ sub do_comp {
 	}
 
     #midi_event: ['note_on', dtime, channel, note, velocity]
-    say "Played midi_events: ".join(',',map{$_->[3]} grep {$_>[0] eq 'note_on'} @{$self->midi_events});
+    say "Played midi_events: ".join(',',map{$_->[3]} grep {$_>[0] ne 'note_off'} @{$self->midi_events});
 
     my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
 
@@ -313,11 +312,10 @@ sub do_comp {
    	if ($play_bs*1.5 <$blueprint_bs || $play_bs > 1.5*$blueprint_bs) {
         say "######";
         $self->tune->beat_score($self->tune->beat_score/2) ;
-        $self->shortest_note_time($self->shortest_note_time * $play_bs / $blueprint_bs);
         my @new_score = map{$_->to_score({factor=>$blueprint_bs/$play_bs})} @{$self->tune->notes};
 	    $self->tune(Model::Tune->from_midi_score(\@new_score));
-        $self->tune->shortest_note_time($self->shortest_note_time * $play_bs / $blueprint_bs);
-        #$self->tune->calc_shortest_note;
+        #$self->tune->shortest_note_time($self->shortest_note_time * $play_bs / $blueprint_bs);
+        g$self->tune->calc_shortest_note;
         $self->tune->score2notes;
 
         $play_bs = $self->tune->get_beat_sum;

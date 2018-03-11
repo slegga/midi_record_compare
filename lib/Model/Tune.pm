@@ -276,7 +276,7 @@ sub evaluate_with_blueprint {
                 print color('red');
             }
 			printf $format, $n->[0],defined $self->notes->[$n->[1]]? $self->notes->[$n->[1]]->to_string( {no_comment=>1}) :''
-			, $blueprint->notes->[$n->[2]]->to_string;
+			, defined $blueprint->notes->[$n->[2]] ? $blueprint->notes->[$n->[2]]->to_string:'';
 		}
 		elsif (! defined $n->[1] && defined $n->[2]) {
 			print color('red');
@@ -560,7 +560,8 @@ sub to_midi_file {
 	my $one_track = MIDI::Track->new;
 	$one_track->events_r( $events_r );
 	my $opus = MIDI::Opus->new(
-	 {  'format' => 1,  'ticks' => $self->shortest_note_time, 'tracks' => [ $one_track ] }	);
+	 {  'format' => 1,  'ticks' =>120 # to slow :$self->shortest_note_time
+     , 'tracks' => [ $one_track ] }	);
         die "Missing midi_file. Do not know what todo" if (! $midi_file);
     $opus->dump;
     print '['.join (', ',@$_)."]\n" for  $opus->tracks_r()->[0]->events;
