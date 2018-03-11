@@ -17,6 +17,7 @@ use Model::Utils;
 use Model::Tune;
 use SH::Script qw/options_and_usage/;
 use Carp::Always;
+use utf8::all;
 #use Carp::Always;
 
 =head1 NAME
@@ -195,7 +196,7 @@ sub do_endtune {
     MIDI::ALSA::stop() or die "stop failed";
     my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
     $self->tune(Model::Tune->from_midi_score($score));
-    say "played score raw:". to_json($score);
+
     $self->tune->calc_shortest_note;
     $self->tune->score2notes;
     print $self->tune->to_string;
@@ -287,24 +288,41 @@ sub do_comp {
     	    }
         }
 	}
+
+    #midi_event: ['note_on', dtime, channel, note, velocity]
+    say "Played midi_events: ".join(',',map{$_->[3]} grep {$_>[0] eq 'note_on'} @{$self->midi_events});
+
     my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
+
+    #score:  ['note', startitme, length, channel, note, velocity],
+    say "Played score:       ".join(',',map {$_->[4]} @$score);
+
     $self->tune(Model::Tune->from_midi_score($score));
+
+    say "Played notes:       ".join(',',map {$_->note} @{$self->tune->notes});
+
     my $tune_blueprint= Model::Tune->from_note_file($filename);
     $self->tune->denominator($tune_blueprint->denominator);
 
     $self->tune->calc_shortest_note;
-
     $self->tune->score2notes;
 
    	my $play_bs = $self->tune->get_beat_sum;
    	my $blueprint_bs = $tune_blueprint->get_beat_sum;
-    printf "beatlengde %s,%s\n",$blueprint_bs,$play_bs;
+    printf "beatlengde før   fasit: %s, spilt: %s\n",$blueprint_bs,$play_bs;
    	if ($play_bs*1.5 <$blueprint_bs || $play_bs > 1.5*$blueprint_bs) {
+        say "######";
         $self->tune->beat_score($self->tune->beat_score/2) ;
         $self->shortest_note_time($self->shortest_note_time * $play_bs / $blueprint_bs);
-	    $self->tune->score2notes;
+        my @new_score = map{$_->to_score({factor=>$blueprint_bs/$play_bs})} @{$self->tune->notes};
+	    $self->tune(Model::Tune->from_midi_score(\@new_score));
+        $self->tune->shortest_note_time($self->shortest_note_time * $play_bs / $blueprint_bs);
+        #$self->tune->calc_shortest_note;
+        $self->tune->score2notes;
+
+        $play_bs = $self->tune->get_beat_sum;
     }
-    printf "beatlengde %s,%s\n",$blueprint_bs,$play_bs;
+    printf "beatlengde etter fasit: %s, spilt: %s\n",$blueprint_bs,$play_bs;
 
     $self->denominator($self->tune->denominator);
 

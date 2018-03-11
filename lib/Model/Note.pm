@@ -72,6 +72,24 @@ sub from_score {
     return $self;
 }
 
+=head2 to_score
+
+Return note in score format.
+Return an array ref of array ref.
+
+=cut
+
+sub to_score {
+    my $self = shift;
+	my $opts = shift;
+    my $factor = 1;#exists $opts->{factor} ||1;
+
+    #score:  ['note', startitme, length, channel, note, velocity],
+    return ['note', $self->starttime * $factor, $self->duration * $factor, 0, $self->note, $self->velocity];
+}
+
+
+
 =head2 to_string
 
 Print a line representing a note. delta_place_numerator,length_numerator,note.

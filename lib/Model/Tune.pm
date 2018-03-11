@@ -37,20 +37,13 @@ has total_score => 0;
 ('note_off', dtime, channel, note, velocity)
 ('note_on',  dtime, channel, note, velocity)
 
-
-
-
 =head1 METHODS
-
-
-
 
 =head2 calc_shortest_note
 
 Guess the shorest note. If shorter than 96 it is a 1/8 else 1/4.
 
 =cut
-
 
 sub calc_shortest_note {
 	my $self =shift;
@@ -165,7 +158,7 @@ sub evaluate_with_blueprint {
 	my $diff = diff( \@played_note_values, \@blueprint_note_values );
     say "Sammenligne innput note";
     say "Spilt:".join(',',@played_note_values );
-    say "Facit:".join(',',@blueprint_note_values );
+    say "Fasit:".join(',',@blueprint_note_values );
 	# remove first array_ref layer from diff
 #	say Dumper $diff;
 	my $wrongs=[];
@@ -257,8 +250,8 @@ sub evaluate_with_blueprint {
         $j = undef if defined $i && $i>$#{$blueprint->notes};
         push @note_diff,['4',$i,$j];
 		while ($#{$self->notes} > ($i//$#{$self->notes}) || $#{$blueprint->notes} > ($j//$#{$blueprint->notes})){
-            $i++ if defined $i && $#{$self->notes} >$i;
-            $j++ if defined $j && $#{$blueprint->notes} >$j;
+            $i++ if defined $i; # && $#{$self->notes} >$i;
+            $j++ if defined $j; # && $#{$blueprint->notes} >$j;
             push @note_diff,['4',$i,$j];
         }
 	}
@@ -282,7 +275,7 @@ sub evaluate_with_blueprint {
 			} else {
                 print color('red');
             }
-			printf $format, $n->[0],$self->notes->[$n->[1]]->to_string( {no_comment=>1} )
+			printf $format, $n->[0],defined $self->notes->[$n->[1]]? $self->notes->[$n->[1]]->to_string( {no_comment=>1}) :''
 			, $blueprint->notes->[$n->[2]]->to_string;
 		}
 		elsif (! defined $n->[1] && defined $n->[2]) {
@@ -445,9 +438,12 @@ Sum beat sum of a tune
 sub get_beat_sum {
 	my $self=shift;
 	die "No notes" if ! @{$self->notes};
-	my $end_note = $self->notes->[-1];
-	my $endbeat =$end_note->startbeat+$end_note->length_numerator;
-    return $endbeat->to_int;
+    my $return = 0;
+    $return += $_ for map{$_->delta_place_numerator} @{$self->notes};
+	#my $end_note = $self->notes->[-1]->length_numerator;
+	#my $endbeat =$end_note->startbeat+$end_note->length_numerator;
+    $return = $return/scalar @{$self->notes};
+    return $return;
 }
 
 =head2 notes2score
