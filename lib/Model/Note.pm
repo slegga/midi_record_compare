@@ -82,10 +82,13 @@ Return an array ref of array ref.
 sub to_score {
     my $self = shift;
 	my $opts = shift;
-    my $factor = 1;#exists $opts->{factor} ||1;
+    my $factor = 1;
+    if(defined  $opts && exists $opts->{factor} ) {
+    	$factor = $opts->{factor};
+    }
 
     #score:  ['note', startitme, length, channel, note, velocity],
-    return ['note', $self->starttime * $factor, $self->duration * $factor, 0, $self->note, $self->velocity];
+    return ['note', $self->starttime * $factor, int($self->duration * $factor + 0.5), 0, $self->note, $self->velocity];
 }
 
 
