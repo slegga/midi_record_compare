@@ -127,12 +127,12 @@ sub alsa_read {
     $self->tune_starttime($on_time) if ! $self->tune_starttime();
     push @alsaevent,{dtime_sec=>
     	($on_time - ($self->last_event_starttime||$self->tune_starttime))};
-    printf "Alsa event: %s\n", encode_json(\@alsaevent);
+    printf "Alsa event: %s\n", encode_json(\@alsaevent) if $alsaevent[0] == 6;
     my $event = Model::Utils::alsaevent2midievent(@alsaevent);
     if (defined $event) {
         push @{ $self->midi_events }, $event;
         $self->last_event_starttime($on_time);
-        say to_json($event);
+#        say to_json($event);
     }
 }
 
@@ -290,7 +290,8 @@ sub do_comp {
 	}
 
     #midi_event: ['note_on', dtime, channel, note, velocity]
-    say "Played midi_events: ".join(',',map{$_->[3]} grep {$_>[0] ne 'note_off'} @{$self->midi_events});
+    say "text:". join(',',map{$_->[0]} grep {$_->[0] ne 'note_off'} @{$self->midi_events});
+    say "Played midi_events: ".join(',',map{$_->[3]} grep {$_->[0] ne 'note_off'} @{$self->midi_events});
 
     my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
 
