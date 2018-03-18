@@ -1,21 +1,22 @@
 PLAN
 ====
 * Finn et bedre navn på hoved script.
+* Finn riktig låt automatisk
+* Kunne bytte toneart etc.
 * mulig gjør commit fra fredriks maskin
 * Kalkuler en låt vanskelighetsgrad
 * Skriv en bedre read me.
-* Trigge enter hvis stille i 2 sek.
 * Lag database register over låter for å tippe låt automatisk
 	(prøv å lag programmet uavhenig av tastatur)
-* Lag ranking
 * Lag oppstart med navn
 * Renskriv kommentarer script
 * script for renskrivning av låter
-* Kunne bytte toneart etc.
 * Print tips, mål om det spilles stakato eller ikke.
+* Lag ranking
 
 DONE
 ====
+* Trigge enter hvis stille i 2 sek.
 * Print score til slutt etter note utskrift
 * Søk i gjennom blueprints hvis ikke fil finnes hvor angitt for fasit fil
 * Lag liste opsjonen
