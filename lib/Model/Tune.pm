@@ -153,7 +153,7 @@ sub evaluate_with_blueprint {
 	my $options = shift;
     $self->blueprint_file($blueprint->note_file);
 	my $result={};
-	my @played_note_values = map{$_->note} @{ $self->notes};
+	my @played_note_values = map{$_->note+0} @{ $self->notes};
 	my @blueprint_note_values = map{$_->note + 0} @{ $blueprint->notes};
 	my $diff = diff( \@played_note_values, \@blueprint_note_values );
     say "Sammenligne innput note";

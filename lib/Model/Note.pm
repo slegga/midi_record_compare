@@ -40,6 +40,9 @@ use overload
 Take an score-note as an array_ref.
 options {shortest_note_time=>..., denominator}
 
+score data is: 'note', starttime, duration, channel, note, velocity
+Notefile data is: startbeat, length_numerator
+
 Do calculate notes values (see Model::Tune::notes2score)
 Return a new Model::Note object.
 
