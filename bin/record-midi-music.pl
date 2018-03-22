@@ -331,6 +331,8 @@ sub do_comp {
 
     $self->shortest_note_time($self->tune->shortest_note_time);
     printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
+    say "Played notes after2:".join(',',map {$_->note} @{$self->tune->notes});
+
     $self->tune->evaluate_with_blueprint($tune_blueprint);
     return $self;
 }
