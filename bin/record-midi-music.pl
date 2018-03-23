@@ -290,7 +290,7 @@ sub do_comp {
 	}
 
     #midi_event: ['note_on', dtime, channel, note, velocity]
-    say "text:". join(',',map{$_->[0]} grep {$_->[0] ne 'note_off'} @{$self->midi_events});
+#    say "text:". join(',',map{$_->[0]} grep {$_->[0] ne 'note_off'} @{$self->midi_events});
     say "Played midi_events: ".join(',',map{$_->[3]} grep {$_->[0] ne 'note_off'} @{$self->midi_events});
 
     my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );

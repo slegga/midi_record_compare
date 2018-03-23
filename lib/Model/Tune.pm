@@ -157,8 +157,8 @@ sub evaluate_with_blueprint {
 	my @blueprint_note_values = map{$_->note + 0} @{ $blueprint->notes};
 	my $diff = diff( \@played_note_values, \@blueprint_note_values );
     say "Sammenligne innput note";
-    say "Spilt:".join(',',@played_note_values );
-    say "Fasit:".join(',',@blueprint_note_values );
+    say "Spilt:              ".join(',',@played_note_values );
+    say "Fasit:              ".join(',',@blueprint_note_values );
 	# remove first array_ref layer from diff
 #	say Dumper $diff;
 	my $wrongs=[];
@@ -507,9 +507,10 @@ sub score2notes {
         $startbeat = $startbeat + $numerator;
         $note->startbeat($startbeat->clone);
     }
-    @notes = sort {sprintf('%03d%02d%03d',$a->startbeat->number, $a->startbeat->numerator,128 - $a->note)
-               cmp sprintf('%03d%02d%03d',$b->startbeat->number, $b->startbeat->numerator,128 - $b->note) } @notes;
-
+    say join(',', map{sprintf('%03d%03d',$_->startbeat->to_int,128 - $_->note)} @notes);
+    @notes = sort {sprintf('%04d%03d',$a->startbeat->to_int,128 - $a->note)
+               cmp sprintf('%04d%03d',$b->startbeat->to_int,128 - $b->note) } @notes;
+say "score2notes  1:      ".join(',',map {$_->note} @notes);
     #loop another time through notes to calc delta_place_numerator after notes is sorted.
     my $prev_note = Model::Note->new(startbeat=>Model::Beat->new(number=>0, numerator=>0));
 #    my @new_notes=();
@@ -519,6 +520,7 @@ sub score2notes {
 #		push(@new_notes, $note);
 		$prev_note = $note;
     }
+    say "score2notes  2:      ".join(',',map {$_->note} @notes);
 
     $self->notes(\@notes);
 
