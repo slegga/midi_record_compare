@@ -503,12 +503,12 @@ sub score2notes {
         $note->length_name($length_name);
         $note->length_numerator($length_numerator);
         #step up beat
-        my $numerator = int( 1/2 + $note->delta_time / $self->shortest_note_time );
+        my $numerator = int( 2/3 + $note->delta_time / $self->shortest_note_time );
         die "MINUS" if $numerator<0;
 
         $startbeat = $startbeat + $numerator;
         $note->order($startbeat->to_int*1000 + 128 - $note->note);
-        say $note->starttime.' '.$note->delta_time.' '.$note->order.' '.$startbeat->to_int .' '.$note->note;
+        printf "%3.2d %6d %3d %3d\n" ,$note->delta_time,$note->order,$startbeat->to_int,$note->note;
         $note->startbeat($startbeat->clone);
     }
     @notes = sort {$a->order <=> $b->order} @notes;

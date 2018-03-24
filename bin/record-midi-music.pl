@@ -295,7 +295,7 @@ say "YEY";
     say "Played midi_events: ".join(',',map{$_->[3]} grep {$_->[0] ne 'note_off'} @{$self->midi_events});
 
     my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
-    warn p($score);
+#    warn p($score);
 
     #score:  ['note', startitme, length, channel, note, velocity],
     say "Played score:       ".join(',',map {$_->[4]} @$score);
