@@ -127,7 +127,7 @@ sub alsa_read {
     $self->tune_starttime($on_time) if ! $self->tune_starttime();
     push @alsaevent,{dtime_sec=>
     	($on_time - ($self->last_event_starttime||$self->tune_starttime))};
-    printf "Alsa event: %s\n", encode_json(\@alsaevent) if $alsaevent[0] == 6;
+    printf "Alsa event: %s\n", encode_json(\@alsaevent) if $alsaevent[0] == 6 || $alsaevent[0] == 7;
     my $event = Model::Utils::alsaevent2midievent(@alsaevent);
     if (defined $event) {
         push @{ $self->midi_events }, $event;
@@ -266,13 +266,11 @@ sub do_comp {
     say "compare $name";
     die "Missing self" if !$self;
 
-say "YAY";
     return if ! $name;
     if  ( @{$self->midi_events } < 8 ) {
         say "Less than 8 notes. No tune is that short";
         return;
     }
-say "YEY";
     my $filename = $name;
     if (! -e $filename) {
 	    my $bluedir = $self->blueprints_dir->to_string;
