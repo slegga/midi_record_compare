@@ -2,6 +2,7 @@ use Mojo::Base -strict;
 use Test::More;
 use Carp::Always;
 use FindBin;
+use Data::Printer;
 use lib "../lib";
 use lib "$FindBin::Bin/lib";
 require "$FindBin::Bin/../bin/record-midi-music.pl";
@@ -36,7 +37,7 @@ my @alsaevents = (
 , [6,0,0,253,0,[20,0],[129,0],[0,60,82,0,0],{"dtime_sec"=>0.633203029632568}]
 );
 my @midievents = map{Model::Utils::alsaevent2midievent(@$_)} grep {defined} @alsaevents;
-
 $t->midi_events(\@midievents);
 ok($t->do_comp('polser_her.txt'),'OK');
+diag $t->do_comp('polser_her.txt');
 done_testing;

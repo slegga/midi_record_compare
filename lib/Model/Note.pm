@@ -25,6 +25,7 @@ has length_numerator => 0;
 #note help
 has delta_place_numerator => 0;
 has length_name => '';
+has order =>0;  #lowest first
 #has tickpersec =>96;
 
 use overload

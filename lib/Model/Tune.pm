@@ -504,13 +504,16 @@ sub score2notes {
         $note->length_numerator($length_numerator);
         #step up beat
         my $numerator = int( 1/2 + $note->delta_time / $self->shortest_note_time );
+        die "MINUS" if $numerator<0;
+
         $startbeat = $startbeat + $numerator;
+        $note->order($startbeat->to_int*1000 + 128 - $note->note);
+        say $note->starttime.' '.$note->delta_time.' '.$note->order.' '.$startbeat->to_int .' '.$note->note;
         $note->startbeat($startbeat->clone);
     }
-    say join(',', map{sprintf('%03d%03d',$_->startbeat->to_int,128 - $_->note)} @notes);
-    @notes = sort {sprintf('%04d%03d',$a->startbeat->to_int,128 - $a->note)
-               cmp sprintf('%04d%03d',$b->startbeat->to_int,128 - $b->note) } @notes;
-say "score2notes  1:      ".join(',',map {$_->note} @notes);
+    @notes = sort {$a->order <=> $b->order} @notes;
+    say "score2notes  1:      ".join(',',map {$_->note.' '.$_->order} @notes);
+    say "score2notes  1:      ".join(',',map {$_->note} @notes);
     #loop another time through notes to calc delta_place_numerator after notes is sorted.
     my $prev_note = Model::Note->new(startbeat=>Model::Beat->new(number=>0, numerator=>0));
 #    my @new_notes=();

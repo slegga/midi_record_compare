@@ -266,12 +266,13 @@ sub do_comp {
     say "compare $name";
     die "Missing self" if !$self;
 
+say "YAY";
     return if ! $name;
     if  ( @{$self->midi_events } < 8 ) {
         say "Less than 8 notes. No tune is that short";
         return;
     }
-
+say "YEY";
     my $filename = $name;
     if (! -e $filename) {
 	    my $bluedir = $self->blueprints_dir->to_string;
@@ -294,10 +295,11 @@ sub do_comp {
     say "Played midi_events: ".join(',',map{$_->[3]} grep {$_->[0] ne 'note_off'} @{$self->midi_events});
 
     my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
+    warn p($score);
 
     #score:  ['note', startitme, length, channel, note, velocity],
     say "Played score:       ".join(',',map {$_->[4]} @$score);
-
+    say "Played score order: ".join(',',map {$_->[4]} sort {$a->[1] <=> $b->[1]} @$score);
     $self->tune(Model::Tune->from_midi_score($score));
 
     say "Played notes:       ".join(',',map {$_->note} @{$self->tune->notes});
