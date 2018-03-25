@@ -1,5 +1,6 @@
 PLAN
 ====
+* Feil første note ignoreres
 * Finn et bedre navn på hoved script.
 * Finn riktig låt automatisk
 * Kunne bytte toneart etc.
