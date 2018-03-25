@@ -1,7 +1,6 @@
 package Model::Note;
 use Mojo::Base -base;
 use MIDI;
-use Data::Dumper;
 use Clone;
 
 my $ALSA_CODE = {'SND_SEQ_EVENT_SYSTEM'=>0,'SND_SEQ_EVENT_RESULT'=>1

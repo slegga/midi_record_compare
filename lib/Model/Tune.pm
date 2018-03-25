@@ -4,6 +4,7 @@ use Mojo::File 'path';
 use Model::Note;
 use Model::Beat;
 use Model::Utils;
+use Model::Scala;
 use Data::Dumper;
 use Mojo::JSON 'to_json';
 
@@ -22,6 +23,7 @@ has 'notes' =>sub {return []};
 has midi_file  => '';
 has note_file  => '';
 
+has scala => sub{Model::Scala->new(scala=>'c_dur')};
 # points:
 has blueprint_file =>'';
 has 'note_diff';
@@ -157,10 +159,9 @@ sub evaluate_with_blueprint {
 	my @blueprint_note_values = map{$_->note + 0} @{ $blueprint->notes};
 	my $diff = diff( \@played_note_values, \@blueprint_note_values );
     say "Sammenligne innput note";
-    say "Spilt:              ".join(',',@played_note_values );
-    say "Fasit:              ".join(',',@blueprint_note_values );
+    say "Spilt:              ".join(',',map{$self->scala->p($_)} @played_note_values );
+    say "Fasit:              ".join(',',map{$self->scala->p($_)} @blueprint_note_values );
 	# remove first array_ref layer from diff
-#	say Dumper $diff;
 	my $wrongs=[];
 	if (@$diff) {
 		for my $area(@$diff){
@@ -175,11 +176,8 @@ sub evaluate_with_blueprint {
 	# Calculate a note map
 	my $cdiff = compact_diff(\@played_note_values, \@blueprint_note_values);
 
-	say "178 - TODO oversett tall til notenavn";
-	say "Spilt:";
-	say to_json \@played_note_values;
-	say "Notefasit:";
-	say to_json \@blueprint_note_values;
+	say "Spilt:         ". join(',',map{$self->scala->p($_)} @played_note_values);
+	say "Notefasit:     ".join(',',map{$self->scala->p($_)} @blueprint_note_values);
 	for ( my $i = 0;$i < $#{$cdiff}-2; $i += 4) {
 		printf "%d,%d;%d,%d\n",$cdiff->[$i],$cdiff->[$i+1],$cdiff->[$i+2],$cdiff->[$i+3];
 	}
@@ -508,12 +506,14 @@ sub score2notes {
 
         $startbeat = $startbeat + $numerator;
         $note->order($startbeat->to_int*1000 + 128 - $note->note);
-        printf "%6s %6d %3d %3d\n" ,sprintf("%.2f",$note->delta_time),$note->order,$startbeat->to_int,$note->note;
+
+        printf "%6s %6d %3d %3s\n" ,sprintf("%.2f",$note->delta_time),$note->order,$startbeat->to_int,$self->scala->p($note->note);
+
         $note->startbeat($startbeat->clone);
     }
     @notes = sort {$a->order <=> $b->order} @notes;
-    say "score2notes  1:      ".join(',',map {$_->note.' '.$_->order} @notes);
-    say "score2notes  1:      ".join(',',map {$_->note} @notes);
+    say "score2notes  1:      ".join(',',map {$self->scala->p($_->note).' '.$_->order} @notes);
+    say "score2notes  1:      ".join(',',map {$self->scala->p($_->note)} @notes);
     #loop another time through notes to calc delta_place_numerator after notes is sorted.
     my $prev_note = Model::Note->new(startbeat=>Model::Beat->new(number=>0, numerator=>0));
 #    my @new_notes=();
@@ -523,7 +523,7 @@ sub score2notes {
 #		push(@new_notes, $note);
 		$prev_note = $note;
     }
-    say "score2notes  2:      ".join(',',map {$_->note} @notes);
+    say "score2notes  2:      ".join(',',map {$self->scala->p($_->note)} @notes);
 
     $self->notes(\@notes);
 

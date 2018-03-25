@@ -176,6 +176,10 @@ sub stdin_read {
     }
 }
 
+sub pn {
+    return shift->tune->scala->to_string(shift);
+}
+
 sub print_help {
     print q'
     h,help          This help text
@@ -290,24 +294,22 @@ sub do_comp {
 
     #midi_event: ['note_on', dtime, channel, note, velocity]
 #    say "text:". join(',',map{$_->[0]} grep {$_->[0] ne 'note_off'} @{$self->midi_events});
-    say "Played midi_events: ".join(',',map{$_->[3]} grep {$_->[0] ne 'note_off'} @{$self->midi_events});
+    say "Played midi_events: ".join(',',map{$self->pn($_->[3])} grep {$_->[0] ne 'note_off'} @{$self->midi_events});
 
     my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
 #    warn p($score);
 
     #score:  ['note', startitme, length, channel, note, velocity],
-    say "Played score:       ".join(',',map {$_->[4]} @$score);
-    say "Played score order: ".join(',',map {$_->[4]} sort {$a->[1] <=> $b->[1]} @$score);
     $self->tune(Model::Tune->from_midi_score($score));
 
-    say "Played notes:       ".join(',',map {$_->note} @{$self->tune->notes});
+    say "Played notes:       ".join(',',map {$self->pn($_->note)} @{$self->tune->notes});
 
     my $tune_blueprint= Model::Tune->from_note_file($filename);
     $self->tune->denominator($tune_blueprint->denominator);
 
     $self->tune->calc_shortest_note;
     $self->tune->score2notes;
-    say "Played notes after: ".join(',',map {$_->note} @{$self->tune->notes});
+    say "Played notes after:  ".join(',',map {$self->pn($_->note)} @{$self->tune->notes});
 
     my $play_bs = $self->tune->get_beat_sum;
    	my $blueprint_bs = $tune_blueprint->get_beat_sum;
@@ -331,7 +333,7 @@ sub do_comp {
 
     $self->shortest_note_time($self->tune->shortest_note_time);
     printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
-    say "Played notes after2:".join(',',map {$_->note} @{$self->tune->notes});
+    say "Played notes after2:".join(',',map {$self->pn($_->note)} @{$self->tune->notes});
 
     $self->tune->evaluate_with_blueprint($tune_blueprint);
     return $self;
