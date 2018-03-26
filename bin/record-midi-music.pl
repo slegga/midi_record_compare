@@ -61,6 +61,7 @@ has tune => sub {Model::Tune->new};
 has midi_events => sub {[]};
 has shortest_note_time => 12;
 has blueprints_dir => sub {path("$FindBin::Bin/../blueprints")};
+has blueprints => sub{{}};
 
 my ( $opts, $usage, $argv ) =
     options_and_usage( $0, \@ARGV, "%c %o",
@@ -69,6 +70,17 @@ my ( $opts, $usage, $argv ) =
 
 
 __PACKAGE__->new->main if !caller;
+
+sub init {
+    # load blueprints
+    my $self = shift;
+    for my $b ($self->blueprints_dir->list->each) {
+        my $tmp = Model::Tune->from_note_file("$b");
+        my $num = scalar @{$tmp->notes};
+        $self->blueprints->{$num} = "$b";
+    }
+
+}
 
 sub main {
     my $self = shift;
@@ -80,6 +92,9 @@ sub main {
         MIDI::ALSA::client( 'Perl MIDI::ALSA client', 1, 1, 0 );
         MIDI::ALSA::connectfrom( 0, $self->alsa_port, 0 );  # input port is lower (0)
     }
+
+    $self->init; #load blueprints
+
     $self->loop->recurring(0 => sub {
         my ($self) = shift;
         if (MIDI::ALSA::inputpending()) {
@@ -90,19 +105,14 @@ sub main {
         $self->alsa_read(@_)
 	});
     $self->loop->recurring(1 => sub {
-
     	# not active
     	return if $self->silence_timer == -1;
-#   		warn "Timeout";
-
     	my $t = Time::HiRes::time;
     	if (! $self->silence_timer ) {
     		$self->silence_timer($t);
     	} elsif ($t - $self->silence_timer >= 2) {
-    	#	warn "Timeout";
     		$self->stdin_read();
     	}
-#    	print STDERR "Delay: "
     });
 
     $self->stdin_loop->on(read => sub { $self->stdin_read(@_) });
@@ -123,7 +133,6 @@ sub alsa_read {
 
     my @alsaevent = MIDI::ALSA::input();
     return if $alsaevent[0] ==10; #ignore pedal
-#    my $off_time = Time::HiRes::time;
     $self->tune_starttime($on_time) if ! $self->tune_starttime();
     push @alsaevent,{dtime_sec=>
     	($on_time - ($self->last_event_starttime||$self->tune_starttime))};
@@ -132,7 +141,6 @@ sub alsa_read {
     if (defined $event) {
         push @{ $self->midi_events }, $event;
         $self->last_event_starttime($on_time);
-#        say to_json($event);
     }
 }
 
@@ -196,7 +204,6 @@ sub print_help {
 sub do_endtune {
     my ($self) = @_;
     return $self if (@{$self->midi_events}<8);
-    MIDI::ALSA::stop() or die "stop failed";
     my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
     $self->tune(Model::Tune->from_midi_score($score));
 
@@ -206,7 +213,8 @@ sub do_endtune {
     $self->shortest_note_time($self->tune->shortest_note_time);
     $self->denominator($self->tune->denominator);
     printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
-    MIDI::ALSA::start() or die "start failed";
+
+    say "Tippet låt: ". $self->guessed_blueprint();
     return $self;
 }
 
@@ -271,10 +279,6 @@ sub do_comp {
     die "Missing self" if !$self;
 
     return if ! $name;
-    if  ( @{$self->midi_events } < 8 ) {
-        say "Less than 8 notes. No tune is that short";
-        return;
-    }
     my $filename = $name;
     if (! -e $filename) {
 	    my $bluedir = $self->blueprints_dir->to_string;
@@ -294,13 +298,18 @@ sub do_comp {
 
     #midi_event: ['note_on', dtime, channel, note, velocity]
 #    say "text:". join(',',map{$_->[0]} grep {$_->[0] ne 'note_off'} @{$self->midi_events});
-    say "Played midi_events: ".join(',',map{$self->pn($_->[3])} grep {$_->[0] ne 'note_off'} @{$self->midi_events});
-
-    my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
-#    warn p($score);
-
-    #score:  ['note', startitme, length, channel, note, velocity],
-    $self->tune(Model::Tune->from_midi_score($score));
+    if  ( @{$self->midi_events } < 8 ) {
+        if (scalar @{$self->notes} <8) {
+            say "Notthing to work with. Less than 8 notes";
+            return;
+        }
+    } else {
+        say "Played midi_events: ".join(',',map{$self->pn($_->[3])} grep {$_->[0] ne 'note_off'} @{$self->midi_events});
+        my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
+    #    warn p($score);
+        #score:  ['note', startitme, length, channel, note, velocity],
+        $self->tune(Model::Tune->from_midi_score($score));
+    }
 
     say "Played notes:       ".join(',',map {$self->pn($_->note)} @{$self->tune->notes});
 
@@ -310,7 +319,6 @@ sub do_comp {
     $self->tune->calc_shortest_note;
     $self->tune->score2notes;
     say "Played notes after:  ".join(',',map {$self->pn($_->note)} @{$self->tune->notes});
-
     my $play_bs = $self->tune->get_beat_sum;
    	my $blueprint_bs = $tune_blueprint->get_beat_sum;
     printf "beatlengde før   fasit: %s, spilt: %s\n",$blueprint_bs,$play_bs;
@@ -346,6 +354,26 @@ sub do_quit {
 	$self->loop->stop_gracefully;
 }
 
+sub guessed_blueprint {
+    my $self = shift;
+    my $played = scalar @{$self->tune->notes};
+    if (exists $self->blueprints->{$played}) {
+        return $self->blueprints->{$played};
+    }
+    my ($cand_best,$cand_diff);
+    while (keys %{$self->blueprints}) {
+        my $i = $_;
+        my $diff = abs({$played} - $i);
+        if (!defined $cand_best) {
+            $cand_best = $i;
+            $cand_diff = $diff;
+        } elsif ($cand_diff>$diff) {
+            $cand_best = $i;
+            $cand_diff = $diff;
+        }
+    }
+    return $self->blueprints->{$cand_best};
+}
 sub local_dir {
 	my ($self, $mojofiledir) =@_;
 	my @l = @$mojofiledir;

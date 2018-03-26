@@ -1,6 +1,5 @@
 package Model::Beat;
 use Mojo::Base -base;
-use Data::Dumper;
 use Clone;
 
 #  numerator and denominator
