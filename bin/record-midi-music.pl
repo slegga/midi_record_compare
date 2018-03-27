@@ -215,6 +215,7 @@ sub do_endtune {
     printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
 
     say "Tippet låt: ". $self->guessed_blueprint();
+    $self->do_comp($self->guessed_blueprint());
     return $self;
 }
 
@@ -357,12 +358,13 @@ sub do_quit {
 sub guessed_blueprint {
     my $self = shift;
     my $played = scalar @{$self->tune->notes};
+    return if ! $played;
     if (exists $self->blueprints->{$played}) {
         return $self->blueprints->{$played};
     }
     my ($cand_best,$cand_diff);
-    while (keys %{$self->blueprints}) {
-        my $i = $_;
+    for my $i (keys %{$self->blueprints}) {
+        next if !defined $i;
         my $diff = abs({$played} - $i);
         if (!defined $cand_best) {
             $cand_best = $i;
