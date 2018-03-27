@@ -77,7 +77,7 @@ sub init {
     for my $b ($self->blueprints_dir->list->each) {
         my $tmp = Model::Tune->from_note_file("$b");
         my $num = scalar @{$tmp->notes};
-        $self->blueprints->{$num} = "$b";
+        $self->blueprints->{$tmp->notes->[0]->note_name()}->{$num} = "$b";
     }
 
 }
@@ -357,13 +357,28 @@ sub do_quit {
 
 sub guessed_blueprint {
     my $self = shift;
-    my $played = scalar @{$self->tune->notes};
-    return if ! $played;
-    if (exists $self->blueprints->{$played}) {
-        return $self->blueprints->{$played};
+    my $first_note;
+    my $played;
+    if (@{$self->tune->notes}) {
+    	$first_note = $self->pn($self->tune->notes->[0]->note());
+    	$played = scalar @{$self->tune->notes};
+    	say "#notename  ".$first_note.' '.$played;
+    } elsif ($self->alsa_events) {
+    	my $midievents = alsaevents2midievents($self->alsa_events);
+
+    	my $score = Model::Tune->from_midievents($self->alsa_events);
+ 	  	$first_note = $self->pn($self->tune->notes->[0]->note());
+       	say "#notename 2 ".$first_note;
+       	$played = scalar @{$self->tune->notes};
+    } else {
+    	return;
+    }
+    if (exists $self->blueprints->{$first_note}->{$played}) {
+        return $self->blueprints->{$first_note}->{$played};
     }
     my ($cand_best,$cand_diff);
-    for my $i (keys %{$self->blueprints}) {
+
+    for my $i (keys %{$self->blueprints->{$first_note}}) {
         next if !defined $i;
         my $diff = abs({$played} - $i);
         if (!defined $cand_best) {
@@ -374,7 +389,9 @@ sub guessed_blueprint {
             $cand_diff = $diff;
         }
     }
-    return $self->blueprints->{$cand_best};
+    return if ! $cand_best;
+    p($self->blueprints);
+    return $self->blueprints->{$first_note}->{$cand_best};
 }
 sub local_dir {
 	my ($self, $mojofiledir) =@_;

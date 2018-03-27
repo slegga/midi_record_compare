@@ -41,5 +41,6 @@ $t->midi_events(\@midievents);
 ok($t->do_comp('polser_her.txt'),'OK');
 diag $t->do_comp('polser_her.txt');
 $t->init;
+diag p($t->blueprints);
 like($t->guessed_blueprint,qr'polser_her.txt$','Tipper riktig sang');
 done_testing;
