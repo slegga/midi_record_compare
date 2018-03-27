@@ -2,16 +2,39 @@ package Model::Scala;
 use Mojo::Base -base;
 use Scalar::Util qw(looks_like_number);
 use overload
-    '""' => sub { shift->to_string }, fallback => 1,
+    '""' => sub { shift->to_string }, fallback => 1,;
 
+=head1 NAME
 
+Model::Scala
+
+=head1 DESCRIPTION
+
+Convert number to note name
+
+=head1 METHODS
+
+=cut
 
 has scala =>'c_dur';
 has value => undef;
 
+
+=head2 p
+
+Short for to_string
+
+=cut
+
 sub p {
     return shift->to_string(shift);
 }
+
+=head2 to_string
+
+Takes a number for note and return note name.
+
+=cut
 
 sub to_string {
     my $self = shift;
