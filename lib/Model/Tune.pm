@@ -583,6 +583,10 @@ Write tune to note file
 sub to_note_file {
     my $self =shift;
     my $note_file = shift;
+    if (! $note_file) {
+        say "Missing name SYNTAX: s <SONGNAME>";
+        return $self;
+    }
     $note_file = $self->note_file if ! $note_file;
     my $file =  path($note_file);
     say $file;

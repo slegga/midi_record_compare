@@ -214,8 +214,10 @@ sub do_endtune {
     $self->denominator($self->tune->denominator);
     printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
 
-    say "Tippet låt: ". $self->guessed_blueprint();
-    $self->do_comp($self->guessed_blueprint());
+    my $guess = $self->guessed_blueprint();
+    return $self if ! $guess;
+    say "Tippet låt: ". ($guess);
+    $self->do_comp($guess);
     return $self;
 }
 
@@ -276,10 +278,10 @@ sub do_list {
 
 sub do_comp {
     my ($self, $name) = @_;
-    say "compare $name";
     die "Missing self" if !$self;
 
     return if ! $name;
+    say "compare $name";
     my $filename = $name;
     if (! -e $filename) {
 	    my $bluedir = $self->blueprints_dir->to_string;
@@ -380,7 +382,7 @@ sub guessed_blueprint {
 
     for my $i (keys %{$self->blueprints->{$first_note}}) {
         next if !defined $i;
-        my $diff = abs({$played} - $i);
+        my $diff = abs($played - $i);
         if (!defined $cand_best) {
             $cand_best = $i;
             $cand_diff = $diff;
@@ -390,7 +392,7 @@ sub guessed_blueprint {
         }
     }
     return if ! $cand_best;
-    p($self->blueprints);
+    # say $self->pn($_) @{$self->blueprints};
     return $self->blueprints->{$first_note}->{$cand_best};
 }
 sub local_dir {

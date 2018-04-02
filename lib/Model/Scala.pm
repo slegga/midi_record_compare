@@ -46,6 +46,10 @@ sub to_string {
     return $self->$return($value % 12) . $oct;
 }
 
+sub _from_a_mol {
+    return shift->_from_c_dur(shift);
+}}
+
 sub _from_c_dur {
     my $self=shift;
     my $bit=shift;
@@ -64,4 +68,28 @@ sub _from_c_dur {
         11 =>   "H",);
     return $note_names{$bit};
 }
+
+sub _from_c_mol {
+    return shift->_from_em_mol(shift);
+}
+
+sub _from_em_mol {
+    my $self=shift;
+    my $bit=shift;
+    my %note_names =(
+        0 =>    "C",
+        1 =>    "Dm",
+        2 =>    "D",
+        3 =>    "Em",
+        4 =>    "E",
+        5 =>    "F",
+        6 =>    "Fs",
+        7 =>    "G",
+        8 =>    "Am",
+        9 =>    "A",
+        10 =>   "Hm",
+        11 =>   "H",);
+    return $note_names{$bit};
+}
+
 1;
