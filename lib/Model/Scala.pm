@@ -48,7 +48,7 @@ sub to_string {
 
 sub _from_a_mol {
     return shift->_from_c_dur(shift);
-}}
+}
 
 sub _from_c_dur {
     my $self=shift;

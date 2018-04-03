@@ -27,7 +27,7 @@ Beat object. number.part
 
 my $new = $self->add(Model::Beat->new(number=>1,numerator=>2,denominator=>4);
 
-Add beats. Retutn new beat.
+Add beats. Return new beat.
 
 =cut
 
@@ -43,7 +43,7 @@ sub add {
 	} else {
 		die ref $other .'  '. $other;
 	}
-	 while ($numerator>=$self->denominator) {
+	 while ($numerator >= $self->denominator) {
 		$number++;
         $numerator -= $self->denominator;
 	}

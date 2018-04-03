@@ -397,8 +397,9 @@ sub guessed_blueprint {
 }
 sub local_dir {
 	my ($self, $mojofiledir) =@_;
-	my @l = @$mojofiledir;
-	splice(@l,$#$mojofiledir-1,0,'local');
+    my $mf = path("$mojofiledir");
+	my @l = @$mf;
+	splice(@l,$#$mf-1,0,'local');
 	return path(@l);
 }
 1;

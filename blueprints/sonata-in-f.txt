@@ -1,7 +1,7 @@
 denominator=8
 shortest_note_time=52
 beat_score=80
-toneart=c_mol
+scala=c_mol
 0;1;Ds5       # 0.0-1/8-0.00
 0;1;G4        # 0.0-1/8-1.16
 0;1;Ds4       # 0.0-1/8-0.37

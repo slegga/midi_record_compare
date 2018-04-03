@@ -52,5 +52,5 @@ $tune->score2notes;
 is($tune->notes->[1]->to_string, "1;2;D6        # 0.1-1/2-96.00", 'Expected');
 is(Model::Note->from_score($score->[1],{tune_starttime=>0
 ,shortest_note_time=>$tune->shortest_note_time, denominator=>4}
-    )->to_string, '0;2;D6        # 0.0-1/2-0.00','Not working yet');
+    )->to_string, '0;2;D6        # 0.0-1/2','Not working yet');
 done_testing;

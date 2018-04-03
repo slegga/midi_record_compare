@@ -413,7 +413,8 @@ sub from_note_file {
           length_numerator => $length_numerator,
           length_name => $ln,
           note_name => $note_name,
-          denominator => $self->denominator//4, startbeat =>$beat->clone,
+          denominator => $self->denominator,
+          startbeat =>$beat->clone,
           )->compile);
       }
 

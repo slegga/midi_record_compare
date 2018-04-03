@@ -13,18 +13,20 @@ use Model::Tune;
 
 =head1 NAME
 
- - cleanup a note csv file
+ - cleanup a note txt file
 
 =head1 DESCRIPTION
 
 Ment to be used to convert samples to blueprints.
 Remove comments and add new ones.
+Can change scala.
 
 =cut
 
 my ( $opts, $usage, $argv ) =
     options_and_usage( $0, \@ARGV, "%c %o",
     [ 'extend|e=s', 'Extend these periods to next valid length. Takes , separated list' ],
+    [ 'scala', 'Set scala. Convert from old to given scala. Example c_dur'],
 ,{return_uncatched_arguments => 1});
 
 
