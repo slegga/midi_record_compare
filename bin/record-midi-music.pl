@@ -132,7 +132,8 @@ sub alsa_read {
     $self->silence_timer(0);
 
     my @alsaevent = MIDI::ALSA::input();
-    return if $alsaevent[0] ==10; #ignore pedal
+    return if $alsaevent[0] == 10; #ignore pedal
+    return if $alsaevent[0] == 42; #ignore system beat
     $self->tune_starttime($on_time) if ! $self->tune_starttime();
     push @alsaevent,{dtime_sec=>
     	($on_time - ($self->last_event_starttime||$self->tune_starttime))};
@@ -223,7 +224,7 @@ sub do_endtune {
 
 sub do_save {
     my ($self, $name) = @_;
-    $self->tune->to_note_file($self->local_dir($self->blueprints_dir->sibling('notes'))->child($name));
+    $self->tune->to_note_file($self->local_dir($self->blueprints_dir->child('notes'))->child($name));
 }
 
 sub do_play {
@@ -307,7 +308,7 @@ sub do_comp {
             return;
         }
     } else {
-        say "Played midi_events: ".join(',',map{$self->pn($_->[3])} grep {$_->[0] ne 'note_off'} @{$self->midi_events});
+#        say "Played midi_events: ".join(',',map{$self->pn($_->[3])} grep {$_->[0] ne 'note_off'} @{$self->midi_events});
         my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
     #    warn p($score);
         #score:  ['note', startitme, length, channel, note, velocity],
@@ -399,7 +400,7 @@ sub local_dir {
 	my ($self, $mojofiledir) =@_;
     my $mf = path("$mojofiledir");
 	my @l = @$mf;
-	splice(@l,$#$mf-1,0,'local');
+	splice(@l,$#$mf-1,1,'local');
 	return path(@l);
 }
 1;

@@ -112,7 +112,14 @@ sub to_string {
 	if ($self->startbeat)  {
 		my $core = sprintf "%s;%s;%s",$self->delta_place_numerator,$self->length_numerator,$MIDI::number2note{ $self->note() };
 		if (! exists $opts->{no_comment} || ! $opts->{no_comment}) {
-		    $return =  sprintf "%-12s  #%4s-%3s%5s",$core,$self->startbeat,$self->length_name,(defined $self->delta_time && $self->delta_time ? sprintf("-%.2f",$self->delta_time) : '');
+            my $format = '%-12s  #%4s-%3s';
+            my $dt = $self->delta_time;
+            my @args = ($core, $self->startbeat, $self->length_name);
+            if (defined $dt && $dt) {
+                $format .='%5s' ;
+                push  @args, sprintf("-%.2f",$dt);
+            }
+		    $return =  sprintf $format,@args;
 		}
 		else {
 			$return =  $core;

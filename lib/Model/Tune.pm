@@ -400,30 +400,27 @@ sub from_note_file {
     my $beat = Model::Beat->new(denominator=>$self->denominator);
     # Remove comments and add new
     for my $line (split/\n/,$content) {
-      $line =~ s/\s*\#.*$//;
-      next if ! $line;
-      if ($line=~/([\w\_\-]+)\s*=\s*(.+)$/) {
-          $self->$1($2);
-      } else {
-          my ($delta_place_numerator, $length_numerator, $note_name) = split(/\;/,$line);
-          $beat = $beat + $delta_place_numerator;
-          my ($ln,undef) = Model::Utils::calc_length({numerator =>$length_numerator}
+        $line =~ s/\s*\#.*$//;
+        next if ! $line;
+        if ($line=~/([\w\_\-]+)\s*=\s*(.+)$/) {
+            $self->$1($2);
+        } else {
+            my ($delta_place_numerator, $length_numerator, $note_name) = split(/\;/,$line);
+            $beat = $beat + $delta_place_numerator;
+            my ($ln,undef) = Model::Utils::calc_length({numerator =>$length_numerator}
             ,{shortest_note_time=>$self->shortest_note_time, denominator=>$self->denominator});
-          push(@notes,Model::Note->new(delta_place_numerator => $delta_place_numerator,
-          length_numerator => $length_numerator,
-          length_name => $ln,
-          note_name => $note_name,
-          denominator => $self->denominator,
-          startbeat =>$beat->clone,
-          )->compile);
-      }
-
-    #      $newcont .= Model::Note->new(delta_place_numinator => $val[0], length_numerator => $val[1], note => $val[2])
-    #          ->to_string({expand=>1,denominator=>$input{denominator}});
+            push(@notes,Model::Note->new(delta_place_numerator => $delta_place_numerator,
+            length_numerator => $length_numerator,
+            length_name => $ln,
+            note_name => $note_name,
+            denominator => $self->denominator,
+            startbeat =>$beat->clone,
+            )->compile);
+        }
     }
-    #say Dumper @notes;
+
     @notes = grep { defined $_ } @notes;
-    die"No notes" if ! @notes;
+    die"No notes $path" if ! @notes;
     $self->notes(\@notes);
     return $self;
 }
@@ -502,18 +499,47 @@ sub score2notes {
         $note->length_name($length_name);
         $note->length_numerator($length_numerator);
         #step up beat
-        my $numerator = int( 2/3 + $note->delta_time / $self->shortest_note_time ); #1/2 fører til litt kluss prvøver med 2/3
+        my $numerator = int( 1/2 + $note->delta_time / $self->shortest_note_time ); #1/2 fører til litt kluss prvøver med 2/3
         die "MINUS" if $numerator<0;
 
         $startbeat = $startbeat + $numerator;
         $note->order($startbeat->to_int*1000 + 128 - $note->note);
 
-        printf "%6s %6d %3d %3s\n" ,sprintf("%.2f",$note->delta_time),$note->order,$startbeat->to_int,$self->scala->p($note->note);
+        printf "%6s %6d %.3f %3d %3s\n" ,sprintf("%.2f",$note->delta_time),$note->order,$startbeat->to_int,$note->duration,$self->scala->p($note->note);
 
         $note->startbeat($startbeat->clone);
     }
+
+    # split notes which is on same beat but not payed together
+    #TODO FIX THIS
+    # handle end of beat time limit. Maybe starttimelimit also shall be handeled
+    if ( @notes && $notes[0]->duration ) {
+        my ($beattime_end); #end limit of beat
+        my $numinator_mod=0;
+        for my $n (@notes) {
+            if (!defined $beattime_end) {
+                $beattime_end = $n->starttime + $n->duration;
+            } elsif ($n->delta_place_numerator) {
+                $beattime_end = $n->starttime + $n->duration;
+            } else {
+                if ($beattime_end < $n->starttime) {
+                    $n->delta_place_numerator($n->delta_place_numerator+1);
+                } elsif ($beattime_end < $n->starttime + $n->duration) {
+                    $beattime_end = $n->starttime + $n->duration;
+                }
+            }
+
+        }
+    }
+
+    for my $n (@notes) {
+        $n->order($n->startbeat->to_int*1000 + 128 - $n->note);
+    }
+
     @notes = sort {$a->order <=> $b->order} @notes;
     say "score2notes  1:      ".join(',',map {$self->scala->p($_->note).' '.$_->order} @notes);
+
+
     say "score2notes  1:      ".join(',',map {$self->scala->p($_->note)} @notes);
     #loop another time through notes to calc delta_place_numerator after notes is sorted.
     my $prev_note = Model::Note->new(startbeat=>Model::Beat->new(number=>0, numerator=>0));
