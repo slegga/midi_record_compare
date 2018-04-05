@@ -186,7 +186,9 @@ sub stdin_read {
 }
 
 sub pn {
-    return shift->tune->scala->to_string(shift);
+	my ($self, $note) = @_;
+	return if !defined $note;
+    return $self->tune->scala->to_string($note);
 }
 
 sub print_help {
@@ -396,11 +398,15 @@ sub guessed_blueprint {
     # say $self->pn($_) @{$self->blueprints};
     return $self->blueprints->{$first_note}->{$cand_best};
 }
+
+
 sub local_dir {
 	my ($self, $mojofiledir) =@_;
+
     my $mf = path("$mojofiledir");
 	my @l = @$mf;
-	splice(@l,$#$mf-1,1,'local');
+	my $remove=1;
+	splice(@l,$#$mf-1, $remove, 'local');
 	return path(@l);
 }
 1;
