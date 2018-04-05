@@ -302,6 +302,21 @@ sub evaluate_with_blueprint {
 	return $self;
 }
 
+=head2 find_best_scala
+
+Return best fit scala for tune.
+
+=cut
+
+sub find_best_scala {
+    my($self) = @_;
+    my $return='c_dur';
+    my %notemap;
+    for my $n(@{$self->notes}) {
+        $notemap{$n->note}++;
+    }
+    return $return;
+}
 
 =head2 from_midi_score
 
@@ -516,18 +531,26 @@ sub score2notes {
     if ( @notes && $notes[0]->duration ) {
         my ($beattime_end); #end limit of beat
         my $numinator_mod=0;
+        my $extend_flag=0;
         for my $n (@notes) {
+            $n->delta_place_numerator($n->delta_place_numerator+$numinator_mod);
             if (!defined $beattime_end) {
                 $beattime_end = $n->starttime + $n->duration;
             } elsif ($n->delta_place_numerator) {
                 $beattime_end = $n->starttime + $n->duration;
+                if ($extend_flag==1) {
+                    $numinator_mod++;
+                }
+                $extend_flag=0;
             } else {
                 if ($beattime_end < $n->starttime) {
                     $n->delta_place_numerator($n->delta_place_numerator+1);
+                    $extend_flag=1;
                 } elsif ($beattime_end < $n->starttime + $n->duration) {
                     $beattime_end = $n->starttime + $n->duration;
                 }
             }
+
 
         }
     }

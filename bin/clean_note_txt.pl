@@ -29,23 +29,16 @@ my ( $opts, $usage, $argv ) =
     [ 'scala', 'Set scala. Convert from old to given scala. Example c_dur'],
 ,{return_uncatched_arguments => 1});
 
-
-
 my $tune = Model::Tune->from_note_file($ARGV[0]);
 #$tune->spurt;
+my $new_scala;
+if ($opts->scala) {
+    $new_scala = $opts->scala;
+} else {
+    $new_scala = $tune->find_best_scala;
+}
+if ($new_scala ne $tune->scala) {
+    $tune->scala($new_scala);
+}
 say "$tune";
 $tune->to_note_file;
-
-__END__
-#!/usr/bin/env perl
-use Mojo::Base -strict;
-use Mojo::File 'path';
-use FindBin;
-use lib "$FindBin::Bin/../lib";
-use Model::Tune;
-use Model::Note;
-
-
-#
-#			MAIN
-#
