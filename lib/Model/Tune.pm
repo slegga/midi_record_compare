@@ -553,7 +553,9 @@ sub score2notes {
 
 
         }
+        warn "# NOTER ER FLYTTET $numinator_mod" if $numinator_mod;
     }
+
 
     for my $n (@notes) {
         $n->order($n->startbeat->to_int*1000 + 128 - $n->note);
