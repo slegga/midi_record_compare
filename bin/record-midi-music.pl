@@ -18,6 +18,9 @@ use Model::Tune;
 use SH::Script qw/options_and_usage/;
 use Carp::Always;
 use utf8;
+use Term::ANSIColor;
+
+
 #use Carp::Always;
 
 =head1 NAME
@@ -219,7 +222,9 @@ sub do_endtune {
 
     my $guess = $self->guessed_blueprint();
     return $self if ! $guess;
+    print color('green');
     say "Tippet låt: ". ($guess);
+    print color('reset');
     $self->do_comp($guess);
     return $self;
 }

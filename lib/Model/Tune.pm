@@ -508,17 +508,28 @@ sub score2notes {
     my $notes = $self->notes;
     my @notes = @$notes;
     my $startbeat = Model::Beat->new(denominator=>$self->denominator);
+    my $prev_starttime=0;
+    my $prev_note;
     for my $note(@notes) {
         my ($length_name, $length_numerator) = Model::Utils::calc_length( { time => $note->duration }
             ,{shortest_note_time=>$self->shortest_note_time, denominator=>$self->denominator} );
         $note->length_name($length_name);
         $note->length_numerator($length_numerator);
         #step up beat
-        my $numerator = int( 1/2 + $note->delta_time / $self->shortest_note_time ); #1/2 fører til litt kluss prvøver med 2/3
-        die "MINUS" if $numerator<0;
+        my $numerator = int( 1/2
+        + $note->delta_time / $self->shortest_note_time );
 
+        # Try to correct to get better startbeat
+        if ($note->starttime) {
+            if(! $numerator) {
+                $numerator = int( 1/2 + ($note->starttime - $prev_starttime)/$self->shortest_note_time );
+            } else {
+                $prev_starttime = $note->starttime;
+            }
+        }
+
+        die "MINUS" if $numerator<0;
         $startbeat = $startbeat + $numerator;
-        $note->order($startbeat->to_int*1000 + 128 - $note->note);
 
         printf "%6s %6d %.3f %3d %3s\n" ,sprintf("%.2f",$note->delta_time),$note->order,$startbeat->to_int,$note->duration,$self->scala->p($note->note);
 
@@ -528,33 +539,33 @@ sub score2notes {
     # split notes which is on same beat but not payed together
     #TODO FIX THIS
     # handle end of beat time limit. Maybe starttimelimit also shall be handeled
-    if ( @notes && $notes[0]->duration ) {
-        my ($beattime_end); #end limit of beat
-        my $numinator_mod=0;
-        my $extend_flag=0;
-        for my $n (@notes) {
-            $n->delta_place_numerator($n->delta_place_numerator+$numinator_mod);
-            if (!defined $beattime_end) {
-                $beattime_end = $n->starttime + $n->duration;
-            } elsif ($n->delta_place_numerator) {
-                $beattime_end = $n->starttime + $n->duration;
-                if ($extend_flag==1) {
-                    $numinator_mod++;
-                }
-                $extend_flag=0;
-            } else {
-                if ($beattime_end < $n->starttime) {
-                    $n->delta_place_numerator($n->delta_place_numerator+1);
-                    $extend_flag=1;
-                } elsif ($beattime_end < $n->starttime + $n->duration) {
-                    $beattime_end = $n->starttime + $n->duration;
-                }
-            }
-
-
-        }
-        warn "# NOTER ER FLYTTET $numinator_mod" if $numinator_mod;
-    }
+    # if ( @notes && $notes[0]->duration ) {
+    #     my ($beattime_end); #end limit of beat
+    #     my $numinator_mod=0;
+    #     my $extend_flag=0;
+    #     for my $n (@notes) {
+    #         $n->delta_place_numerator($n->delta_place_numerator+$numinator_mod);
+    #         if (!defined $beattime_end) {
+    #             $beattime_end = $n->starttime + $n->duration;
+    #         } elsif ($n->delta_place_numerator) {
+    #             $beattime_end = $n->starttime + $n->duration;
+    #             if ($extend_flag==1) {
+    #                 $numinator_mod++;
+    #             }
+    #             $extend_flag=0;
+    #         } else {
+    #             if ($beattime_end < $n->starttime) {
+    #                 $n->delta_place_numerator($n->delta_place_numerator+1);
+    #                 $extend_flag=1;
+    #             } elsif ($beattime_end < $n->starttime + $n->duration) {
+    #                 $beattime_end = $n->starttime + $n->duration;
+    #             }
+    #         }
+    #
+    #
+    #     }
+    #     warn "# NOTER ER FLYTTET $numinator_mod" if $numinator_mod;
+    # }
 
 
     for my $n (@notes) {
