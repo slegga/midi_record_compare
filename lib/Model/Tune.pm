@@ -509,7 +509,6 @@ sub score2notes {
     my @notes = @$notes;
     my $startbeat = Model::Beat->new(denominator=>$self->denominator);
     my $prev_starttime=0;
-    my $prev_note;
     for my $note(@notes) {
         my ($length_name, $length_numerator) = Model::Utils::calc_length( { time => $note->duration }
             ,{shortest_note_time=>$self->shortest_note_time, denominator=>$self->denominator} );

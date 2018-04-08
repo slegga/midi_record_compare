@@ -17,9 +17,11 @@ use Model::Utils;
 use Model::Tune;
 use SH::Script qw/options_and_usage/;
 use Carp::Always;
-use utf8;
 use Term::ANSIColor;
-
+use feature 'unicode_strings';
+use utf8;
+binmode(STDOUT, ":utf8");
+use open ':encoding(UTF-8)';
 
 #use Carp::Always;
 
