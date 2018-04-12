@@ -7,6 +7,7 @@ use Model::Utils;
 use Model::Scala;
 use Data::Dumper;
 use Mojo::JSON 'to_json';
+use MIDI;
 
 use Carp;
 use List::Util qw/min max/;
@@ -23,7 +24,8 @@ has 'notes' =>sub {return []};
 has midi_file  => '';
 has note_file  => '';
 
-has scala => sub{Model::Scala->new(scala=>'c_dur')};
+has scala => 'c_dur';
+has scala_obj => sub{Model::Scala->new(scala=>'c_dur')};
 # points:
 has blueprint_file =>'';
 has 'note_diff';
@@ -32,6 +34,7 @@ has note_score => 0;
 has length_score =>0;
 has delta_beat_score =>0;
 has total_score => 0;
+has startbeat => 0;
 
 
 =head1 DESCRIPTION
@@ -159,8 +162,8 @@ sub evaluate_with_blueprint {
 	my @blueprint_note_values = map{$_->note + 0} @{ $blueprint->notes};
 	my $diff = diff( \@played_note_values, \@blueprint_note_values );
     say "Sammenligne innput note";
-    say "Spilt:              ".join(',',map{$self->scala->p($_)} @played_note_values );
-    say "Fasit:              ".join(',',map{$self->scala->p($_)} @blueprint_note_values );
+    say "Spilt:              ".join(',',map{$self->scala_obj->p($_)} @played_note_values );
+    say "Fasit:              ".join(',',map{$self->scala_obj->p($_)} @blueprint_note_values );
 	# remove first array_ref layer from diff
 	my $wrongs=[];
 	if (@$diff) {
@@ -176,8 +179,8 @@ sub evaluate_with_blueprint {
 	# Calculate a note map
 	my $cdiff = compact_diff(\@played_note_values, \@blueprint_note_values);
 
-	say "Spilt:         ". join(',',map{$self->scala->p($_)} @played_note_values);
-	say "Notefasit:     ".join(',',map{$self->scala->p($_)} @blueprint_note_values);
+	say "Spilt:         ". join(',',map{$self->scala_obj->p($_)} @played_note_values);
+	say "Notefasit:     ".join(',',map{$self->scala_obj->p($_)} @blueprint_note_values);
 	for ( my $i = 0;$i < $#{$cdiff}-2; $i += 4) {
 		printf "%d,%d;%d,%d\n",$cdiff->[$i],$cdiff->[$i+1],$cdiff->[$i+2],$cdiff->[$i+3];
 	}
@@ -412,13 +415,23 @@ sub from_note_file {
     my $newcont='';
     my %input;
     my @notes = ();
-    my $beat = Model::Beat->new(denominator=>$self->denominator);
+
+    #scan for variables
+    for my $line (split/\n/,$content) {
+        if ($line=~/([\w\_\-]+)\s*=\s*(.+)$/) {
+            $self->$1($2);
+        }
+    }
+    my $beat = Model::Beat->new(integer => $self->startbeat, denominator => $self->denominator);
+
+    #read notes
+    warn "#".$beat;
     # Remove comments and add new
     for my $line (split/\n/,$content) {
         $line =~ s/\s*\#.*$//;
         next if ! $line;
         if ($line=~/([\w\_\-]+)\s*=\s*(.+)$/) {
-            $self->$1($2);
+            next
         } else {
             my ($delta_place_numerator, $length_numerator, $note_name) = split(/\;/,$line);
             $beat = $beat + $delta_place_numerator;
@@ -530,7 +543,7 @@ sub score2notes {
         die "MINUS" if $numerator<0;
         $startbeat = $startbeat + $numerator;
 
-        printf "%6s %6d %.3f %3d %3s\n" ,sprintf("%.2f",$note->delta_time),$note->order,$startbeat->to_int,$note->duration,$self->scala->p($note->note);
+        printf "%6s %6d %.3f %3d %3s\n" ,sprintf("%.2f",$note->delta_time),$note->order,$startbeat->to_int,$note->duration,$self->scala_obj->p($note->note);
 
         $note->startbeat($startbeat->clone);
     }
@@ -572,10 +585,10 @@ sub score2notes {
     }
 
     @notes = sort {$a->order <=> $b->order} @notes;
-    say "score2notes  1:      ".join(',',map {$self->scala->p($_->note).' '.$_->order} @notes);
+    say "score2notes  1:      ".join(',',map {$self->scala_obj->p($_->note).' '.$_->order} @notes);
 
 
-    say "score2notes  1:      ".join(',',map {$self->scala->p($_->note)} @notes);
+    say "score2notes  1:      ".join(',',map {$self->scala_obj->p($_->note)} @notes);
     #loop another time through notes to calc delta_place_numerator after notes is sorted.
     my $prev_note = Model::Note->new(startbeat=>Model::Beat->new(number=>0, numerator=>0));
 #    my @new_notes=();
@@ -585,7 +598,7 @@ sub score2notes {
 #		push(@new_notes, $note);
 		$prev_note = $note;
     }
-    say "score2notes  2:      ".join(',',map {$self->scala->p($_->note)} @notes);
+    say "score2notes  2:      ".join(',',map {$self->scala_obj->p($_->note)} @notes);
 
     $self->notes(\@notes);
 
@@ -645,13 +658,14 @@ Write tune to note file
 sub to_note_file {
     my $self =shift;
     my $note_file = shift;
+    $note_file = $self->note_file if ! $note_file;
+    my $file =  path($note_file);
+    say $file;
     if (! $note_file) {
         say "Missing name SYNTAX: s <SONGNAME>";
         return $self;
     }
-    $note_file = $self->note_file if ! $note_file;
-    my $file =  path($note_file);
-    say $file;
+
     my $content = $self->to_string({end=>"\n"});
     die "No content" if ! $content;
     $file->spurt($content);
@@ -668,9 +682,11 @@ Return a text with all notes and some general variables for the tune.
 sub to_string {
   my $self = shift;
   my @notes = map{"$_"} grep {$_} @{$self->notes};
-	my $return= sprintf "denominator=%s\n", $self->denominator if $self->denominator;
-	$return .=  sprintf "shortest_note_time=%s\n", $self->shortest_note_time if $self->shortest_note_time;
-    $return .=  sprintf "beat_score=%s\n", $self->beat_score if $self->beat_score;
+
+	my $return='';
+    for my $name (qw/denominator shortest_note_time beat_score scala startbeat/) {
+        $return .=  sprintf "$name=%s\n", $self->$name if $self->$name;
+    }
   return $return . join('',@notes)."\n";
 }
 

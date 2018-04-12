@@ -4,6 +4,7 @@ use Mojo::IOLoop;
 use Mojo::IOLoop::Stream;
 use Mojo::Util 'dumper';
 use Mojo::Loader 'data_section';
+use MIDI;
 use MIDI::ALSA(':CONSTS');
 use Time::HiRes;
 use Mojo::JSON qw(encode_json);
@@ -193,7 +194,7 @@ sub stdin_read {
 sub pn {
 	my ($self, $note) = @_;
 	return if !defined $note;
-    return $self->tune->scala->to_string($note);
+    return $self->tune->scala_obj->to_string($note);
 }
 
 sub print_help {

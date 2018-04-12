@@ -39,6 +39,7 @@ if ($opts->scala) {
 }
 if ($new_scala ne $tune->scala) {
     $tune->scala($new_scala);
+    $tune->scala_obj($tune->scala);
 }
 say "$tune";
 $tune->to_note_file;

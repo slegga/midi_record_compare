@@ -3,9 +3,9 @@ use Mojo::Base -base;
 use Clone;
 
 #  numerator and denominator
-
-has number => 0;
-has numerator => 0;
+has integer =>0;
+# has number => 0;
+# has numerator => 0;
 has denominator => 8;
 
 use overload
@@ -32,22 +32,21 @@ Add beats. Return new beat.
 =cut
 
 sub add {
-  my ($self, $other,$swap) = @_;
-	my $number = $self->number;
-  my $numerator = $self->numerator;
+    my ($self, $other,$swap) = @_;
+	my $integer = $self->integer;
+    #my $numerator = $self->numerator;
 	if (ref $other eq __PACKAGE__ ) {
-			$number += $other->number;
-			$numerator += $other->numerator;
+			$integer += $other->integer;
 	} elsif($other=~/^\d+$/)	{
-		$numerator += $other;
+		$integer += $other;
 	} else {
 		die ref $other .'  '. $other;
 	}
-	 while ($numerator >= $self->denominator) {
-		$number++;
-        $numerator -= $self->denominator;
-	}
-	return Model::Beat->new(number => $number, numerator => $numerator, denominator => $self->denominator);
+#	 while ($numerator >= $self->denominator) {
+#		$number++;
+#        $numerator -= $self->denominator;
+#	}
+	return Model::Beat->new(integer => $integer, denominator => $self->denominator);
 }
 
 =head2 clone
@@ -58,7 +57,7 @@ Return a new similar beat with same values.
 
 sub clone {
     my $self = shift;
-    return Model::Beat->new(number => $self->number, numerator => $self->numerator, denominator => $self->denominator);
+    return Model::Beat->new(integer => $self->integer, denominator => $self->denominator);
 }
 
 =head2 subtract
@@ -69,24 +68,22 @@ Similar as add.
 
 sub subtract {
   my ($self, $other,$swap) = @_;
-  my $number = $self->number;
-  my $numerator = $self->numerator;
-	if ($swap) {
+  my $integer = $self->integer;
+  if ($swap) {
 		...;
 	}
   if (ref $other eq __PACKAGE__ ) {
-      $number -= $other->number;
-      $numerator -= $other->numerator;
+      $integer -= $other->integer;
   } elsif($other=~/^\d+$/)  {
-    $numerator -= $other;
+    $integer -= $other;
   } else {
     die ref $other .'  '. $other;
   }
-   while ($numerator<0) {
-    $number--;
-        $numerator += $self->denominator;
-  }
-  return Model::Beat->new(number => $number, numerator => $numerator, denominator => $self->denominator);
+   #while ($numerator<0) {
+#    $number--;
+#        $numerator += $self->denominator;
+#  }
+  return Model::Beat->new(integer => $integer, denominator => $self->denominator);
 
 }
 
@@ -97,8 +94,10 @@ Return beat as string with . as delimiter between beat and beat part
 =cut
 
 sub to_string {
-  my $self = shift;
-      return sprintf "%d.%d",$self->number,$self->numerator;
+    my $self = shift;
+    my $number = int($self->integer/$self->denominator);
+    my $numerator = $self->integer - $number * $self->denominator;
+    return sprintf "%d.%d",$number, $numerator;
       # time, length,note
       # 3.8;1/4;C4
 
@@ -112,7 +111,7 @@ Return As a number.
 
 sub to_int {
 	my $self =shift;
-	return $self->numerator + $self->number * $self->denominator;
+	return $self->integer;
 }
 
 1;
