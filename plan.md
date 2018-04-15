@@ -1,5 +1,6 @@
 PLAN
 ====
+* script for renskrivning av låter
 * Tippe toneart
 * toneart konverteringsscript
 * Finn et bedre navn på hoved script.
@@ -8,7 +9,6 @@ PLAN
 * Skriv en bedre read me.
 * Lag oppstart med navn
 * Renskriv kommentarer script
-* script for renskrivning av låter
 * Print tips, mål om det spilles stakato eller ikke.
 * Lag ranking
 

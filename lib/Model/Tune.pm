@@ -59,10 +59,21 @@ sub calc_shortest_note {
 
         return;
     }
-	my ($min_try,$max_try)=(0,200);
+
+	if(! exists $numnotes->[0]->{delta_time}) {
+		say "Missing delta_time on notes";
+	}
+
+	my ($min_try,$max_try);
     $max_try = max grep{$_ && $_>=30} map{ $_->{delta_time} } @$numnotes;
     $min_try = min grep{$_ && $_>=10} map{ $_->{delta_time} } @$numnotes;
-    my $try = int(($min_try+$max_try) / 2);
+
+    my $try;
+    if (!defined $min_try || ! defined $max_try) {
+    	$try = 48;
+    } else {
+    	$try = int(($min_try+$max_try) / 2);
+    }
 	my $best = {period=>1000, value=>10000000};
 
 #	my $new_try=$try-1;
@@ -81,11 +92,11 @@ sub calc_shortest_note {
 	printf "# d:%s - nn:%s - dv:%2.2f - p:%d\n",$self->beat_interval, $numnotes, $best->{value} / $numnotes, $best->{'period'};
     my $tmp = ($best->{value} / $numnotes);
 #    warn $tmp;
-    $tmp *=100;
+    $tmp *= 100;
 #    warn $tmp;
-    $tmp=25 - $tmp;
+    $tmp = 25 - $tmp;
 #    warn $tmp;
-    $tmp=$tmp*4;
+    $tmp = $tmp*4;
 #    warn $tmp;
     $self->beat_score( int ((25 -(100 * ($best->{value} / $numnotes)))*4 ));
 
