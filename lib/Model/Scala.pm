@@ -19,7 +19,7 @@ Convert number to note name
 has scala =>'c_dur';
 has value => undef;  #note as a number
 
-=head2 from_name
+=head2 from_notename
 
 For converting note_name to value.
 
