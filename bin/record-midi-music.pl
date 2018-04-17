@@ -194,7 +194,7 @@ sub stdin_read {
 sub pn {
 	my ($self, $note) = @_;
 	return if !defined $note;
-    return $self->tune->scala_obj->to_string($note);
+    return Model::Utils::Scala::value2notename($self->tune->scala,$note);
 }
 
 sub print_help {

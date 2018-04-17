@@ -1,7 +1,7 @@
 package Model::Note;
 use Mojo::Base -base;
 use Clone;
-use Model::Scala;
+use Model::Utils::Scala;
 
 my $ALSA_CODE = {'SND_SEQ_EVENT_SYSTEM'=>0,'SND_SEQ_EVENT_RESULT'=>1
 ,'SND_SEQ_EVENT_NOTE'=>5,'SND_SEQ_EVENT_NOTEON'=>6,'SND_SEQ_EVENT_NOTEOFF'=>7};
@@ -110,7 +110,7 @@ sub to_string {
 	die "Missing note" . Dumper $self if ! defined $self->note;
 	#  return '' if $self->length<3;
 	if ($self->startbeat)  {
-		my $core = sprintf "%s;%s;%s",$self->delta_place_numerator,$self->length_numerator,Model::Scala->new(value=>$self->note(), scala=>$opts->{scala}//'c_dur')->to_string;
+		my $core = sprintf "%s;%s;%s",$self->delta_place_numerator,$self->length_numerator,Model::Utils::Scala::value2notename($opts->{scala}//'c_dur',$self->note());
 		if (! exists $opts->{no_comment} || ! $opts->{no_comment}) {
             my $format = '%-12s  #%4s-%3s';
             my $dt = $self->delta_time;
@@ -140,7 +140,7 @@ sub compile {
     my $self = shift;
     if (! $self->note) {
         if ($self->note_name) {
-            $self->note(Model::Scala->from_notename($self->note_name)->value);
+            $self->note(Model::Utils::Scala::notename2value($self->note_name));
         } else {
             die"Must have note";
         }

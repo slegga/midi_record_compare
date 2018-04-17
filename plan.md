@@ -1,8 +1,7 @@
 PLAN
 ====
-* script for renskrivning av låter
 * Tippe toneart
-* toneart konverteringsscript
+* script for renskrivning av låter
 * Finn et bedre navn på hoved script.
 * mulig gjør commit fra fredriks maskin
 * Kalkuler en låt vanskelighetsgrad
