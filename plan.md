@@ -1,6 +1,5 @@
 PLAN
 ====
-* Tippe toneart
 * script for renskrivning av låter
 * Finn et bedre navn på hoved script.
 * mulig gjør commit fra fredriks maskin
@@ -13,6 +12,7 @@ PLAN
 
 DONE
 ====
+* Tippe toneart
 * Lag database register over låter for å tippe låt automatisk
 	(prøv å lag programmet uavhenig av tastatur)
 * Kunne bytte toneart etc.

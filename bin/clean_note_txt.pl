@@ -19,27 +19,26 @@ use Model::Tune;
 
 Ment to be used to convert samples to blueprints.
 Remove comments and add new ones.
-Can change scala.
+Can change scale.
 
 =cut
 
 my ( $opts, $usage, $argv ) =
     options_and_usage( $0, \@ARGV, "%c %o",
     [ 'extend|e=s', 'Extend these periods to next valid length. Takes , separated list' ],
-    [ 'scala', 'Set scala. Convert from old to given scala. Example c_dur'],
+    [ 'scale', 'Set scale. Convert from old to given scale. Example c_dur'],
 ,{return_uncatched_arguments => 1});
 
 my $tune = Model::Tune->from_note_file($ARGV[0]);
 #$tune->spurt;
-my $new_scala;
-if ($opts->scala) {
-    $new_scala = $opts->scala;
+my $new_scale;
+if ($opts->scale) {
+    $new_scale = $opts->scale;
 } else {
-    $new_scala = $tune->find_best_scala;
+    $new_scale = Model::Utils::Scale::guess_scale_from_notes($tune->notes);
 }
-if ($new_scala ne $tune->scala) {
-    $tune->scala($new_scala);
-    $tune->scala_obj($tune->scala);
+if ($new_scale ne $tune->scale) {
+    $tune->scale($new_scale);
 }
 say "$tune";
-$tune->to_note_file;
+$tune->to_note_file; # will write notes based on $tune->scale

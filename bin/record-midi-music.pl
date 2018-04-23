@@ -194,7 +194,7 @@ sub stdin_read {
 sub pn {
 	my ($self, $note) = @_;
 	return if !defined $note;
-    return Model::Utils::Scala::value2notename($self->tune->scala,$note);
+    return Model::Utils::Scale::value2notename($self->tune->scala,$note);
 }
 
 sub print_help {
@@ -218,6 +218,7 @@ sub do_endtune {
 
     $self->tune->calc_shortest_note;
     $self->tune->score2notes;
+    
     print $self->tune->to_string;
     $self->shortest_note_time($self->tune->shortest_note_time);
     $self->denominator($self->tune->denominator);

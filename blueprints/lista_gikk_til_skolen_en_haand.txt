@@ -1,6 +1,6 @@
 denominator=4
 shortest_note_time=120
-scala=c_dur
+scale=c_dur
 0;1;C5        # 0.0-1/4
 1;1;D5        # 0.1-1/4
 1;1;E5        # 0.2-1/4
