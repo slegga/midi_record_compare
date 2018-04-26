@@ -1,5 +1,6 @@
 PLAN
 ====
+* Øke til to noter for å identifisere en fasit
 * script for renskrivning av låter
 * Finn et bedre navn på hoved script.
 * mulig gjør commit fra fredriks maskin
