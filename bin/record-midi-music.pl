@@ -144,7 +144,7 @@ sub alsa_read {
     push @alsaevent,{dtime_sec=>
     	($on_time - ($self->last_event_starttime||$self->tune_starttime))};
     #printf "Alsa event: %s\n", encode_json(\@alsaevent) if $alsaevent[0] == 6 || $alsaevent[0] == 7;
-    printf("%s %s %s %s\n",($alsaevent[0] == 6 ? 'start':'slutt'),Model::Utils::Scale::value2notename($self->scale,$alsaevent[7][1]),$alsaevent[7][2],$alsaevent[8]{dtime_sec}) if $alsaevent[0] == 6 || $alsaevent[0] == 7;
+    printf("%s %s %s %s\n",($alsaevent[0] == 6 ? 'start':'slutt'),Model::Utils::Scale::value2notename($self->tune->scale,$alsaevent[7][1]),$alsaevent[7][2],$alsaevent[8]{dtime_sec}) if $alsaevent[0] == 6 || $alsaevent[0] == 7;
     my $event = Model::Utils::alsaevent2midievent(@alsaevent);
     if (defined $event) {
         push @{ $self->midi_events }, $event;
