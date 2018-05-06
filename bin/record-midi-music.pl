@@ -83,7 +83,7 @@ sub init {
     for my $b ($self->blueprints_dir->list->each) {
         my $tmp = Model::Tune->from_note_file("$b");
         my $num = scalar @{$tmp->notes};
-        $self->blueprints->{$tmp->notes->[0]->note_name()}->{$num} = "$b";
+        $self->blueprints->{$tmp->notes->[0]->note_name()}->{$tmp->notes->[1]->note_name()}->{$num} = "$b";
     }
 
 }
@@ -143,8 +143,7 @@ sub alsa_read {
     $self->tune_starttime($on_time) if ! $self->tune_starttime();
     push @alsaevent,{dtime_sec=>
     	($on_time - ($self->last_event_starttime||$self->tune_starttime))};
-    #printf "Alsa event: %s\n", encode_json(\@alsaevent) if $alsaevent[0] == 6 || $alsaevent[0] == 7;
-    printf("%s %s %s %s\n",($alsaevent[0] == 6 ? 'start':'slutt'),Model::Utils::Scale::value2notename($self->tune->scale,$alsaevent[7][1]),$alsaevent[7][2],$alsaevent[8]{dtime_sec}) if $alsaevent[0] == 6 || $alsaevent[0] == 7;
+    printf("%-6s %s %3d %.3f\n",($alsaevent[0] == 6 ? 'start':'slutt'),Model::Utils::Scale::value2notename($self->tune->scale,$alsaevent[7][1]),$alsaevent[7][2],$alsaevent[8]{dtime_sec}) if $alsaevent[0] == 6 || $alsaevent[0] == 7;
     my $event = Model::Utils::alsaevent2midievent(@alsaevent);
     if (defined $event) {
         push @{ $self->midi_events }, $event;
@@ -372,28 +371,30 @@ sub do_quit {
 
 sub guessed_blueprint {
     my $self = shift;
-    my $first_note;
+    my ($first_note,$second_note);
     my $played;
     if (@{$self->tune->notes}) {
     	$first_note = $self->pn($self->tune->notes->[0]->note());
+        $second_note = $self->pn($self->tune->notes->[1]->note());
     	$played = scalar @{$self->tune->notes};
-    	say "#notename  ".$first_note.' '.$played;
+    	say join(' ',"#notename  ",$first_note,$second_note,$played);
     } elsif ($self->alsa_events) {
     	my $midievents = alsaevents2midievents($self->alsa_events);
 
     	my $score = Model::Tune->from_midievents($self->alsa_events);
- 	  	$first_note = $self->pn($self->tune->notes->[0]->note());
-       	say "#notename 2 ".$first_note;
+        $first_note = $self->pn($self->tune->notes->[0]->note());
+        $second_note = $self->pn($self->tune->notes->[1]->note());
+        say join(' ',"#notename  ",$first_note,$second_note,$played);
        	$played = scalar @{$self->tune->notes};
     } else {
     	return;
     }
-    if (exists $self->blueprints->{$first_note}->{$played}) {
-        return $self->blueprints->{$first_note}->{$played};
+    if (exists $self->blueprints->{$first_note}->{$second_note}->{$played}) {
+        return $self->blueprints->{$first_note}->{$second_note}->{$played};
     }
     my ($cand_best,$cand_diff);
 
-    for my $i (keys %{$self->blueprints->{$first_note}}) {
+    for my $i (keys %{$self->blueprints->{$first_note}->{$second_note}}) {
         next if !defined $i;
         my $diff = abs($played - $i);
         if (!defined $cand_best) {
@@ -406,7 +407,7 @@ sub guessed_blueprint {
     }
     return if ! $cand_best;
     # say $self->pn($_) @{$self->blueprints};
-    return $self->blueprints->{$first_note}->{$cand_best};
+    return $self->blueprints->{$first_note}->{$second_note}->{$cand_best};
 }
 
 
