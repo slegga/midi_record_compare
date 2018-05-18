@@ -186,25 +186,34 @@ sub evaluate_with_blueprint {
 	my $n = ((scalar @{ $blueprint->notes } - scalar @$wrongs * 4)/(scalar @{ $blueprint->notes }))*100;
     warn $self->note_score($n);
 
-	# Calculate a note map
-	my $cdiff = compact_diff(\@played_note_values, \@blueprint_note_values);
-
-	say "Spilt:         ". join(',',map{Model::Utils::Scale::value2notename($self->{scale},$_)} @played_note_values);
+    say "Spilt:         ". join(',',map{Model::Utils::Scale::value2notename($self->{scale},$_)} @played_note_values);
 	say "Notefasit:     ".join(',',map{Model::Utils::Scale::value2notename($self->{scale},$_)} @blueprint_note_values);
-	for ( my $i = 0;$i < $#{$cdiff}-2; $i += 4) {
-		printf "%d,%d;%d,%d\n",$cdiff->[$i],$cdiff->[$i+1],$cdiff->[$i+2],$cdiff->[$i+3];
-	}
-	my %map;
-	for ( my $i = 0;$i < $#{$cdiff}-2; $i += 4) {
-		if ($cdiff->[$i] == $cdiff->[$i+2]) {
-            next;
-        }
-        #warn sprintf "i:%s  cdiff:%s\n",$i,($cdiff->[$i+2] - $cdiff->[$i] -1);
-		for my $j(0 .. ($cdiff->[$i+2] - $cdiff->[$i] -1)){
-			$map{$cdiff->[$i]+$j} = $cdiff->[$i+1]+$j;
-		}
 
-	}
+	# Calculate a note map
+    my %map;
+
+    if (1) {        #compact_diff
+    	my $cdiff = compact_diff(\@played_note_values, \@blueprint_note_values);
+
+    	for ( my $i = 0;$i < $#{$cdiff}-2; $i += 4) {
+    		printf "%d,%d;%d,%d\n",$cdiff->[$i],$cdiff->[$i+1],$cdiff->[$i+2],$cdiff->[$i+3];
+    	}
+    	for ( my $i = 0;$i < $#{$cdiff}-2; $i += 4) {
+    		if ($cdiff->[$i] == $cdiff->[$i+2]) {
+                next;
+            }
+            #warn sprintf "i:%s  cdiff:%s\n",$i,($cdiff->[$i+2] - $cdiff->[$i] -1);
+    		for my $j(0 .. ($cdiff->[$i+2] - $cdiff->[$i] -1)){
+    			$map{$cdiff->[$i]+$j} = $cdiff->[$i+1]+$j;
+    		}
+
+    	}
+    } elsif (0) {
+        my $diff = diff(\@played_note_values, \@blueprint_note_values);
+
+    } else {
+        die "No choices of diff";
+    }
 #	say "190\n".Dumper %map;
 	# Calculate note length score
 	my $rln=0;# right length numerator
@@ -227,9 +236,12 @@ sub evaluate_with_blueprint {
 	my @note_diff;
 	my @maps = map { $_, $map{$_} } sort {$a <=> $b} keys %map;
 
-	while ( my ($m,$b) = (shift(@maps),shift(@maps) )) {
+    for ( my $i = 0;$i < $#maps-2; $i += 2) {
+        printf "mapping: %s,%s\n", $maps[$i],$maps[$i+1]
+    }
+
+	while ( my ($m,$b) = (shift(@maps),shift(@maps) )) { #$m=blueprint,$b = played
 		last if ! defined $m && ! defined $b;
-#		print "ETTER WHILE $i,$j $m,$b\n";
 		if ($i == $m && $j == $b) {
 			push @note_diff, ['100',$i,$j];
 		} elsif ( $i < $m && $j < $b ) {
@@ -243,11 +255,13 @@ sub evaluate_with_blueprint {
 				push @note_diff, ['2',undef,$j];
 				$j++;
 			}
+            if ($i == $m && $j == $b) {push @note_diff, ['100',$i,$j]};
 		} elsif ( $i < $m && $j == $b ) {
 			while( $i < $m && $j == $b ) {
 				push @note_diff, ['3',$i,undef];
 				$i++;
 			}
+            if ($i == $m && $j == $b) {push @note_diff, ['100',$i,$j]};
 		} else {
 			print Dumper @note_diff;
 			die "TELLER FEIL. SKAL IKKE KOMME HIT $i,$j $m,$b";
