@@ -34,7 +34,7 @@ has length_score =>0;
 has delta_beat_score =>0;
 has total_score => 0;
 has startbeat => 0;
-
+has debug => 0;
 
 =head1 DESCRIPTION
 
@@ -192,30 +192,24 @@ sub evaluate_with_blueprint {
 	# Calculate a note map
     my %map;
 
-    if (1) {        #compact_diff
-    	my $cdiff = compact_diff(\@played_note_values, \@blueprint_note_values);
-
+	my $cdiff = compact_diff(\@played_note_values, \@blueprint_note_values);
+    if ($self->debug) {
     	for ( my $i = 0;$i < $#{$cdiff}-2; $i += 4) {
     		printf "%d,%d;%d,%d\n",$cdiff->[$i],$cdiff->[$i+1],$cdiff->[$i+2],$cdiff->[$i+3];
     	}
-    	for ( my $i = 0;$i < $#{$cdiff}-2; $i += 4) {
-    		if ($cdiff->[$i] == $cdiff->[$i+2]) {
-                next;
-            }
-            #warn sprintf "i:%s  cdiff:%s\n",$i,($cdiff->[$i+2] - $cdiff->[$i] -1);
-    		for my $j(0 .. ($cdiff->[$i+2] - $cdiff->[$i] -1)){
-    			$map{$cdiff->[$i]+$j} = $cdiff->[$i+1]+$j;
-    		}
-
-    	}
-    } elsif (0) {
-        my $diff = diff(\@played_note_values, \@blueprint_note_values);
-
-    } else {
-        die "No choices of diff";
     }
-#	say "190\n".Dumper %map;
-	# Calculate note length score
+
+	for ( my $i = 0;$i < $#{$cdiff}-2; $i += 4) {
+		if ($cdiff->[$i] == $cdiff->[$i+2]) {
+            next;
+        }
+        #warn sprintf "i:%s  cdiff:%s\n",$i,($cdiff->[$i+2] - $cdiff->[$i] -1);
+		for my $j(0 .. ($cdiff->[$i+2] - $cdiff->[$i] -1)){
+			$map{$cdiff->[$i]+$j} = $cdiff->[$i+1]+$j;
+		}
+
+	}
+
 	my $rln=0;# right length numerator
     my $rdb=0;# right delta beat
 	for my $key(keys %map) {
@@ -235,9 +229,10 @@ sub evaluate_with_blueprint {
 	my $j=0;
 	my @note_diff;
 	my @maps = map { $_, $map{$_} } sort {$a <=> $b} keys %map;
-
-    for ( my $i = 0;$i < $#maps-2; $i += 2) {
-        printf "mapping: %s,%s\n", $maps[$i],$maps[$i+1]
+    if ($self->debug) {
+        for ( my $i = 0;$i < $#maps-2; $i += 2) {
+            printf "mapping: %s,%s\n", $maps[$i],$maps[$i+1]
+        }
     }
 
 	while ( my ($m,$b) = (shift(@maps),shift(@maps) )) { #$m=blueprint,$b = played
