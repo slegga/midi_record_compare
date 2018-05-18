@@ -1,7 +1,8 @@
 PLAN
 ====
-* Øke til to noter for å identifisere en fasit
-* script for renskrivning av låter
+* Begynn med web støtte
+** les usb fra web(skriv dump til web)
+** eksprimenter med grafiske noter
 * Finn et bedre navn på hoved script.
 * mulig gjør commit fra fredriks maskin
 * Kalkuler en låt vanskelighetsgrad
@@ -13,6 +14,8 @@ PLAN
 
 DONE
 ====
+* script for renskrivning av låter clean....txt.pl
+* Øke til to noter for å identifisere en fasit
 * Tippe toneart
 * Lag database register over låter for å tippe låt automatisk
 	(prøv å lag programmet uavhenig av tastatur)
