@@ -237,9 +237,7 @@ sub evaluate_with_blueprint {
 
 	while ( my ($m,$b) = (shift(@maps),shift(@maps) )) { #$m=blueprint,$b = played
 		last if ! defined $m && ! defined $b;
-		if ($i == $m && $j == $b) {
-			push @note_diff, ['100',$i,$j];
-		} elsif ( $i < $m && $j < $b ) {
+		if ( $i < $m && $j < $b ) {
 			while( $i < $m && $j < $b ) {
 				print "$i,$j $m,$b\n";
 				push @note_diff, ['1',$i,$j];
@@ -250,17 +248,17 @@ sub evaluate_with_blueprint {
 				push @note_diff, ['2',undef,$j];
 				$j++;
 			}
-            if ($i == $m && $j == $b) {push @note_diff, ['100',$i,$j]};
 		} elsif ( $i < $m && $j == $b ) {
 			while( $i < $m && $j == $b ) {
 				push @note_diff, ['3',$i,undef];
 				$i++;
 			}
-            if ($i == $m && $j == $b) {push @note_diff, ['100',$i,$j]};
-		} else {
-			print Dumper @note_diff;
-			die "TELLER FEIL. SKAL IKKE KOMME HIT $i,$j $m,$b";
 		}
+		
+		if ($i == $m && $j == $b) {
+			push @note_diff, ['100',$i,$j];
+		}
+		
         $i++;$j++;
 	}
 	#Register errous notes at the end.
