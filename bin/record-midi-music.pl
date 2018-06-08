@@ -180,6 +180,8 @@ sub stdin_read {
             $self->do_endtune;
             if (grep { $cmd eq $_ } ('s','save')) {
                 $self->do_save($name);
+            } elsif (grep { $cmd eq $_} ('sm','savemidi')) {
+                $self->do_save_midi($name);
             } elsif (grep { $cmd eq $_} ('p','play')) {
                 $self->do_play($name);
             } elsif (grep {$cmd eq $_} ('l','list')) {
@@ -204,7 +206,9 @@ sub print_help {
     p,play [NAME]   Play last tune. If none defaults to the not ended play.
     l,list [REGEXP] List saved tunes.
     c,comp [NAME]   Compare last tune with given name. If not name then test with --comp argument
+    sm [NAME]       Save as midi file. Add .midi if not present in name.
     q,quit			End session.
+
     defaults        Stop last tune and start on new.
 
 ';
@@ -235,7 +239,14 @@ sub do_endtune {
 
 sub do_save {
     my ($self, $name) = @_;
+    $name .= '.txt' if ($name !~/\.midi?$/);
     $self->tune->to_note_file($self->local_dir($self->blueprints_dir->child('notes'))->child($name));
+}
+
+sub do_save_midi {
+    my ($self, $name) = @_;
+    $name .= '.midi' if ($name !~/\.midi?$/);
+    $self->tune->to_midi_file($self->local_dir($self->blueprints_dir->child('notes'))->child($name));
 }
 
 sub do_play {

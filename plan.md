@@ -1,8 +1,14 @@
 PLAN
 ====
+* play må kunne spille .midi filer også.
+* Kunne lagre midi og trekke ut noter fra midi som en test.
 * Begynn med web støtte
+** Se på websocket støtten her: Writing websocket chat using Mojolicious Lite · kraih_mojo Wiki · GitHub.html
+** https://github.com/kraih/mojo/wiki/Writing-websocket-chat-using-Mojolicious-Lite
+** https://developers.google.com/web/updates/2016/03/access-usb-devices-on-the-web
 ** les usb fra web(skriv dump til web)
 ** eksprimenter med grafiske noter
+
 * Finn et bedre navn på hoved script.
 * mulig gjør commit fra fredriks maskin
 * Kalkuler en låt vanskelighetsgrad
@@ -10,7 +16,13 @@ PLAN
 * Lag oppstart med navn
 * Renskriv kommentarer script
 * Print tips, mål om det spilles stakato eller ikke.
-* Lag ranking
+* Lag ranking pi
+
+* tunnelbroker for å nå
+** https://www.linode.com/docs/networking/set-up-an-ipv6-tunnel-on-your-linode/
+** Lag fil:/etc/sysconfig/network-scripts/ifcfg-he-ipv6
+** Enten slik: https://gist.github.com/briancline/9360785
+** Eller: https://www.linode.com/docs/networking/set-up-an-ipv6-tunnel-on-your-linode/#centos-7-and-fedora-22
 
 DONE
 ====
