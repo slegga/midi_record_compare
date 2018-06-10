@@ -116,7 +116,7 @@ sub main {
     	my $t = Time::HiRes::time;
     	if (! $self->silence_timer ) {
     		$self->silence_timer($t);
-    	} elsif ($t - $self->silence_timer >= 2) {
+    	} elsif ($t - $self->silence_timer >= 4) {
     		$self->stdin_read();
     	}
     });
@@ -255,8 +255,13 @@ sub do_play {
     my $tune;
     if (defined $name) {
         if (-e $name) {
-            $tune = Model::Tune->from_note_file($name);
-            $tune->notes2score;
+            if ($name =~ /midi?$/)  {
+                print `timidity $name`;
+                return;
+            } else {
+                $tune = Model::Tune->from_note_file($name);
+                $tune->notes2score;
+            }
         } else {
         	my $tmp = $self->blueprints_dir->child($name);
         	if( -e $tmp) {
