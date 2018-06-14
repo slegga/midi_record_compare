@@ -1,31 +1,31 @@
 PLAN
 ====
-* play må kunne spille .midi filer også.
-* Kunne lagre midi og trekke ut noter fra midi som en test.
 * Begynn med web støtte
+** splitt record-midi-music.pl.
+*** lag ny lib: Model::Controller alle do_*,init,alle has, alsa_read, pn,guessed_blueprint,local_dir,...
+*** Beholdes i record-midi-music.pl: main, stdin_read, print_help
 ** Se på websocket støtten her: Writing websocket chat using Mojolicious Lite · kraih_mojo Wiki · GitHub.html
 ** https://github.com/kraih/mojo/wiki/Writing-websocket-chat-using-Mojolicious-Lite
 ** https://developers.google.com/web/updates/2016/03/access-usb-devices-on-the-web
 ** les usb fra web(skriv dump til web)
 ** eksprimenter med grafiske noter
 
-* Finn et bedre navn på hoved script.
-* mulig gjør commit fra fredriks maskin
-* Kalkuler en låt vanskelighetsgrad
+* Finn et bedre navn på hoved script. (piano_trainer.pl)
+* mulig gjør commit fra fredriks maskin (Opprett bruker på hans maskin)
+* Kalkuler en låt vanskelighetsgrad (denominator=8 * antall noter?)
 * Skriv en bedre read me.
 * Lag oppstart med navn
-* Renskriv kommentarer script
 * Print tips, mål om det spilles stakato eller ikke.
 * Lag ranking pi
+* Legg inn poc tester
 
-* tunnelbroker for å nå
-** https://www.linode.com/docs/networking/set-up-an-ipv6-tunnel-on-your-linode/
-** Lag fil:/etc/sysconfig/network-scripts/ifcfg-he-ipv6
-** Enten slik: https://gist.github.com/briancline/9360785
-** Eller: https://www.linode.com/docs/networking/set-up-an-ipv6-tunnel-on-your-linode/#centos-7-and-fedora-22
 
 DONE
 ====
+* Renskriv kommentarer script
+* midi2notes.pl fikser dette: Har Kunne lagre midi og trekke ut noter fra midi som en test.
+* styrke 0 = note_off
+* play må kunne spille .midi filer også.
 * script for renskrivning av låter clean....txt.pl
 * Øke til to noter for å identifisere en fasit
 * Tippe toneart
@@ -51,3 +51,8 @@ UTGÅR
 * Feil første note ignoreres
 * [fungerte ikke lyttet kun til /dev/music må lytte til /dev/snd/...] Midi::Music daemon som automatisk lager en midi fil når det er stille i 3 sekunder
 * Copy https://gist.github.com/augensalat/3699443
+* tunnelbroker for å nå
+** https://www.linode.com/docs/networking/set-up-an-ipv6-tunnel-on-your-linode/
+** Lag fil:/etc/sysconfig/network-scripts/ifcfg-he-ipv6
+** Enten slik: https://gist.github.com/briancline/9360785
+** Eller: https://www.linode.com/docs/networking/set-up-an-ipv6-tunnel-on-your-linode/#centos-7-and-fedora-22

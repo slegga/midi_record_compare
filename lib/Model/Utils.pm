@@ -26,7 +26,7 @@ sub alsaevent2midievent {
     # score
     die '$extra is not defiend ' . join(', ',@_) if ! defined $extra;
     my $dtime = $extra->{dtime_sec} * 96;
-    if (   $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEON }) {
+    if (   $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEON } && $data->[2] ) {
             #(type, starttime, duration, channel, note, velocity)
 #        warn "NOTE ON";
 #        my $starttime = int ($extra->{starttime} * 96);
@@ -34,7 +34,7 @@ sub alsaevent2midievent {
         # ('note_on', dtime, channel, note, velocity)
         return ['note_on', $dtime, 0, $data->[1], $data->[2]];
     }
-    if ( $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEOFF} ) {
+    if ( $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEOFF} || ! $data->[2]) {
 #        warn "NOTE OFF";
 #        my $starttime = int ($extra->{starttime} * 96);
 #        my $duration = int($opts->{duration} *96);
