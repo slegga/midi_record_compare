@@ -183,7 +183,7 @@ sub evaluate_with_blueprint {
 	}
 #	say "171\n".Dumper $wrongs;
 	# Calculate a note score
-	my $n = ((scalar @{ $blueprint->notes } - scalar @$wrongs * 4)/(scalar @{ $blueprint->notes }))*100;
+	my $n = ((scalar @{ $blueprint->notes } - scalar @$wrongs * 3)/(scalar @{ $blueprint->notes }))*100;
     warn $self->note_score($n);
 
     say "Spilt:         ". join(',',map{Model::Utils::Scale::value2notename($self->{scale},$_)} @played_note_values);
@@ -254,11 +254,11 @@ sub evaluate_with_blueprint {
 				$i++;
 			}
 		}
-		
+
 		if ($i == $m && $j == $b) {
 			push @note_diff, ['100',$i,$j];
 		}
-		
+
         $i++;$j++;
 	}
 	#Register errous notes at the end.
@@ -318,7 +318,7 @@ sub evaluate_with_blueprint {
 	printf "%-16s %3.1f%%\n", "Note score:",       $self->note_score;
 	printf "%-16s %3.1f%%\n", "Length score:",     $self->length_score;
 	printf "%-16s %3.1f%%\n", "Delta beat score:", $self->delta_beat_score;
-	printf "%-16s %3.1f%%\n", "Total score:", (3 * $self->note_score + $self->length_score + $self->delta_beat_score + $self->beat_score)/6;
+	printf "%-16s %3.1f%%\n", "Total score:", (3 * $self->note_score + $self->length_score + $self->delta_beat_score + 2 * $self->delta_beat_score)/7;
 	return $self;
 }
 

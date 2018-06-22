@@ -1,5 +1,6 @@
 PLAN
 ====
+* Endre score. Teller mindre om man spiller stakato og mindre straff for å spille feil
 * Begynn med web støtte
 ** splitt record-midi-music.pl.
 *** lag ny lib: Model::Controller alle do_*,init,alle has, alsa_read, pn,guessed_blueprint,local_dir,...
