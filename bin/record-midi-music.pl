@@ -8,14 +8,11 @@ use MIDI;
 use MIDI::ALSA(':CONSTS');
 use Time::HiRes;
 use Mojo::JSON qw(encode_json);
-use Mojo::File qw(tempfile path);
 use Mojo::JSON 'to_json';
 use FindBin;
-use File::Basename;
 use lib "$FindBin::Bin/../../utillities-perl/lib";
 use lib "$FindBin::Bin/../lib";
-use Model::Utils;
-use Model::Tune;
+use Model::Action;
 use SH::Script qw/options_and_usage/;
 use Carp::Always;
 use Term::ANSIColor;
@@ -33,6 +30,8 @@ record-midi-music.pl
 =head1 DESCRIPTION
 
 Read midi signal from a USB-cable.
+
+Present a cli User Interface and send request to Model::Action;
 
 =head1 INSTALL GUIDE
 
@@ -57,18 +56,11 @@ has alsa_stream => sub {
      warn $r->error if $r->error;
      return $r
  };
-has tune_starttime => 0;
-has last_event_starttime => 0;
-has silence_timer=> -1;
-has denominator =>8;
 has loop  => sub { Mojo::IOLoop->singleton };
 has stdin_loop => sub { Mojo::IOLoop::Stream->new(\*STDIN)->timeout(0) };
-has tune => sub {Model::Tune->new};
-has midi_events => sub {[]};
-has shortest_note_time => 12;
-has blueprints_dir => sub {path("$FindBin::Bin/../blueprints")};
-has blueprints => sub{{}};
+has silence_timer=> -1;
 
+has action => sub {Model::Action->new};
 my ( $opts, $usage, $argv ) =
     options_and_usage( $0, \@ARGV, "%c %o",
     [ 'comp|c=s', 'Compare play with this blueprint' ],
@@ -77,16 +69,6 @@ my ( $opts, $usage, $argv ) =
 
 __PACKAGE__->new->main if !caller;
 
-sub init {
-    # load blueprints
-    my $self = shift;
-    for my $b ($self->blueprints_dir->list->each) {
-        my $tmp = Model::Tune->from_note_file("$b");
-        my $num = scalar @{$tmp->notes};
-        $self->blueprints->{$tmp->notes->[0]->note_name()}->{$tmp->notes->[1]->note_name()}->{$num} = "$b";
-    }
-
-}
 
 sub main {
     my $self = shift;
@@ -99,7 +81,7 @@ sub main {
         MIDI::ALSA::connectfrom( 0, $self->alsa_port, 0 );  # input port is lower (0)
     }
 
-    $self->init; #load blueprints
+    $self->action->init; #load blueprints
 
     $self->loop->recurring(0 => sub {
         my ($self) = shift;
@@ -140,18 +122,18 @@ sub alsa_read {
     my @alsaevent = MIDI::ALSA::input();
     return if $alsaevent[0] == 10; #ignore pedal
     return if $alsaevent[0] == 42; #ignore system beat
-    $self->tune_starttime($on_time) if ! $self->tune_starttime();
+    $self->action->tune_starttime($on_time) if ! $self->action->tune_starttime();
     push @alsaevent,{dtime_sec=>
-    	($on_time - ($self->last_event_starttime||$self->tune_starttime))};
+    	($on_time - ($self->action->last_event_starttime||$self->action->tune_starttime))};
     my $place = 'start';
     $place = 'slutt' if $alsaevent[0] == 6;
     $place = 'slutt' if $alsaevent[7][2] == 0;
 
-    printf("%-6s %s %3d %.3f\n",$place,Model::Utils::Scale::value2notename($self->tune->scale,$alsaevent[7][1]),$alsaevent[7][2],$alsaevent[8]{dtime_sec}) if $alsaevent[0] == 6 || $alsaevent[0] == 7;
+    printf("%-6s %s %3d %.3f\n",$place,Model::Utils::Scale::value2notename($self->action->tune->scale,$alsaevent[7][1]),$alsaevent[7][2],$alsaevent[8]{dtime_sec}) if $alsaevent[0] == 6 || $alsaevent[0] == 7;
     my $event = Model::Utils::alsaevent2midievent(@alsaevent);
     if (defined $event) {
-        push @{ $self->midi_events }, $event;
-        $self->last_event_starttime($on_time);
+        push @{ $self->action->midi_events }, $event;
+        $self->action->last_event_starttime($on_time);
     }
 }
 
@@ -172,35 +154,29 @@ sub stdin_read {
     } else {
         if(!defined $cmd) {
             if ($opts->comp) {
-                $self->do_comp($opts->comp);
+                $self->action->do_comp($opts->comp);
             } else {
-                $self->do_endtune();
+                $self->action->do_endtune();
             }
         }elsif (grep {$cmd eq $_} 'q','quit' ) {
         	$self->do_quit;
         } elsif (grep {$cmd eq $_} ('c','comp')) {
-            $self->do_comp($name);
+            $self->action->do_comp($name);
         } else {
-            $self->do_endtune;
+            $self->action->do_endtune;
             if (grep { $cmd eq $_ } ('s','save')) {
-                $self->do_save($name);
+                $self->action->do_save($name);
             } elsif (grep { $cmd eq $_} ('sm','savemidi')) {
-                $self->do_save_midi($name);
+                $self->action->do_save_midi($name);
             } elsif (grep { $cmd eq $_} ('p','play')) {
-                $self->do_play($name);
+                $self->action->do_play($name);
             } elsif (grep {$cmd eq $_} ('l','list')) {
-                $self->do_list($name);
+                $self->action->do_list($name);
             }
         }
-        $self->midi_events([]); # clear history
-        $self->tune_starttime(undef);
+        $self->action->midi_events([]); # clear history
+        $self->action->tune_starttime(undef);
     }
-}
-
-sub pn {
-	my ($self, $note) = @_;
-	return if !defined $note;
-    return Model::Utils::Scale::value2notename($self->tune->scale,$note);
 }
 
 sub print_help {
@@ -218,226 +194,11 @@ sub print_help {
 ';
 }
 
-sub do_endtune {
-    my ($self) = @_;
-    return $self if (@{$self->midi_events}<8);
-    my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
-    $self->tune(Model::Tune->from_midi_score($score));
-
-    $self->tune->calc_shortest_note;
-    $self->tune->score2notes;
-
-    print $self->tune->to_string;
-    $self->shortest_note_time($self->tune->shortest_note_time);
-    $self->denominator($self->tune->denominator);
-    printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
-
-    my $guess = $self->guessed_blueprint();
-    return $self if ! $guess;
-    print color('green');
-    say "Tippet låt: ". ($guess);
-    print color('reset');
-    $self->do_comp($guess);
-    return $self;
-}
-
-sub do_save {
-    my ($self, $name) = @_;
-    $name .= '.txt' if ($name !~/\.midi?$/);
-    $self->tune->to_note_file($self->local_dir($self->blueprints_dir->child('notes'))->child($name));
-}
-
-sub do_save_midi {
-    my ($self, $name) = @_;
-    $name .= '.midi' if ($name !~/\.midi?$/);
-    $self->tune->to_midi_file($self->local_dir($self->blueprints_dir->child('notes'))->child($name));
-}
-
-sub do_play {
-    my ($self, $name) = @_;
-    my $tmpfile = tempfile(DIR=>'/tmp');
-    my $tune;
-    if (defined $name) {
-        if (-e $name) {
-            if ($name =~ /midi?$/)  {
-                print `timidity $name`;
-                return;
-            } else {
-                $tune = Model::Tune->from_note_file($name);
-                $tune->notes2score;
-            }
-        } else {
-        	my $tmp = $self->blueprints_dir->child($name);
-        	if( -e $tmp) {
-	            $tune = Model::Tune->from_note_file($tmp);
-	            $tune->notes2score;
-	        } else {
-	 			$tmp = $self->blueprints_dir->sibling('local','notes')->child($name);
-	 			if (-e $tmp) {
-		            $tune = Model::Tune->from_note_file($tmp);
-		 	        $tune->notes2score;
-		 	    } else {
-	 				$tmp = $self->blueprints_dir->sibling('local','blueprints')->child($name);
-    	 			if (-e $tmp) {
-    		            $tune = Model::Tune->from_note_file($tmp);
-    		 	        $tune->notes2score;
-    		 	    } else {
-    		 	    	warn "Did not find $name. Play stored tune instead.";
-			            $tune = $self->tune;
-    		 	    }
-				}
-			}
-        }
-    } else {
-        $tune = $self->tune;
-    }
-    $tune->to_midi_file("$tmpfile");
-    print `timidity $tmpfile`;
-}
-
-sub do_list {
-    my ($self, $name) = @_;
-    say '';
-    say "notes/";
-    my $notes_dir = path("$FindBin::Bin/../notes");
-    say $notes_dir->list_tree->map(sub{basename($_)})->join("\n");
-    say $notes_dir->list_tree->map(sub{basename($_)})->join("\n");
-
-    say '';
-    say "blueprints/";
-    say $self->blueprints_dir->list_tree->map(sub{basename($_)})->join("\n");
-}
-
-sub do_comp {
-    my ($self, $name) = @_;
-    die "Missing self" if !$self;
-
-    return if ! $name;
-    say "compare $name";
-    my $filename = $name;
-    if (! -e $filename) {
-	    my $bluedir = $self->blueprints_dir->to_string;
-        say $bluedir;
-        if ( -e $self->blueprints_dir->child($filename)) {
-	        $filename = $self->blueprints_dir->child($filename);
-        } else {
-        	my $lbf = $self->local_dir($self->blueprints_dir);
-        	if (-e $lbf) {
-        		$filename = $lbf;
-        	} else {
-	            warn "$filename or ".$self->blueprints_dir->child($filename)." or $lbf not found";
-    	        return;
-    	    }
-        }
-	}
-
-    #midi_event: ['note_on', dtime, channel, note, velocity]
-#    say "text:". join(',',map{$_->[0]} grep {$_->[0] ne 'note_off'} @{$self->midi_events});
-    if  ( @{$self->midi_events } < 8 ) {
-        if (scalar @{$self->notes} <8) {
-            say "Notthing to work with. Less than 8 notes";
-            return;
-        }
-    } else {
-#        say "Played midi_events: ".join(',',map{$self->pn($_->[3])} grep {$_->[0] ne 'note_off'} @{$self->midi_events});
-        my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
-    #    warn p($score);
-        #score:  ['note', startitme, length, channel, note, velocity],
-        $self->tune(Model::Tune->from_midi_score($score));
-    }
-
-    say "Played notes:       ".join(',',map {$self->pn($_->note)} @{$self->tune->notes});
-
-    my $tune_blueprint= Model::Tune->from_note_file($filename);
-    $self->tune->denominator($tune_blueprint->denominator);
-
-    $self->tune->calc_shortest_note;
-    $self->tune->score2notes;
-    say "Played notes after:  ".join(',',map {$self->pn($_->note)} @{$self->tune->notes});
-    my $play_bs = $self->tune->get_beat_sum;
-   	my $blueprint_bs = $tune_blueprint->get_beat_sum;
-    printf "beatlengde før   fasit: %s, spilt: %s\n",$blueprint_bs,$play_bs;
-   	if ($play_bs*1.5 <$blueprint_bs || $play_bs > 1.5*$blueprint_bs) {
-        say "######";
-        $self->tune->beat_score($self->tune->beat_score/2) ;
-        my $old_shortest_note_time = $self->tune->shortest_note_time;
-        #my @new_score = map{$_->to_score({factor=>$blueprint_bs/$play_bs})} @{$self->tune->notes};
-#	    $self->tune(Model::Tune->from_midi_score(\@new_score));
-	    say "SHORTEST NOTE TIME $self->tune->shortest_note_time $old_shortest_note_time * $play_bs / $blueprint_bs";
-        $self->tune->shortest_note_time($old_shortest_note_time * $play_bs / $blueprint_bs);
-#        $self->tune->calc_shortest_note;
-        $self->tune->score2notes;
-
-    }
-    $play_bs = $self->tune->get_beat_sum;
-    printf "beatlengde etter fasit: %s, spilt: %s\n",$blueprint_bs,$play_bs;
-
-    $self->denominator($self->tune->denominator);
-
-    $self->shortest_note_time($self->tune->shortest_note_time);
-    printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
-    say "Played notes after2:".join(',',map {$self->pn($_->note)} @{$self->tune->notes});
-
-    $self->tune->evaluate_with_blueprint($tune_blueprint);
-    return $self;
-}
-
-
 sub do_quit {
 	my ($self,$stream,$bytes) =@_;
 	say "Goodbye";
 	$self->loop->stop_gracefully;
 }
 
-sub guessed_blueprint {
-    my $self = shift;
-    my ($first_note,$second_note);
-    my $played;
-    if (@{$self->tune->notes}) {
-    	$first_note = $self->pn($self->tune->notes->[0]->note());
-        $second_note = $self->pn($self->tune->notes->[1]->note());
-    	$played = scalar @{$self->tune->notes};
-    	say join(' ',"#notename  ",$first_note,$second_note,$played);
-    } elsif ($self->alsa_events) {
-    	my $midievents = alsaevents2midievents($self->alsa_events);
 
-    	my $score = Model::Tune->from_midievents($self->alsa_events);
-        $first_note = $self->pn($self->tune->notes->[0]->note());
-        $second_note = $self->pn($self->tune->notes->[1]->note());
-        say join(' ',"#notename  ",$first_note,$second_note,$played);
-       	$played = scalar @{$self->tune->notes};
-    } else {
-    	return;
-    }
-    if (exists $self->blueprints->{$first_note}->{$second_note}->{$played}) {
-        return $self->blueprints->{$first_note}->{$second_note}->{$played};
-    }
-    my ($cand_best,$cand_diff);
-
-    for my $i (keys %{$self->blueprints->{$first_note}->{$second_note}}) {
-        next if !defined $i;
-        my $diff = abs($played - $i);
-        if (!defined $cand_best) {
-            $cand_best = $i;
-            $cand_diff = $diff;
-        } elsif ($cand_diff>$diff) {
-            $cand_best = $i;
-            $cand_diff = $diff;
-        }
-    }
-    return if ! $cand_best;
-    # say $self->pn($_) @{$self->blueprints};
-    return $self->blueprints->{$first_note}->{$second_note}->{$cand_best};
-}
-
-
-sub local_dir {
-	my ($self, $mojofiledir) =@_;
-
-    my $mf = path("$mojofiledir");
-	my @l = @$mf;
-	my $remove=1;
-	splice(@l,$#$mf-1, $remove, 'local');
-	return path(@l);
-}
 1;

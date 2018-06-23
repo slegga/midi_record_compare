@@ -1,11 +1,7 @@
 PLAN
 ====
-* Endre score. Teller mindre om man spiller stakato og mindre straff for å spille feil
-* Begynn med web støtte
-** splitt record-midi-music.pl.
-*** lag ny lib: Model::Controller alle do_*,init,alle has, alsa_read, pn,guessed_blueprint,local_dir,...
-*** Beholdes i record-midi-music.pl: main, stdin_read, print_help
-** Se på websocket støtten her: Writing websocket chat using Mojolicious Lite · kraih_mojo Wiki · GitHub.html
+* Skill ut MIDI::ALSA til Model::Loop::ALSA (Model::Loop::WebUSB kommer)
+* Se på websocket støtten her: Writing websocket chat using Mojolicious Lite · kraih_mojo Wiki · GitHub.html
 ** https://github.com/kraih/mojo/wiki/Writing-websocket-chat-using-Mojolicious-Lite
 ** https://developers.google.com/web/updates/2016/03/access-usb-devices-on-the-web
 ** les usb fra web(skriv dump til web)
@@ -23,6 +19,11 @@ PLAN
 
 DONE
 ====
+* Endre score. Teller mindre om man spiller stakato og mindre straff for å spille feil
+* Begynn med web støtte
+** splitt record-midi-music.pl.
+*** lag ny lib: Model::Controller alle do_*,init,alle has, alsa_read, pn,guessed_blueprint,local_dir,...
+*** Beholdes i record-midi-music.pl: main, stdin_read, print_help
 * Renskriv kommentarer script
 * midi2notes.pl fikser dette: Har Kunne lagre midi og trekke ut noter fra midi som en test.
 * styrke 0 = note_off

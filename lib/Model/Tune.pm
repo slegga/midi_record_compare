@@ -275,8 +275,8 @@ sub evaluate_with_blueprint {
 	}
     for my $n (@note_diff) {
         next if $n->[0]<50;
-        $n->[0] -= 20 if $self->notes->[$n->[1]]->length_numerator ne $blueprint->notes->[$n->[2]]->length_numerator;
-        $n->[0] -= 25 if $self->notes->[$n->[1]]->delta_place_numerator ne $blueprint->notes->[$n->[2]]->delta_place_numerator;
+        $n->[0] -= 19 if $self->notes->[$n->[1]]->length_numerator ne $blueprint->notes->[$n->[2]]->length_numerator;
+        $n->[0] -= 35 if $self->notes->[$n->[1]]->delta_place_numerator ne $blueprint->notes->[$n->[2]]->delta_place_numerator;
     }
     $self->note_diff(\@note_diff);
     my $format = "%5s %-15s %s\n";

@@ -37,10 +37,10 @@ my @alsaevents = (
 , [6,0,0,253,0,[20,0],[129,0],[0,60,82,0,0],{"dtime_sec"=>0.633203029632568}]
 );
 my @midievents = map{Model::Utils::alsaevent2midievent(@$_)} grep {defined} @alsaevents;
-$t->midi_events(\@midievents);
-ok($t->do_comp('polser_her.txt'),'OK');
-diag $t->do_comp('polser_her.txt');
-$t->init;
-diag p($t->blueprints);
-like($t->guessed_blueprint,qr'polser_her.txt$','Tipper riktig sang');
+$t->action->midi_events(\@midievents);
+ok($t->action->do_comp('polser_her.txt'),'OK');
+diag $t->action->do_comp('polser_her.txt');
+$t->action->init;
+diag p($t->action->blueprints);
+like($t->action->guessed_blueprint,qr'polser_her.txt$','Tipper riktig sang');
 done_testing;
