@@ -54,19 +54,21 @@ has silence_timer=> -1;
 has input_object => sub { Model::Input::ALSA->new };
 
 has action => sub {Model::Action->new};
+my @COPY_ARGV = @ARGV;
 my ( $opts, $usage, $argv ) =
     options_and_usage( $0, \@ARGV, "%c %o",
     [ 'comp|c=s', 'Compare play with this blueprint' ],
 ,{return_uncatched_arguments => 1});
+@ARGV = @COPY_ARGV;
 
-
-__PACKAGE__->new->main if !caller;
+__PACKAGE__->new->main(@ARGV) if !caller;
 
 
 sub main {
     my $self = shift;
-    if (! defined $self->input_object->port
-        && (! exists $ENV{MOJO_MODE} || $ENV{MOJO_MODE} ne 'dry-run')) {
+    if (! defined $self->input_object->port()
+        && (! exists $ENV{MOJO_MODE} || $ENV{MOJO_MODE} eq 'dry-run' ) && ! grep {'--dry-run' eq $_} @_) {
+            printf '%s ## %s', ($ENV{MOJO_MODE}//'__UNDEF__'),join(',',@_);
             die "Did not find the midi input stream! Need port number.";
     } else {
         $self->input_object->init();
@@ -74,7 +76,7 @@ sub main {
 
     $self->action->init; #load blueprints
 
-    $self->input_object->register_events($self->loop);
+    $self->input_object->register_events($self->loop, $self);
     $self->loop->recurring(1 => sub {
     	# not active
     	return if $self->silence_timer == -1;
