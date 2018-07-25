@@ -5,7 +5,6 @@ use Mojo::IOLoop::Stream;
 use Mojo::Util 'dumper';
 use Mojo::Loader 'data_section';
 use MIDI;
-use MIDI::ALSA(':CONSTS');
 use Time::HiRes;
 use Mojo::JSON qw(encode_json);
 use Mojo::JSON 'to_json';
@@ -13,6 +12,7 @@ use FindBin;
 use lib "$FindBin::Bin/../../utillities-perl/lib";
 use lib "$FindBin::Bin/../lib";
 use Model::Action;
+use Model::Input::ALSA;
 use SH::Script qw/options_and_usage/;
 use Carp::Always;
 use Term::ANSIColor;
@@ -48,17 +48,10 @@ Type h + [enter]
 
 
 has loop  => sub { Mojo::IOLoop->singleton };
-has alsa_port => sub {my $con =`aconnect -i`;
-    (map{/(\d+)/} grep {$_=~/client \d+.+\Wmidi/i} grep {$_!~/\sThrough/} split(/\n/, $con))[0]};
-has alsa_stream => sub {
-     my $r = IO::Handle->new;
-     $r->fdopen(MIDI::ALSA::fd(),'r');
-     warn $r->error if $r->error;
-     return $r
- };
 has loop  => sub { Mojo::IOLoop->singleton };
 has stdin_loop => sub { Mojo::IOLoop::Stream->new(\*STDIN)->timeout(0) };
 has silence_timer=> -1;
+has input_object => sub { Model::Input::ALSA->new };
 
 has action => sub {Model::Action->new};
 my ( $opts, $usage, $argv ) =
@@ -72,33 +65,23 @@ __PACKAGE__->new->main if !caller;
 
 sub main {
     my $self = shift;
-    if (! defined $self->alsa_port
+    if (! defined $self->input_object->port
         && (! exists $ENV{MOJO_MODE} || $ENV{MOJO_MODE} ne 'dry-run')) {
             die "Did not find the midi input stream! Need port number.";
     } else {
-        say "alsa port: ".$self->alsa_port;
-        MIDI::ALSA::client( 'Perl MIDI::ALSA client', 1, 1, 0 );
-        MIDI::ALSA::connectfrom( 0, $self->alsa_port, 0 );  # input port is lower (0)
+        $self->input_object->init();
     }
 
     $self->action->init; #load blueprints
 
-    $self->loop->recurring(0 => sub {
-        my ($self) = shift;
-        if (MIDI::ALSA::inputpending()) {
-            $self->emit('alsaread',$self) ;
-        }
-    });
-    $self->loop->on( alsaread => sub {
-        $self->alsa_read(@_)
-	});
+    $self->input_object->register_events($self->loop);
     $self->loop->recurring(1 => sub {
     	# not active
     	return if $self->silence_timer == -1;
     	my $t = Time::HiRes::time;
     	if (! $self->silence_timer ) {
     		$self->silence_timer($t);
-    	} elsif ($t - $self->silence_timer >= 4) {
+    	} elsif ($t - $self->silence_timer >= 3) {
     		$self->stdin_read();
     	}
     });
@@ -112,30 +95,6 @@ sub main {
 }
 
 # Read note pressed.
-sub alsa_read {
-    my ($self) = @_;
-    my $on_time = Time::HiRes::time;
-
-    # reset timer
-    $self->silence_timer(0);
-
-    my @alsaevent = MIDI::ALSA::input();
-    return if $alsaevent[0] == 10; #ignore pedal
-    return if $alsaevent[0] == 42; #ignore system beat
-    $self->action->tune_starttime($on_time) if ! $self->action->tune_starttime();
-    push @alsaevent,{dtime_sec=>
-    	($on_time - ($self->action->last_event_starttime||$self->action->tune_starttime))};
-    my $place = 'start';
-    $place = 'slutt' if $alsaevent[0] == 7 ;
-    $place = 'slutt' if $alsaevent[0] == 6 && $alsaevent[7][2] == 0;
-
-    printf("%-6s %s %3d %.3f\n",$place,Model::Utils::Scale::value2notename($self->action->tune->scale,$alsaevent[7][1]),$alsaevent[7][2],$alsaevent[8]{dtime_sec}) if $alsaevent[0] == 6 || $alsaevent[0] == 7;
-    my $event = Model::Utils::alsaevent2midievent(@alsaevent);
-    if (defined $event) {
-        push @{ $self->action->midi_events }, $event;
-        $self->action->last_event_starttime($on_time);
-    }
-}
 
 # Stop existing tune
 # analyze
