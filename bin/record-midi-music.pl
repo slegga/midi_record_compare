@@ -90,7 +90,6 @@ sub main {
 
     $self->stdin_loop->on(read => sub { $self->stdin_read(@_) });
 
-    MIDI::ALSA::start() or die "start failed";
     $self->stdin_loop->start;
     $self->loop->start unless $self->loop->is_running;
 

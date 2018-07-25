@@ -19,18 +19,20 @@ sub port {
     (map{/(\d+)/} grep {$_=~/client \d+.+\Wmidi/i} grep {$_!~/\sThrough/} split(/\n/, $con))[0]
 }
 
-sub alsa_stream {
-     my $r = IO::Handle->new;
-     $r->fdopen(MIDI::ALSA::fd(),'r');
-     warn $r->error if $r->error;
-     return $r
- }
+# sub alsa_stream {
+#      my $r = IO::Handle->new;
+#      $r->fdopen(MIDI::ALSA::fd(),'r');
+#      warn $r->error if $r->error;
+#      return $r
+#  }
 
  sub init {
     my ($self) = @_;
          say "input port: ".$self->port();
          MIDI::ALSA::client( 'Perl MIDI::ALSA client', 1, 1, 0 );
          MIDI::ALSA::connectfrom( 0, $self->port, 0 );  # input port is lower (0)
+         MIDI::ALSA::start() or die "start failed";
+
 }
 
 sub register_events {
