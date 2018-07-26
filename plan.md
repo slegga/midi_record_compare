@@ -1,5 +1,7 @@
 PLAN
-====
+===
+* Neste gang:
+* Jobb med register_event og fiks feil.
 * Test ut sak-programmet https://trello.com/b/LPO2GFPO Du har allerede en bruker.
 * Skill ut MIDI::ALSA til Model::Loop::ALSA (Model::Loop::WebUSB kommer)
 * Se på websocket støtten her: Writing websocket chat using Mojolicious Lite · kraih_mojo Wiki · GitHub.html

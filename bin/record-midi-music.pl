@@ -4,7 +4,6 @@ use Mojo::IOLoop;
 use Mojo::IOLoop::Stream;
 use Mojo::Util 'dumper';
 use Mojo::Loader 'data_section';
-use MIDI;
 use Time::HiRes;
 use Mojo::JSON qw(encode_json);
 use Mojo::JSON 'to_json';
@@ -95,6 +94,28 @@ sub main {
 
 }
 
+=head2 register_midi_event
+
+Takes score as arrays ref and extra if any as hash ref.
+
+ score:
+ ('note_on', dtime, channel, note, velocity)
+ ['note_on', 0, 0, 96, 25],
+
+
+Saves as score in self->midi_events
+
+=cut
+
+sub register_midi_event {
+    my ($self, $event) = @_;
+    #printf("%-6s %s %3d %.3f\n",$place,Model::Utils::Scale::value2notename($controller->action->tune->scale,$alsaevent[7][1]),$alsaevent[7][2],$alsaevent[8]{dtime_sec}) if $alsaevent[0] == 6 || $alsaevent[0] == 7;
+    if (defined $event) {
+        push @{ $self->action->midi_events }, $event;
+    }
+
+}
+
 # Read note pressed.
 
 # Stop existing tune
@@ -135,7 +156,7 @@ sub stdin_read {
             }
         }
         $self->action->midi_events([]); # clear history
-        $self->action->tune_starttime(undef);
+        $self->reset_time();
     }
 }
 

@@ -69,19 +69,23 @@ sub guess_scale_from_notes {
         $profile{$value % 12}++;
     }
     my %scales = (
-        'c_dur' =>  [0,2,4,5,7,9,11], #c, D, E,  F, G, A,  H
-        'em_dur' => [0,2,3,5,7,8,10], #C, D, Eb, F, G, Ab, Hb, C
+        'c_dur' =>  [0,2,4,5,7,9,11], # C, D, E,  F, G, A,  H
+        'f_dur' =>  [0,2,4,5,7,9,10], # F, G, A, Bb, C, D, E, F
+        'g_dur' =>  [0,2,4,6,7,9,11], # G, A, B, C, D, E, F#, G
+        'em_dur' => [0,2,3,5,7,8,10], # C, D, Eb, F, G, Ab, Hb, C
+
     );
     my $best='';
     my $best_score=0;
-    for my $k (keys %scales) {
+    for my $k (sort keys %scales) {
         my $score=0;
         for my $v (@{$scales{$k}}) {
             $score += $profile{$v};
         }
-        if ($score>$best_score) {
+        if ($score > $best_score) {
             $best = $k;
             $best_score = $score;
+#warn "($k: $best_score)";
         }
     }
     return $best;

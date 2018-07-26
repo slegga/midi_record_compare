@@ -2,6 +2,7 @@ package Model::Action;
 use Mojo::Base -base;
 use Mojo::File qw(tempfile path);
 use File::Basename;
+use MIDI;
 
 # TODO fjern linjen under. Ingen printing fra denne modulen
 use Term::ANSIColor;
