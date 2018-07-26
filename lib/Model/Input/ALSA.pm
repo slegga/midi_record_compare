@@ -1,5 +1,6 @@
 package Model::Input::ALSA;
 use Mojo::Base 'Model::Input';
+use Mojo::JSON 'to_json';
 use MIDI::ALSA(':CONSTS');
 
 =head1 NAME
@@ -35,8 +36,19 @@ Return port.
 
 
 sub port {
-    my $con =`aconnect -i`;
-    (map{/(\d+)/} grep {$_=~/client \d+r.+\Wmidi/i} grep {$_!~/\sThrough/} split(/\n/, $con))[0]
+    my $return;
+    my $state='new';
+    while (! defined $return) {
+        my $con=`aconnect -i`;
+        #warn $con;
+        $return = (map{/(\d+)/} grep {$_=~/client \d+.+\Wmidi/i} grep {$_!~/\sThrough/} split(/\n/, $con))[0];
+        if (! defined $return and $state eq 'new') {
+            $state='warned';
+            say "Missing port. Waiting for Piano to connect. Please secure that piano is turned on.";
+
+        }
+    }
+    return $return;
 }
 
 # sub alsa_stream {
@@ -90,8 +102,11 @@ sub alsa_read {
     $controller->silence_timer(0);
 
     my @alsaevent = MIDI::ALSA::input();
-    return if $alsaevent[0] == 10; #ignore pedal
-    return if $alsaevent[0] == 42; #ignore system beat
+    # if (grep {$alsaevent[0] eq $_} qw/10 42/ ) {
+    #     #return if $alsaevent[0] == 10; #ignore pedal
+    #     # return if $alsaevent[0] == 42; #ignore system beat
+    #     say "Ignore alsa event: ".to_json(\@alsaevent);
+    # }
     $self->tune_starttime($on_time) if ! $self->tune_starttime();
     push @alsaevent,{dtime_sec=>
     	($on_time - ($self->last_event_starttime||$self->tune_starttime))};

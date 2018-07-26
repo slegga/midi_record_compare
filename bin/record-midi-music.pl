@@ -57,7 +57,7 @@ my @COPY_ARGV = @ARGV;
 my ( $opts, $usage, $argv ) =
     options_and_usage( $0, \@ARGV, "%c %o",
     [ 'comp|c=s', 'Compare play with this blueprint' ],
-,{return_uncatched_arguments => 1});
+{return_uncatched_arguments => 1});
 @ARGV = @COPY_ARGV;
 
 __PACKAGE__->new->main(@ARGV) if !caller;
@@ -113,8 +113,11 @@ sub register_midi_event {
     #$place = 'slutt' if $alsaevent[0] == 7 ;
     #$place = 'slutt' if $alsaevent[0] == 6 && $alsaevent[7][2] == 0;
 
-    printf("%-6s %s %3d %.3f\n",$event->[0],Model::Utils::Scale::value2notename($self->action->tune->scale,$event->[3]),$event->[4],$event->[2]);
-    if (defined $event) {
+    printf("%-6s %s %3d %.3f\n",$event->[0]
+    ,(defined($event->[3]) ? Model::Utils::Scale::value2notename($self->action->tune->scale,$event->[3]):'__UNDEF__')
+    ,($event->[4]//0),
+    $event->[2]//0);
+    if (defined $event && grep { $event->[0] eq $_ } qw/note_on note_off/) {
         push @{ $self->action->midi_events }, $event;
     }
 
@@ -160,7 +163,7 @@ sub stdin_read {
             }
         }
         $self->action->midi_events([]); # clear history
-        $self->reset_time();
+        $self->input_object->reset_time();
     }
 }
 
@@ -184,6 +187,5 @@ sub do_quit {
 	say "Goodbye";
 	$self->loop->stop_gracefully;
 }
-
 
 1;

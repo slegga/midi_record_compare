@@ -7,7 +7,9 @@ our $ALSA_CODE = {      'SND_SEQ_EVENT_SYSTEM'      => 0
                     ,   'SND_SEQ_EVENT_NOTE'        => 5
                     ,   'SND_SEQ_EVENT_NOTEON'      => 6
                     ,   'SND_SEQ_EVENT_NOTEOFF'     => 7
-                    ,   'SND_SEQ_EVENT_CONTROLLER'  =>10   };
+                    ,   'SND_SEQ_EVENT_CONTROLLER'  =>10
+                    ,   'SND_SEQ_EVENT_SENSING'     =>42
+                };
 
 =head2 alsaevent2midievent
 
@@ -35,14 +37,19 @@ sub alsaevent2midievent {
         # ('note_on', dtime, channel, note, velocity)
         return ['note_on', $dtime, 0, $data->[1], $data->[2]];
     }
-    if ( $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEOFF} || ! $data->[2]) {
+    if ( $type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEOFF} || ($type == $ALSA_CODE->{SND_SEQ_EVENT_NOTEON } && ! $data->[2])) {
 #        warn "NOTE OFF";
 #        my $starttime = int ($extra->{starttime} * 96);
 #        my $duration = int($opts->{duration} *96);
         return ['note_off', $dtime, 0, $data->[1], $data->[2]];
     }
-    say "Unregisered type = $type";
-    return [$type, $dtime, 0, @$data ];
+    if ( grep {$type == $_ } values %$ALSA_CODE ) {
+        my $event_name = ( grep {$type == $ALSA_CODE->{$_} } keys %$ALSA_CODE )[0];
+        say "ignore $event_name: ".to_json(@_);
+        return;
+    }
+    say "Unregisered type = $type: " .to_json(@_) ;
+    return;
 }
 
 =head2 calc_length
