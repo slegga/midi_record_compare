@@ -1,5 +1,6 @@
 package Model::Utils;
 use Mojo::Base -strict;
+use Mojo::JSON qw/to_json/;
 use autodie;
 
 our $ALSA_CODE = {      'SND_SEQ_EVENT_SYSTEM'      => 0
@@ -8,7 +9,9 @@ our $ALSA_CODE = {      'SND_SEQ_EVENT_SYSTEM'      => 0
                     ,   'SND_SEQ_EVENT_NOTEON'      => 6
                     ,   'SND_SEQ_EVENT_NOTEOFF'     => 7
                     ,   'SND_SEQ_EVENT_CONTROLLER'  =>10
+                    ,   'SND_SEQ_EVENT_PGMCHANGE'   =>11
                     ,   'SND_SEQ_EVENT_SENSING'     =>42
+                    ,   'SND_SEQ_EVENT_PORT_UNSUBSCRIBED'=>67
                 };
 
 =head2 alsaevent2midievent
@@ -43,12 +46,16 @@ sub alsaevent2midievent {
 #        my $duration = int($opts->{duration} *96);
         return ['note_off', $dtime, 0, $data->[1], $data->[2]];
     }
+    if ( $type == $ALSA_CODE->{SND_SEQ_EVENT_PORT_UNSUBSCRIBED} ) {
+        say "got SND_SEQ_EVENT_PORT_UNSUBSCRIBED: ".to_json(@_);
+        return ['port_unsubscribed'];
+    }
     if ( grep {$type == $_ } values %$ALSA_CODE ) {
         my $event_name = ( grep {$type == $ALSA_CODE->{$_} } keys %$ALSA_CODE )[0];
-        say "ignore $event_name: ".to_json(@_);
+        say "ignore $event_name: ".to_json(\@_);
         return;
     }
-    say "Unregisered type = $type: " .to_json(@_) ;
+    say "Unregisered type = $type: " .to_json(\@_) ;
     return;
 }
 

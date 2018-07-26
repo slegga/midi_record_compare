@@ -109,14 +109,21 @@ Saves as score in self->midi_events
 
 sub register_midi_event {
     my ($self, $event) = @_;
-    my $place = 'start';
-    #$place = 'slutt' if $alsaevent[0] == 7 ;
-    #$place = 'slutt' if $alsaevent[0] == 6 && $alsaevent[7][2] == 0;
+    return if ! defined $event;
+    # my $place = 'start';
+    # $place = 'slutt' if $alsaevent[0] == 7 ;
+    # $place = 'slutt' if $alsaevent[0] == 6 && $alsaevent[7][2] == 0;
 
     printf("%-6s %s %3d %.3f\n",$event->[0]
     ,(defined($event->[3]) ? Model::Utils::Scale::value2notename($self->action->tune->scale,$event->[3]):'__UNDEF__')
     ,($event->[4]//0),
     $event->[2]//0);
+    if ($event->[0] eq 'port_unsubscribed') { # piano is turned off.
+        $self->action->do_endtune;
+        say 'Forced quit';
+        $self->do_quit;
+        return;
+    }
     if (defined $event && grep { $event->[0] eq $_ } qw/note_on note_off/) {
         push @{ $self->action->midi_events }, $event;
     }
