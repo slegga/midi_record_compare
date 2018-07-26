@@ -95,9 +95,6 @@ sub alsa_read {
     $self->tune_starttime($on_time) if ! $self->tune_starttime();
     push @alsaevent,{dtime_sec=>
     	($on_time - ($self->last_event_starttime||$self->tune_starttime))};
-#    my $place = 'start';
-#    $place = 'slutt' if $alsaevent[0] == 7 ;
-#    $place = 'slutt' if $alsaevent[0] == 6 && $alsaevent[7][2] == 0;
 
     #printf("%-6s %s %3d %.3f\n",$place,Model::Utils::Scale::value2notename($controller->action->tune->scale,$alsaevent[7][1]),$alsaevent[7][2],$alsaevent[8]{dtime_sec}) if $alsaevent[0] == 6 || $alsaevent[0] == 7;
     my $event = Model::Utils::alsaevent2midievent(@alsaevent);

@@ -22,8 +22,6 @@ Talk with Model modules like Model::Tune
 
 =cut
 
-has tune_starttime => 0;
-has last_event_starttime => 0;
 has denominator =>8;
 has tune => sub {Model::Tune->new};
 has midi_events => sub {[]};

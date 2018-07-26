@@ -109,7 +109,11 @@ Saves as score in self->midi_events
 
 sub register_midi_event {
     my ($self, $event) = @_;
-    #printf("%-6s %s %3d %.3f\n",$place,Model::Utils::Scale::value2notename($controller->action->tune->scale,$alsaevent[7][1]),$alsaevent[7][2],$alsaevent[8]{dtime_sec}) if $alsaevent[0] == 6 || $alsaevent[0] == 7;
+    my $place = 'start';
+    #$place = 'slutt' if $alsaevent[0] == 7 ;
+    #$place = 'slutt' if $alsaevent[0] == 6 && $alsaevent[7][2] == 0;
+
+    printf("%-6s %s %3d %.3f\n",$event->[0],Model::Utils::Scale::value2notename($self->action->tune->scale,$event->[3]),$event->[4],$event->[2]);
     if (defined $event) {
         push @{ $self->action->midi_events }, $event;
     }
