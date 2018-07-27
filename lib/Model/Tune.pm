@@ -36,6 +36,16 @@ has total_score => 0;
 has startbeat => 0;
 has debug => 0;
 
+=head1 NAME
+
+Model::Tune - Handle tunes
+
+=head1 SYNOPSIS
+
+ use Model::Tune
+ my $tune = Model::tune->from_notefile('my-notefile.txt');
+ $tune->play;
+
 =head1 DESCRIPTION
 
 ('note_off', dtime, channel, note, velocity)

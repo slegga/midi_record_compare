@@ -33,6 +33,33 @@ use overload
 # TODO Flytt from_alsaevent ut i egen modul og endre navn til alsaevent2score
 # returnerer en note i score format til bruk i Model::Tune->from_score
 
+=head1 NAME
+
+Model::Note - Handle notes alias a score
+
+=head1 DESCRIPTION
+
+Keep data for one note. Handle transaction etc.
+
+=head1 ATTRIBUTES
+
+=over
+
+=item starttime
+=item duration
+=item note
+=item velocity
+=item delta_time
+=item note_name
+=item startbeat
+=item length_numerator
+=item delta_place_numerator
+=item length_name
+=item order
+
+=back
+
+
 =head1 METHOD
 
 =head2 from_score {

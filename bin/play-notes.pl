@@ -13,13 +13,29 @@ use Model::Tune;
 use Mojo::File qw/path tempfile/;
 use Carp::Always;
 
+=head1 NAME
+
+play-notes.pl
+
+=head1 SYNOPSIS
+
+play-notes.pl my-notefile.txt
+
 =head1 DESCRIPTION
+
+Play sounds from a given notefile.
 
 ('note_on', dtime, channel, note, velocity)
 dtime = a value 0 to 268,435,455 (0x0FFFFFFF)
 channel = a value 0 to 15
 note = a value 0 to 127
 velocity = a value 0 to 127
+
+=head1 INSTALLATION
+
+Prequeries:
+
+sudo apt timidity
 
 =cut
 

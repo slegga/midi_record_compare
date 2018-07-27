@@ -11,8 +11,17 @@ use Data::Dumper;
 #use Carp::Always;
 use Model::Tune;
 
+=head1 NAME
+
+midi2notes.pl
+
+=head2 SYNOPSIS
+
+midi2notes.pl my-midifile.mid >my-notefile.txt
 
 =head1 DESCRIPTION
+
+Read a midi file and output to stdout notes.
 
 ('note_on', dtime, channel, note, velocity)
 dtime = a value 0 to 268,435,455 (0x0FFFFFFF)

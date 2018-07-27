@@ -6,6 +6,14 @@ use MIDI; # uses MIDI::Opus et al
 use Data::Dumper;
 use SH::PrettyPrint;
 
+=head1 NAME
+
+midi-analyzer.pl - print evetns from midi-file
+
+=head1 SYNOPSIS
+
+midi-analyzer.pl my-file.midi your-file.mid
+
 =head1 DESCRIPTION
 
 ('note_on', dtime, channel, note, velocity)

@@ -14,6 +14,16 @@ our $ALSA_CODE = {      'SND_SEQ_EVENT_SYSTEM'      => 0
                     ,   'SND_SEQ_EVENT_PORT_UNSUBSCRIBED'=>67
                 };
 
+=head1 NAME
+
+Model::Utils - A place to store common functions.
+
+=head1 DESCRIPTION
+
+Place to put functions that does not belong else where.
+
+=head1 FUNCTIONS
+
 =head2 alsaevent2midievent
 
 Read input from the MIDI::ALSA::input method. With HiRes tune_start,on and off
