@@ -7,5 +7,15 @@ use FindBin;
 BEGIN { unshift @INC, "$FindBin::Bin/../lib" }
 use Mojolicious::Commands;
 
+=head1 NAME
+
+midi_record_compare - Testing web page
+
+=head1 DESCRIPTION
+
+May be deleted.
+
+=cut
+
 # Start command line interface for application
 Mojolicious::Commands->start_app('MidiRecordCompare');

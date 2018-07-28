@@ -8,6 +8,16 @@ use lib "$FindBin::Bin/../lib";
 
 use Model::Action;
 
+=head1 NAME
+
+piano-trainer.pl
+
+=head1 DESCRIPTION
+
+Under construction. Will be the webservice for piano training suite.
+
+=cut
+
 get '/' => 'index';
 
 my $clients = {};
