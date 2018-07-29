@@ -73,6 +73,7 @@ sub guess_scale_from_notes {
         'f_dur' =>  [0,2,4,5,7,9,10], # F, G, A, Bb, C, D, E, F
         'g_dur' =>  [0,2,4,6,7,9,11], # G, A, B, C, D, E, F#, G
         'em_dur' => [0,2,3,5,7,8,10], # C, D, Eb, F, G, Ab, Hb, C
+        'd_dur' =>  [1,2,4,6,7,9,11],
 
     );
     my $best='';
