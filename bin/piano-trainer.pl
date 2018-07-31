@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use utf8;
 use Mojolicious::Lite;
-use DateTime;
+#use DateTime;
 use FindBin;
 use lib "$FindBin::Bin/../../utillities-perl/lib";
 use lib "$FindBin::Bin/../lib";
@@ -32,11 +32,11 @@ websocket '/echo' => sub {
     $self->on(message => sub {
         my ($self, $msg) = @_;
 
-        my $dt   = DateTime->now( time_zone => 'Asia/Tokyo');
+#        my $dt   = DateTime->now( time_zone => 'Asia/Tokyo');
 
         for (keys %$clients) {
             $clients->{$_}->send({json => {
-                hms  => $dt->hms,
+                hms  => time(),
                 text => $msg,
             }});
         }

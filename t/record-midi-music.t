@@ -5,6 +5,12 @@ use FindBin;
 use lib "../lib";
 use lib "$FindBin::Bin/lib";
 
+my $tmpdir = "$FindBin::Bin/../local";
+mkdir($tmpdir )//die"cant make $tmpdir" if (! -d $tmpdir);
+$tmpdir = "$FindBin::Bin/../local/notes";
+mkdir($tmpdir )//die"cant make $tmpdir" if (! -d $tmpdir);
+
+
 $ENV{MOJO_MODE}='dry-run';
 require "$FindBin::Bin/../bin/record-midi-music.pl";
 ok(1,'test');
