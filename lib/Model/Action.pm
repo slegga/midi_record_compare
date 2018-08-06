@@ -15,6 +15,11 @@ use Model::Tune;
 
 Model::Action - Takes order from UI
 
+=head1 SYNOPSIS
+
+use Model::Action;
+...;
+
 =head1 DESCRIPTION
 
 Handles request from UI either from cli or web.

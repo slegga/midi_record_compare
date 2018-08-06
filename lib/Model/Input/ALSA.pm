@@ -7,6 +7,11 @@ use MIDI::ALSA(':CONSTS');
 
 Model::Input::ALSA
 
+=head1 SYNOPSIS
+
+use Model::Input::ALSA
+...;
+
 =head1 DESCRIPTION
 
 "Input plugin" for Mojo::IOLoop for ALSA protocoll for reading .

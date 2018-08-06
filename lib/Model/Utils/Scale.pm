@@ -7,6 +7,8 @@ use Carp::Always;
 
 Model::Utils::Scale - converting from to scale and numbers
 
+=head1 SYNOPSIS
+
 =head1 DESCRIPTION
 
 Convert number to note name

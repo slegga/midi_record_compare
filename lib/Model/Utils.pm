@@ -18,6 +18,11 @@ our $ALSA_CODE = {      'SND_SEQ_EVENT_SYSTEM'      => 0
 
 Model::Utils - A place to store common functions.
 
+=head1 SYNOPSIS
+
+ use Model::Utils;
+ ...;
+
 =head1 DESCRIPTION
 
 Place to put functions that does not belong else where.
