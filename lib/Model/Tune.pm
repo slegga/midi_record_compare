@@ -181,9 +181,9 @@ sub evaluate_with_blueprint {
 	my @played_note_values = map{$_->note+0} @{ $self->notes};
 	my @blueprint_note_values = map{$_->note + 0} @{ $blueprint->notes};
 	my $diff = diff( \@played_note_values, \@blueprint_note_values );
-    say "Sammenligne innput note";
-    say "Spilt:              ".join(',',map{Model::Utils::Scale::value2notename($self->{scale},$_)} @played_note_values );
-    say "Fasit:              ".join(',',map{Model::Utils::Scale::value2notename($self->{scale},$_)} @blueprint_note_values );
+    say "Sammenligne innput note" if $self->debug;
+    say "Spilt:              ".join(',',map{Model::Utils::Scale::value2notename($self->{scale},$_)} @played_note_values ) if $self->debug;
+    say "Fasit:              ".join(',',map{Model::Utils::Scale::value2notename($self->{scale},$_)} @blueprint_note_values ) if $self->debug;
 	# remove first array_ref layer from diff
 	my $wrongs=[];
 	if (@$diff) {
@@ -194,10 +194,10 @@ sub evaluate_with_blueprint {
 #	say "171\n".Dumper $wrongs;
 	# Calculate a note score
 	my $n = ((scalar @{ $blueprint->notes } - scalar @$wrongs * 3)/(scalar @{ $blueprint->notes }))*100;
-    warn $self->note_score($n);
+   warn $self->note_score($n);
 
-    say "Spilt:         ". join(',',map{Model::Utils::Scale::value2notename($self->{scale},$_)} @played_note_values);
-	say "Notefasit:     ".join(',',map{Model::Utils::Scale::value2notename($self->{scale},$_)} @blueprint_note_values);
+#    say "Spilt:         ". join(',',map{Model::Utils::Scale::value2notename($self->{scale},$_)} @played_note_values);
+#	say "Notefasit:     ".join(',',map{Model::Utils::Scale::value2notename($self->{scale},$_)} @blueprint_note_values);
 
 	# Calculate a note map
     my %map;
