@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 use FindBin;
-use lib "$FindBin::Bin/../../utillities-perl/lib";
+use lib "$FindBin::Bin/../../utilities-perl/lib";
 use lib "$FindBin::Bin/../lib";
 use SH::Script qw/options_and_usage/;
 
