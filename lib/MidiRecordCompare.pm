@@ -13,6 +13,7 @@ MidiRecordCompare
 
 =head1 DESCRIPTION
 
+Main web class. Under constructrion.
 
 =head1 METHODS
 

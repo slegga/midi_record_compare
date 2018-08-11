@@ -25,6 +25,24 @@ use Model::Action;
 Handles request from UI either from cli or web.
 Talk with Model modules like Model::Tune
 
+=head1 ATTRIBUTES
+
+=over
+
+=item denominator: Part of beat which is the shortest note.
+
+=item tune:        Tune object
+
+=item midi_events: Temporary played notes.
+
+=item shortest_note_time: How long the shortest note is in length.
+
+=item blueprints_dir:     Where the blueprints are. Default to ./blueprints
+
+=item blueprints:         Loaded on startup. Container for all blueprints as Tune objects.
+
+=back
+
 =cut
 
 has denominator =>8;
@@ -33,6 +51,14 @@ has midi_events => sub {[]};
 has shortest_note_time => 12;
 has blueprints_dir => sub {path("$FindBin::Bin/../blueprints")};
 has blueprints => sub{{}};
+
+=head1 METHODS
+
+=head2 init
+
+Initialize Action object loads all the blueprints
+
+=cut
 
 
 sub init {

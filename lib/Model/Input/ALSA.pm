@@ -22,7 +22,7 @@ inherits all methods from Model::Input and override following methods.
 
 =cut
 
-=head2 ATTRIBUTES
+=head1 ATTRIBUTES
 
 =cut
 
@@ -30,7 +30,7 @@ has tune_starttime => 0;
 has last_event_starttime => 0;
 
 
-=head2 METHODS
+=head1 METHODS
 
 =head2 port
 

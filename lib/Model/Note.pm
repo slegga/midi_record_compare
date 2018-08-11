@@ -60,7 +60,7 @@ Keep data for one note. Handle transaction etc.
 =back
 
 
-=head1 METHOD
+=head1 METHODS
 
 =head2 from_score {
 

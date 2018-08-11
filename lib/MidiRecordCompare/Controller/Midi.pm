@@ -7,10 +7,14 @@ MidiRecordCompare::Controller::Midi - A start on a web page
 
 =cut
 
+=head1 DESCRIPTION
 
+Under construction.
 
 
 # This action will render a template
+
+=head1 METHODS
 
 =head2 upload_get
 
