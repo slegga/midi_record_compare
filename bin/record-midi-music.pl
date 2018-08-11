@@ -8,7 +8,7 @@ use Time::HiRes;
 use Mojo::JSON qw(encode_json);
 use Mojo::JSON 'to_json';
 use FindBin;
-use lib "$FindBin::Bin/../../utillities-perl/lib";
+use lib "$FindBin::Bin/../../utilities-perl/lib";
 use lib "$FindBin::Bin/../lib";
 use Model::Action;
 use Model::Input::ALSA;
