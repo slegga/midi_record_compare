@@ -613,10 +613,10 @@ sub score2notes {
     }
 
     @notes = sort {$a->order <=> $b->order} @notes;
-    say "score2notes  1:      ".join(',',map {Model::Utils::Scale::value2notename($self->{scale},$_->note).' '.$_->order} @notes);
+    say "score2notes  1:      ".join(',',map {Model::Utils::Scale::value2notename($self->{scale},$_->note).' '.$_->order} @notes) if $self->debug;
 
 
-    say "score2notes  1:      ".join(',',map {Model::Utils::Scale::value2notename($self->{scale},$_->note)} @notes);
+    say "score2notes  1:      ".join(',',map {Model::Utils::Scale::value2notename($self->{scale},$_->note)} @notes) if $self->debug;
     #loop another time through notes to calc delta_place_numerator after notes is sorted.
     my $prev_note = Model::Note->new(startbeat=>Model::Beat->new(number=>0, numerator=>0));
 #    my @new_notes=();
@@ -626,7 +626,7 @@ sub score2notes {
 #		push(@new_notes, $note);
 		$prev_note = $note;
     }
-    say "score2notes  2:      ".join(',',map {Model::Utils::Scale::value2notename($self->{scale},$_->note)} @notes);
+    say "score2notes  2:      ".join(',',map {Model::Utils::Scale::value2notename($self->{scale},$_->note)} @notes) if $self->debug;
 
     $self->notes(\@notes);
     $self->scale(Model::Utils::Scale::guess_scale_from_notes($self->notes));
