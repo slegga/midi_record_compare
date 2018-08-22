@@ -114,7 +114,7 @@ sub register_midi_event {
     # $place = 'slutt' if $alsaevent[0] == 7 ;
     # $place = 'slutt' if $alsaevent[0] == 6 && $alsaevent[7][2] == 0;
 
-    printf("%-6s %s %3d %.3f\n",$event->[0]
+    printf("%-7s %-3s %3d %.3f\n",$event->[0]
     ,(defined($event->[3]) ? Model::Utils::Scale::value2notename($self->action->tune->scale,$event->[3]):'__UNDEF__')
     ,($event->[4]//0),
     $event->[2]//0);
