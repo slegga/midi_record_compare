@@ -52,14 +52,14 @@ has stdin_loop => sub { Mojo::IOLoop::Stream->new(\*STDIN)->timeout(0) };
 has silence_timer=> -1;
 has input_object => sub { Model::Input::ALSA->new };
 has commands => sub{[
-    [[qw/h help/],     0, 'This help text', sub{$_[0]->do_help}],
+    [[qw/h help/],     0, 'This help text', sub{$_[0]->print_help}],
     [[qw/l list/],     1, 'List saved tunes.', sub{$_[0]->action->do_endtune;			$_[0]->action->do_list($_[1])}],
     [[qw/p play/],     1, ' Play last tune. If none defaults to the not ended play.', sub{$_[0]->action->do_endtune; $_[0]->action->do_play($_[1])}],
     [[qw/s save/],     1, 'Save play to disk as notes.', sub{$_[0]->action->do_endtune;	$_[0]->action->do_save($_[1])}],
-    [[qw/c comp/],     1, 'Compare last tune with given name. If not name then test with --comp argument', sub{   $_[0]->action->do_comp($_[1])}],
+    [[qw/c comp/],     0, 'Compare last tune with given name. If not name then test with --comp argument', sub{   $_[0]->action->do_comp($_[1])}],
     [[qw/sm savemidi/],1, 'Save as midi file. Add .midi if not present in name.', sub{$_[0]->action->do_endtune;  $_[0]->action->do_save_midi($_[1])}],
-    [[qw/q quit/],     1, 'End session.',sub{$_[0]->do_quit}],
-    [[qw/defaults/],    1, 'Stop last tune and start on new.', sub{$_[0]->action->do_endtune()}],
+    [[qw/q quit/],     0, 'End session.',sub{$_[0]->do_quit}],
+    [[qw/defaults/],   0, 'Stop last tune and start on new.', sub{$_[0]->action->do_endtune()}],
 ]};
 has action => sub {Model::Action->new};
 my @COPY_ARGV = @ARGV;
@@ -74,13 +74,10 @@ __PACKAGE__->new->main(@ARGV) if !caller;
 
 sub main {
     my $self = shift;
-    if (! defined $self->input_object->port()) {
-        if ((! exists $ENV{MOJO_MODE} || $ENV{MOJO_MODE} eq 'dry-run' ) && ! grep {'--dry-run' eq $_} @_) {
-            printf '%s ## %s', ($ENV{MOJO_MODE}//'__UNDEF__'),join(',',@_);
-            die "Did not find the midi input stream! Need port number.";
-        }
-    } else {
-        $self->input_object->init();
+    if ((exists $ENV{MOJO_MODE} && $ENV{MOJO_MODE} eq 'dry-run' ) || grep {'--dry-run' eq $_} @_) {
+		printf '%s ## %s', ($ENV{MOJO_MODE}//'__UNDEF__'),join(',',@_);
+    }else {
+    	$self->input_object->port();
     }
 
     $self->action->init; #load blueprints
@@ -165,10 +162,17 @@ sub stdin_read {
 		}
 	} else {
 		for my $c(@{$self->commands}) {
-		if (grep {$cmd eq $_} @{$c->[0]} ) {
-		$c->[3]->($self, $name);
-		last;
-		}
+			if (grep {$cmd eq $_} @{$c->[0]} ) {
+				my $sub = $c->[3];
+				if (! $sub) {
+					say "cmd $cmd";
+					p $c;
+					die "invalid option def";
+				}
+				say "cmd $cmd";
+				$sub->($self, $name );
+				last;
+			}
 		}
 	}
 
