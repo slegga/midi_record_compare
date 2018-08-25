@@ -78,6 +78,7 @@ sub main {
 		printf '%s ## %s', ($ENV{MOJO_MODE}//'__UNDEF__'),join(',',@_);
     }else {
     	$self->input_object->port();
+    	$self->input_object->init();
     }
 
     $self->action->init; #load blueprints
