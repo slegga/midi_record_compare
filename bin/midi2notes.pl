@@ -35,10 +35,10 @@ velocity = a value 0 to 127
 
 option  'extend|e=s', 'Extend these periods to next valid length. Takes , separated list';
 #,{return_uncatched_arguments => 1});
-__PACKAGE__->new->with_options(forward_uncatched_arguments=>1)->main();
+__PACKAGE__->new->with_options( extra_options => 1 )->main();
 sub main {
 	my $self=shift;
-	my $tune = Model::Tune->from_midi_file(@SH::ScriptX::_extra);
+	my $tune = Model::Tune->from_midi_file($self->extra_options);
 	$tune->calc_shortest_note;
 	$tune->score2notes;
 	$tune->clean($self->extend);
