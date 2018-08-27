@@ -3,9 +3,10 @@
 use FindBin;
 use lib "$FindBin::Bin/../../utilities-perl/lib";
 use lib "$FindBin::Bin/../lib";
-use SH::Script qw/options_and_usage/;
+#use SH::Script qw/options_and_usage/;
+use SH::ScriptX; # calls import
 
-use Mojo::Base -strict;
+use Mojo::Base 'SH::ScriptX';
 use MIDI; # uses MIDI::Opus et al
 use Data::Dumper;
 #use Carp::Always;
@@ -31,13 +32,15 @@ velocity = a value 0 to 127
 
 =cut
 
-my ( $opts, $usage, $argv ) =
-    options_and_usage( $0, \@ARGV, "%c %o",
-    [ 'extend|e=s', 'Extend these periods to next valid length. Takes , separated list' ],
-,{return_uncatched_arguments => 1});
 
-my $tune = Model::Tune->from_midi_file($ARGV[0]);
-$tune->calc_shortest_note;
-$tune->score2notes;
-$tune->clean($opts);
-say "$tune";
+option  'extend|e=s', 'Extend these periods to next valid length. Takes , separated list';
+#,{return_uncatched_arguments => 1});
+__PACKAGE__->new->with_options(forward_uncatched_arguments=>1)->main();
+sub main {
+	my $self=shift;
+	my $tune = Model::Tune->from_midi_file(@SH::ScriptX::_extra);
+	$tune->calc_shortest_note;
+	$tune->score2notes;
+	$tune->clean($self->extend);
+	say "$tune";
+}
