@@ -17,7 +17,7 @@ use Carp::Always;
 use Term::ANSIColor;
 use feature 'unicode_strings';
 use utf8;
-binmode(STDIN, ":utf8");
+# binmode(STDIN, ":utf8");
 binmode(STDOUT, ":utf8");
 use open ':encoding(UTF-8)';
 

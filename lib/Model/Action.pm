@@ -48,7 +48,7 @@ Talk with Model modules like Model::Tune
 has denominator =>8;
 has tune => sub {Model::Tune->new};
 has midi_events => sub {[]};
-has shortest_note_time => 12;
+has shortest_note_time => 9;
 has blueprints_dir => sub {path("$FindBin::Bin/../blueprints")};
 has blueprints => sub{{}};
 
