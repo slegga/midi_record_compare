@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-use Mojo::Base '-base';
+
 use Mojo::IOLoop;
 use Mojo::IOLoop::Stream;
 use Mojo::Util 'dumper';
@@ -12,7 +12,8 @@ use lib "$FindBin::Bin/../../utilities-perl/lib";
 use lib "$FindBin::Bin/../lib";
 use Model::Action;
 use Model::Input::ALSA;
-use SH::Script qw/options_and_usage/;
+use SH::ScriptX;
+use Mojo::Base 'SH::ScriptX';
 use Carp::Always;
 use Term::ANSIColor;
 use feature 'unicode_strings';
@@ -63,12 +64,9 @@ has commands => sub{[
     [[qw/defaults/],   0, 'Stop last tune and start on new.', sub{$_[0]->action->do_endtune()}],
 ]};
 has action => sub {Model::Action->new};
-my @COPY_ARGV = @ARGV;
-my ( $opts, $usage, $argv ) =
-    options_and_usage( $0, \@ARGV, "%c %o",
-    [ 'comp|c=s', 'Compare play with this blueprint' ],
-{return_uncatched_arguments => 1});
-@ARGV = @COPY_ARGV;
+option  'comp|c=s', 'Compare play with this blueprint';
+#{return_uncatched_arguments => 1});
+#@ARGV = @COPY_ARGV;
 
 __PACKAGE__->new->main(@ARGV) if !caller;
 
@@ -157,8 +155,8 @@ sub stdin_read {
 #        $self->print_help();
 #    } else {
 	if(!defined $cmd) {
-		if ($opts->comp) {
-		$self->action->do_comp($opts->comp);
+		if ($self->comp) {
+		$self->action->do_comp($self->comp);
 		} else {
 		$self->action->do_endtune();
 		}
