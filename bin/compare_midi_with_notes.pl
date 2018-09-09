@@ -22,13 +22,15 @@ Compare played song as midi file with a blue print as note-text.
 #,{return_uncatched_arguments => 2});
 
 sub main {
-    my $tune_play = Model::Tune->from_midi_file($ARGV[0]);
+    my $self = shift;
+    my ($midifile, $tunefile) = ($self->extra_options)[0,1];
+    my $tune_play = Model::Tune->from_midi_file($midifile);
     $tune_play->calc_shortest_note;
     $tune_play->score2notes;
-    my $tune_blueprint= Model::Tune->from_note_file($ARGV[1]);
+    my $tune_blueprint= Model::Tune->from_note_file($tunefile);
 
     $tune_play->evaluate_with_blueprint($tune_blueprint);
     # print $tune_play->evaluation;
 }
 
-__PACKAGE__->new->with_options->main();
+__PACKAGE__->new->with_options->main()  if ! caller;;

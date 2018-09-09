@@ -42,16 +42,17 @@ sudo apt timidity
 
 #,{return_uncatched_arguments => 1});
 sub main {
-    my $note_file = $ARGV[0] or die "Did not get a filename";
+    my $self = shift;
+    my $note_file = ($self->extra_options)[0] or die "Did not get a filename";
     die "File $note_file does not exists" if ! -e $note_file;
 
     my $tmpfile = tempfile(DIR=>'/tmp');
-    my $tune = Model::Tune->from_note_file($ARGV[0]);
+    my $tune = Model::Tune->from_note_file($note_file);
     $tune->notes2score;
     $tune->to_midi_file("$tmpfile");
 
     print `timidity $tmpfile`;
 }
 
-__PACKAGE->new->with_options->main();
+__PACKAGE->new->with_options->main() if ! caller;
 1;

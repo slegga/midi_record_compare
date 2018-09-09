@@ -65,36 +65,36 @@ has commands => sub{[
 ]};
 has action => sub {Model::Action->new};
 option  'comp|c=s', 'Compare play with this blueprint';
-#{return_uncatched_arguments => 1});
-#@ARGV = @COPY_ARGV;
+option  'dryrun!',  'Do not expect a linked piano';
+option  'debug!',   'Print debug info';
 
-__PACKAGE__->new->main(@ARGV) if !caller;
+__PACKAGE__->new->with_options->main() if !caller;
 
 
 sub main {
     my $self = shift;
-    if ((exists $ENV{MOJO_MODE} && $ENV{MOJO_MODE} eq 'dry-run' ) || grep {'--dry-run' eq $_} @_) {
+    if ( $self->dryrun ) {
 		printf '%s ## %s', ($ENV{MOJO_MODE}//'__UNDEF__'),join(',',@_);
-    }else {
+    } else {
     	$self->input_object->port();
     	$self->input_object->init();
     }
 
     $self->action->init; #load blueprints
 
-    $self->input_object->register_events($self->loop, $self);
-    $self->loop->recurring(1 => sub {
+    $self->input_object->register_events( $self->loop, $self );
+    $self->loop->recurring( 1 => sub {
     	# not active
     	return if $self->silence_timer == -1;
     	my $t = Time::HiRes::time;
-    	if (! $self->silence_timer ) {
+    	if ( ! $self->silence_timer ) {
     		$self->silence_timer($t);
-    	} elsif ($t - $self->silence_timer >= 3) {
+    	} elsif ( $t - $self->silence_timer >= 3 ) {
     		$self->stdin_read();
     	}
     });
 
-    $self->stdin_loop->on(read => sub { $self->stdin_read(@_) });
+    $self->stdin_loop->on( read => sub { $self->stdin_read(@_) } );
 
     $self->stdin_loop->start;
     $self->loop->start unless $self->loop->is_running;

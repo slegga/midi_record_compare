@@ -196,8 +196,6 @@ sub evaluate_with_blueprint {
 	my $n = ((scalar @{ $blueprint->notes } - scalar @$wrongs * 3)/(scalar @{ $blueprint->notes }))*100;
    warn $self->note_score($n);
 
-#    say "Spilt:         ". join(',',map{Model::Utils::Scale::value2notename($self->{scale},$_)} @played_note_values);
-#	say "Notefasit:     ".join(',',map{Model::Utils::Scale::value2notename($self->{scale},$_)} @blueprint_note_values);
 
 	# Calculate a note map
     my %map;
@@ -213,7 +211,6 @@ sub evaluate_with_blueprint {
 		if ($cdiff->[$i] == $cdiff->[$i+2]) {
             next;
         }
-        #warn sprintf "i:%s  cdiff:%s\n",$i,($cdiff->[$i+2] - $cdiff->[$i] -1);
 		for my $j(0 .. ($cdiff->[$i+2] - $cdiff->[$i] -1)){
 			$map{$cdiff->[$i]+$j} = $cdiff->[$i+1]+$j;
 		}

@@ -28,7 +28,11 @@ option 'ticsprbeat', 'Number of tics. Examle 6.';
 #,{return_uncatched_arguments => 1});
  sub main {
     my $self = shift;
-    my $tune = Model::Tune->from_note_file($ARGV[0]);
+    my @e = $self->extra_options;
+    say Dumper \@e;
+    my $filename = ($self->extra_options)[0];
+    die "No file given" if ! $filename;
+    my $tune = Model::Tune->from_note_file($filename);
     my $new_scale;
     if ($self->scale) {
         $new_scale = $self->scale;
@@ -46,3 +50,6 @@ option 'ticsprbeat', 'Number of tics. Examle 6.';
     say "$tune";
     $tune->to_note_file; # will write notes based on $tune->scale
 }
+
+__PACKAGE__->new->with_options->main() if !caller;;
+1;
