@@ -50,7 +50,7 @@ has tune => sub {Model::Tune->new};
 has midi_events => sub {[]};
 has shortest_note_time => 9;
 has blueprints_dir => sub {path("$FindBin::Bin/../blueprints")};
-has blueprints => sub{{}};
+has blueprints => sub{[]}; # [ [65,66,...], Mojo::File ]
 
 =head1 METHODS
 
@@ -67,7 +67,9 @@ sub init {
     for my $b ($self->blueprints_dir->list->each) {
         my $tmp = Model::Tune->from_note_file("$b");
         my $num = scalar @{$tmp->notes};
-        $self->blueprints->{$tmp->notes->[0]->note_name()}->{$tmp->notes->[1]->note_name()}->{$num} = "$b";
+        my $firstnotes;
+        push @$firstnotes, $tmp->notes->[$_]->note for (0 .. 9);
+        push @{$self->blueprints},[$firstnotes , "$b"];
     }
 
 }
@@ -241,43 +243,34 @@ sub do_save_midi {
 
 sub guessed_blueprint {
     my $self = shift;
-    my ($first_note,$second_note);
-    my $played;
-    if (@{$self->tune->notes}) {
-    	$first_note = $self->pn($self->tune->notes->[0]->note());
-        $second_note = $self->pn($self->tune->notes->[1]->note());
-    	$played = scalar @{$self->tune->notes};
-    	say join(' ',"#notename  ",$first_note,$second_note,$played);
-    } elsif ($self->alsa_events) {
-    	my $midievents = alsaevents2midievents($self->alsa_events);
-
-    	my $score = Model::Tune->from_midievents($self->alsa_events);
-        $first_note = $self->pn($self->tune->notes->[0]->note());
-        $second_note = $self->pn($self->tune->notes->[1]->note());
-        say join(' ',"#notename  ",$first_note,$second_note,$played);
-       	$played = scalar @{$self->tune->notes};
-    } else {
-    	return;
+    if (@{$self->tune->notes} <10) {
+        say "For kort låt for å sammenligne";
+        return;
     }
-    if (exists $self->blueprints->{$first_note}->{$second_note}->{$played}) {
-        return $self->blueprints->{$first_note}->{$second_note}->{$played};
-    }
-    my ($cand_best,$cand_diff);
 
-    for my $i (keys %{$self->blueprints->{$first_note}->{$second_note}}) {
-        next if !defined $i;
-        my $diff = abs($played - $i);
-        if (!defined $cand_best) {
-            $cand_best = $i;
-            $cand_diff = $diff;
-        } elsif ($cand_diff>$diff) {
-            $cand_best = $i;
-            $cand_diff = $diff;
+    # Reduce number of candidates for each note played until one.
+    my @candidates = @{$self->blueprints};
+    my $i =0;
+    my $bestname;
+    for my $n( map {$_->note} @{$self->tune->notes}) {
+        for my $j(reverse 0 .. $#candidates) {
+            splice(@candidates,$j,1) if $n != $candidates[$j][0][$i];
+        }
+        if (@candidates == 1) {
+            $bestname = $candidates[0][1];
+            last;
+        }
+        $i++;
+        if ($i>10) {
+            say "Flere kandidater etter 10 noter er spilt. Fjern en av fasitene";
+            return;
         }
     }
-    return if ! $cand_best;
-    # say $self->pn($_) @{$self->blueprints};
-    return $self->blueprints->{$first_note}->{$second_note}->{$cand_best};
+    if (! defined $bestname) {
+        say "Ingen passende fasit er funnet. Notenr-1: $i";
+        return;
+    }
+    return $bestname;
 }
 
 sub local_dir {
