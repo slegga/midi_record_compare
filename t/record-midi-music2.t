@@ -1,5 +1,7 @@
 use Mojo::Base -strict;
 use Test::More;
+# use Test::Warn;
+use Test::FailWarnings;
 use Carp::Always;
 use FindBin;
 use lib "../lib";
