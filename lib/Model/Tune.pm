@@ -55,7 +55,8 @@ Model::Tune - Handle tunes
 
 =head2 calc_shortest_note
 
-Guess the shorest note. If shorter than 96 it is a 1/8 else 1/4.
+Guess the shorest note. If shorter than 64 it is a 1/8 else 1/4.
+Set denominator, beat_interval, beat_score,shortest_note_time
 
 =cut
 
@@ -110,9 +111,9 @@ sub calc_shortest_note {
     $self->beat_score( int ((25 -(100 * ($best->{value} / $numnotes)))*4 ));
 
 	$self->shortest_note_time($best->{'period'});
-    if ( $best->{'period'} >= 96 ) {
+    if ( $best->{'period'} >= 64 ) {
         $self->denominator(4);
-    } elsif( $best->{'period'} < 96 ) {
+    } elsif( $best->{'period'} < 64 ) {
         $self->denominator(8);
     }
 	return $self;
@@ -349,6 +350,7 @@ sub find_best_scale {
 
 
 Take an array_ref of (MIDI) score and return a new Model::Tune object
+Do not concatinate on beat yet.
 
 =cut
 
@@ -362,7 +364,7 @@ sub from_midi_score {
     # Order score_notes on starttime
     my @score_t = sort {$a->[1] <=> $b->[1]} @$score;
     my@notes;
-    for my $sp(@score_t) {#0=type,note,dtime,0,volumne
+    for my $sp(@score_t) {#0=type,1=dtime,2=duration,3=0,4=note,5=volumne
         next if $sp->[0] ne 'note';
         $tune_start=$sp->[1] if ! defined $tune_start;
         push @notes, Model::Note->new(starttime => $sp->[1] - $tune_start
@@ -377,6 +379,7 @@ sub from_midi_score {
     my $pre_time;
     for my $note (@notes) {
         if (! defined $pre_time) {
+            # firt note in tune
             $pre_time = $note->starttime;
             $note->delta_time(0);
         } else {
@@ -529,7 +532,9 @@ sub notes2score {
 
 
 Enrich notes with: point in startbeat,delta_place_numerator, length_numerator,length_name, sound
-and guess scale
+and guess scale.
+
+Contatinate beats.
 
 Prepare output at notefile.
 i.e
@@ -573,38 +578,6 @@ sub score2notes {
         $note->startbeat($startbeat->clone);
     }
 
-    # split notes which is on same beat but not payed together
-    #TODO FIX THIS
-    # handle end of beat time limit. Maybe starttimelimit also shall be handeled
-    # if ( @notes && $notes[0]->duration ) {
-    #     my ($beattime_end); #end limit of beat
-    #     my $numinator_mod=0;
-    #     my $extend_flag=0;
-    #     for my $n (@notes) {
-    #         $n->delta_place_numerator($n->delta_place_numerator+$numinator_mod);
-    #         if (!defined $beattime_end) {
-    #             $beattime_end = $n->starttime + $n->duration;
-    #         } elsif ($n->delta_place_numerator) {
-    #             $beattime_end = $n->starttime + $n->duration;
-    #             if ($extend_flag==1) {
-    #                 $numinator_mod++;
-    #             }
-    #             $extend_flag=0;
-    #         } else {
-    #             if ($beattime_end < $n->starttime) {
-    #                 $n->delta_place_numerator($n->delta_place_numerator+1);
-    #                 $extend_flag=1;
-    #             } elsif ($beattime_end < $n->starttime + $n->duration) {
-    #                 $beattime_end = $n->starttime + $n->duration;
-    #             }
-    #         }
-    #
-    #
-    #     }
-    #     warn "# NOTER ER FLYTTET $numinator_mod" if $numinator_mod;
-    # }
-
-
     for my $n (@notes) {
         $n->order($n->startbeat->to_int*1000 + 128 - $n->note);
     }
@@ -612,17 +585,16 @@ sub score2notes {
     @notes = sort {$a->order <=> $b->order} @notes;
     say "score2notes  1:      ".join(',',map {Model::Utils::Scale::value2notename($self->{scale},$_->note).' '.$_->order} @notes) if $self->debug;
 
-
     say "score2notes  1:      ".join(',',map {Model::Utils::Scale::value2notename($self->{scale},$_->note)} @notes) if $self->debug;
+
     #loop another time through notes to calc delta_place_numerator after notes is sorted.
-    my $prev_note = Model::Note->new(startbeat=>Model::Beat->new(number=>0, numerator=>0));
-#    my @new_notes=();
+    my $prev_note_int = 0;#Model::Note->new(startbeat=>Model::Beat->new(number=>0, numerator=>0));
     for my $note(@notes) {
-		my $tb = $note->startbeat - $prev_note->startbeat;
-		$note->delta_place_numerator($tb->to_int);
-#		push(@new_notes, $note);
-		$prev_note = $note;
+		my $tb = $note->startbeat->to_int - $prev_note_int;#->startbeat->to_int;
+		$note->delta_place_numerator($tb);
+		$prev_note_int = $note->startbeat->to_int;
     }
+
     say "score2notes  2:      ".join(',',map {Model::Utils::Scale::value2notename($self->{scale},$_->note)} @notes) if $self->debug;
 
     $self->notes(\@notes);

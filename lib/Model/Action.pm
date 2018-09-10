@@ -161,7 +161,7 @@ sub do_list {
 
 sub do_endtune {
     my ($self) = @_;
-    return $self if (@{$self->midi_events}<8);
+    return $self if (@{$self->midi_events} <= 10);
     my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
     $self->tune(Model::Tune->from_midi_score($score));
 
@@ -182,7 +182,12 @@ sub do_endtune {
     return $self;
 }
 
+=head2 do_play
 
+Takes self, filepathname
+Plays self->tune or given filepathname
+
+=cut
 
 sub do_play {
     my ($self, $name) = @_;
