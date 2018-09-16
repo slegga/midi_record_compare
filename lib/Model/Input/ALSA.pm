@@ -107,16 +107,9 @@ sub alsa_read {
     $controller->silence_timer(0);
 
     my @alsaevent = MIDI::ALSA::input();
-    # if (grep {$alsaevent[0] eq $_} qw/10 42/ ) {
-    #     #return if $alsaevent[0] == 10; #ignore pedal
-    #     # return if $alsaevent[0] == 42; #ignore system beat
-    #     say "Ignore alsa event: ".to_json(\@alsaevent);
-    # }
     $self->tune_starttime($on_time) if ! $self->tune_starttime();
     push @alsaevent,{dtime_sec=>
     	($on_time - ($self->last_event_starttime||$self->tune_starttime))};
-
-    #printf("%-6s %s %3d %.3f\n",$place,Model::Utils::Scale::value2notename($controller->action->tune->scale,$alsaevent[7][1]),$alsaevent[7][2],$alsaevent[8]{dtime_sec}) if $alsaevent[0] == 6 || $alsaevent[0] == 7;
     my $event = Model::Utils::alsaevent2midievent(@alsaevent);
     $self->last_event_starttime($on_time) if $event;
     $controller->register_midi_event($event);
