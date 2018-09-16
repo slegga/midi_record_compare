@@ -561,19 +561,20 @@ sub score2notes {
         my $numerator = int( 1/2
         + $note->delta_time / $self->shortest_note_time );
 
+        # TROR LINJENE UNDER ROTER DET TIL HVIS FLERE TANGENTER PRESSES SAMTIDIG.
         # Try to correct to get better startbeat
-        if ($note->starttime) {
-            if(! $numerator) {
-                $numerator = int( 1/2 + ($note->starttime - $prev_starttime)/$self->shortest_note_time );
-            } else {
-                $prev_starttime = $note->starttime;
-            }
-        }
+#        if ($note->starttime) {
+            #if(! $numerator) {
+                #$numerator = int( 1/2 + ($note->starttime - $prev_starttime)/$self->shortest_note_time );
+            #} else {
+#                $prev_starttime = $note->starttime;
+            #}
+#        }
 
         die "MINUS" if $numerator<0;
         $startbeat = $startbeat + $numerator;
 
-        printf "%6s %6d %.3f %3d %3s\n" ,sprintf("%.2f",$note->delta_time),$note->order,$startbeat->to_int,$note->duration,Model::Utils::Scale::value2notename($self->{scale}//'c_dur',$note->note);
+        printf "%6s %6d %.3f %3d %3s\n" ,sprintf("%.2f",$note->delta_time),$note->order,$startbeat->to_int,$note->duration,Model::Utils::Scale::value2notename($self->{scale}//'c_dur',$note->note) if $self->debug;
 
         $note->startbeat($startbeat->clone);
     }
