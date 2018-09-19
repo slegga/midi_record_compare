@@ -372,7 +372,7 @@ sub from_midi_score {
 
     }
         # warn Dumper \@notes;
-    @notes = sort { $a->{'starttime'} <=> $b->{'starttime'} }  @notes;
+    #@notes = sort { $a->{'starttime'} <=> $b->{'starttime'} }  @notes;
 
     my $self = $class->new(%$options);
 
@@ -573,14 +573,10 @@ sub score2notes {
 
         die "MINUS" if $numerator<0;
         $startbeat = $startbeat + $numerator;
-
-        printf "%6s %6d %.3f %3d %3s\n" ,sprintf("%.2f",$note->delta_time),$note->order,$startbeat->to_int,$note->duration,Model::Utils::Scale::value2notename($self->{scale}//'c_dur',$note->note) if $self->debug;
-
         $note->startbeat($startbeat->clone);
-    }
+        $note->order($note->startbeat->to_int*1000 + 128 - $note->note);
+        printf "%6d %3d %3d %3s\n" ,$note->order,$startbeat->to_int,$note->duration,Model::Utils::Scale::value2notename($self->{scale}//'c_dur',$note->note);# if $self->debug;
 
-    for my $n (@notes) {
-        $n->order($n->startbeat->to_int*1000 + 128 - $n->note);
     }
 
     @notes = sort {$a->order <=> $b->order} @notes;
