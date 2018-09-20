@@ -168,7 +168,7 @@ sub do_endtune {
     $self->tune->calc_shortest_note;
     $self->tune->score2notes;
 
-    print $self->tune->to_string;
+#    print $self->tune->to_string;
     $self->shortest_note_time($self->tune->shortest_note_time);
     $self->denominator($self->tune->denominator);
     printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
@@ -265,6 +265,9 @@ sub guessed_blueprint {
             $bestname = $candidates[0][1];
             last;
         }
+        if (@candidates == 0 ) {
+        	last;
+        }
         $i++;
         if ($i>10) {
             say "Flere kandidater etter 10 noter er spilt. Fjern en av fasitene";
@@ -272,7 +275,7 @@ sub guessed_blueprint {
         }
     }
     if (! defined $bestname) {
-        say "Ingen passende fasit er funnet. Notenr-1: $i";
+        say "Ingen passende fasit er funnet etter $i noter";
         return;
     }
     return $bestname;
