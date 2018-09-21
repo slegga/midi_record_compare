@@ -74,6 +74,12 @@ sub init {
 
 }
 
+=head2 do_comp
+
+Do compare played tune with an blueprint.
+
+=cut
+
 sub do_comp {
     my ($self, $name) = @_;
     die "Missing self" if !$self;
@@ -146,6 +152,12 @@ sub do_comp {
     return $self;
 }
 
+=head2 do_list
+
+List files in the notes and blueprints directory
+
+=cut
+
 sub do_list {
     my ($self, $name) = @_;
     say '';
@@ -158,6 +170,13 @@ sub do_list {
     say "blueprints/";
     say $self->blueprints_dir->list_tree->map(sub{basename($_)})->join("\n");
 }
+
+=head2 do_endtune
+
+Execute after tune actions.
+After last played note is finished. End tune and look for blueprints to compare.
+
+=cut
 
 sub do_endtune {
     my ($self) = @_;
@@ -231,7 +250,11 @@ sub do_play {
     print `timidity $tmpfile`;
 }
 
+=head2 do_save
 
+Save played tune to disk in local/notes directory as notes (txt)
+
+=cut
 
 sub do_save {
     my ($self, $name) = @_;

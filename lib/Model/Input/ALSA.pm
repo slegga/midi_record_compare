@@ -38,8 +38,6 @@ Return port.
 
 =cut
 
-
-
 sub port {
     my $return;
     my $state='new';
@@ -79,6 +77,12 @@ lissening.
 
 }
 
+=head2 register_events
+
+Register a Mojo::Events event when an event from piano is found.
+
+=cut
+
 sub register_events {
     my ($self,$loop, $controller) = @_;
     $loop->recurring(0 => sub {
@@ -95,7 +99,7 @@ sub register_events {
 
 =head2 alsa_read
 
-
+Reads alsa event and register the event.
 
 =cut
 
@@ -114,6 +118,12 @@ sub alsa_read {
     $self->last_event_starttime($on_time) if $event;
     $controller->register_midi_event($event);
 }
+
+=head2 reset_time
+
+Reset time. When a new tune is finished.
+
+=cut
 
 sub reset_time {
     my ($self) = @_;

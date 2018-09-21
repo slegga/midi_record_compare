@@ -52,11 +52,11 @@ sub notename2value {
     return $note_names{$name} + $oct * 12;
 }
 
-=head2 guess_scale
+=head2 guess_scale_from_notes
 
 Takes array ref of notevalues.
 
-Return scale name.
+Return a guessed scale name.
 
 =cut
 

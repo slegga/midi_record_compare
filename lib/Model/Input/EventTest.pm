@@ -3,6 +3,7 @@ use Mojo::Base -base;
 
 use Carp 'croak';
 
+
 sub port { 1 }
 
 sub register_events {
@@ -63,6 +64,7 @@ the following new ones.
 
 =head2 init
 
+=head2 port
 
 =head2 register_events
 

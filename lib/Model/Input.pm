@@ -51,6 +51,7 @@ the following new ones.
 
 =head2 init
 
+=head2 port
 
 =head2 register_events
 
