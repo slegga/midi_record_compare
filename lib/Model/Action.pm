@@ -262,12 +262,23 @@ sub do_save {
     $self->tune->to_note_file($self->local_dir($self->blueprints_dir->child('notes'))->child($name));
 }
 
+=head2 do_save_midi
+
+Save played tune as midi
+
+=cut
+
 sub do_save_midi {
     my ($self, $name) = @_;
     $name .= '.midi' if ($name !~/\.midi?$/);
     $self->tune->to_midi_file($self->local_dir($self->blueprints_dir->child('notes'))->child($name));
 }
 
+=head2 guessed_blueprint
+
+Return guessed blueprint based on played notes.
+
+=cut
 
 sub guessed_blueprint {
     my $self = shift;
@@ -304,6 +315,13 @@ sub guessed_blueprint {
     return $bestname;
 }
 
+
+=head2 local_dir
+
+Find local dir. Wher to save tunes.
+
+=cut
+
 sub local_dir {
 	my ($self, $mojofiledir) =@_;
 
@@ -314,6 +332,11 @@ sub local_dir {
 	return path(@l);
 }
 
+=head2 pn
+
+Return note for print
+
+=cut
 
 sub pn {
 	my ($self, $note) = @_;
