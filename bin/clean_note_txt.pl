@@ -22,9 +22,9 @@ Can change scale.
 
 =cut
 
-option 'extend|e=s', 'Extend these periods to next valid length. Takes , separated list';
-option 'scale', 'Set scale. Convert from old to given scale. Example c_dur';
-option 'ticsprbeat', 'Number of tics. Examle 6.';
+option 'extend=s', 'Extend these periods to next valid length. Takes , separated list';
+option 'scale=s', 'Set scale. Convert from old to given scale. Example c_dur';
+option 'ticsprbeat=i', 'Number of tics. Examle 6.';
 #,{return_uncatched_arguments => 1});
  sub main {
     my $self = shift;

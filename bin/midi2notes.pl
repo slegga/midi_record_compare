@@ -33,7 +33,7 @@ velocity = a value 0 to 127
 =cut
 
 
-option  'extend|e=s', 'Extend these periods to next valid length. Takes , separated list';
+option  'extend=s', 'Extend these periods to next valid length. Takes , separated list';
 #,{return_uncatched_arguments => 1});
 __PACKAGE__->new->with_options( extra_options => 1 )->main();
 sub main {

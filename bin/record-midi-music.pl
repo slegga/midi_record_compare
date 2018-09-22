@@ -64,7 +64,7 @@ has commands => sub{[
     [[qw/defaults/],   0, 'Stop last tune and start on new.', sub{$_[0]->action->do_endtune()}],
 ]};
 has action => sub {Model::Action->new};
-option  'comp|c=s', 'Compare play with this blueprint';
+option  'comp=s', 'Compare play with this blueprint';
 option  'dryrun!',  'Do not expect a linked piano';
 option  'debug!',   'Print debug info';
 
