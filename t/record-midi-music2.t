@@ -5,12 +5,11 @@ use Test::FailWarnings;
 use Carp::Always;
 use FindBin;
 use lib "../lib";
-use lib "$FindBin::Bin/lib";
+use lib "$FindBin::Bin/../../utilities-perl/lib";
 use Model::Input::EventTest;
-
+use Test::ScriptX;
 $ENV{MOJO_MODE}='dry-run';
-require "$FindBin::Bin/../bin/record-midi-music.pl";
 ok(1,'test');
-my $t = __PACKAGE__->new(input_object => Model::Input::EventTest->new)->with_options;
-$t->main();
+my $t = Test::ScriptX->new('bin/record-midi-music.pl',input_object => Model::Input::EventTest->new);
+$t->run->stderr_ok->stdout_like(qr{note_on});
 done_testing;
