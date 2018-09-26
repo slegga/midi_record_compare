@@ -33,4 +33,4 @@ sub main {
     # print $tune_play->evaluation;
 }
 
-__PACKAGE__->new->with_options->main()  if ! caller;;
+__PACKAGE__->new->main();
