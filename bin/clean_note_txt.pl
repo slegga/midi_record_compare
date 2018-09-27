@@ -51,5 +51,5 @@ option 'ticsprbeat=i', 'Number of tics. Examle 6.';
     $tune->to_note_file; # will write notes based on $tune->scale
 }
 
-__PACKAGE__->new->with_options->main() if !caller;;
-1;
+__PACKAGE__->new(options_cfg=>{extra=>1})->main();
+
