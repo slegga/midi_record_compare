@@ -108,10 +108,11 @@ sub alsa_read {
     my $on_time = Time::HiRes::time;
 
     # reset timer
-    $controller->silence_timer(0);
 
-    my @alsaevent = MIDI::ALSA::input();
-    $self->tune_starttime($on_time) if ! $self->tune_starttime();
+    my @alsaevent = MIDI::ALSA::input(); # 
+    return if ($alsaevent[7][2]<10 && $alsaevent[0] == SND_SEQ_EVENT_NOTEON ) ; # remove miss pressed keys. Usually when hit another key in addition to the one wanted pressed.
+    $controller->silence_timer(0);
+        $self->tune_starttime($on_time) if ! $self->tune_starttime();
     push @alsaevent,{dtime_sec=>
     	($on_time - ($self->last_event_starttime||$self->tune_starttime))};
     my $event = Model::Utils::alsaevent2midievent(@alsaevent);
