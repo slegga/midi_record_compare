@@ -68,7 +68,6 @@ option  'comp=s', 'Compare play with this blueprint';
 option  'dryrun!',  'Do not expect a linked piano';
 option  'debug!',   'Print debug info';
 
-__PACKAGE__->new->with_options->main() if !caller;
 
 
 sub main {
@@ -210,4 +209,6 @@ sub do_quit {
 	say "Goodbye";
 	$self->loop->stop_gracefully;
 }
-1;
+
+__PACKAGE__->new->main();
+
