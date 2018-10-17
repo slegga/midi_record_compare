@@ -109,7 +109,8 @@ sub alsa_read {
 
     # reset timer
 
-    my @alsaevent = MIDI::ALSA::input(); # 
+    my @alsaevent = MIDI::ALSA::input(); #
+    return if ! @alsaevent;
     return if ($alsaevent[7][2]<10 && $alsaevent[0] == SND_SEQ_EVENT_NOTEON ) ; # remove miss pressed keys. Usually when hit another key in addition to the one wanted pressed.
     $controller->silence_timer(0);
         $self->tune_starttime($on_time) if ! $self->tune_starttime();
