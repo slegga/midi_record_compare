@@ -52,6 +52,7 @@ has loop  => sub { Mojo::IOLoop->singleton };
 has loop  => sub { Mojo::IOLoop->singleton };
 has stdin_loop => sub { Mojo::IOLoop::Stream->new(\*STDIN)->timeout(0) };
 has silence_timer=> -1;
+has piano_keys_pressed =>sub{ {} };
 has input_object => sub { Model::Input::ALSA->new };
 has commands => sub{[
     [[qw/h help/],     0, 'This help text', sub{$_[0]->print_help}],
@@ -88,7 +89,9 @@ sub main {
     	my $t = Time::HiRes::time;
     	if ( ! $self->silence_timer ) {
     		$self->silence_timer($t);
-    	} elsif ( $t - $self->silence_timer >= 3 ) {
+    	}
+    	elsif ( $t - $self->silence_timer >= 3 && ! keys %{ $self->piano_keys_pressed }) {
+    		# do_endtune
     		$self->stdin_read();
     	}
     });
@@ -116,9 +119,6 @@ Saves as score in self->midi_events
 sub register_midi_event {
     my ($self, $event) = @_;
     return if ! defined $event;
-    # my $place = 'start';
-    # $place = 'slutt' if $alsaevent[0] == 7 ;
-    # $place = 'slutt' if $alsaevent[0] == 6 && $alsaevent[7][2] == 0;
 
     printf("%-8s %-3s %3d %.3f\n",$event->[0]
     ,(defined($event->[3]) ? Model::Utils::Scale::value2notename($self->action->tune->scale,$event->[3]):'__UNDEF__')
@@ -132,6 +132,14 @@ sub register_midi_event {
     }
     if (defined $event && grep { $event->[0] eq $_ } qw/note_on note_off/) {
         push @{ $self->action->midi_events }, $event;
+        my $pks = $self->piano_keys_pressed;
+        my $pkp = $self->piano_keys_pressed;
+        if ($event->[0] eq 'note_on') {
+        	$pkp->{$event->[3]} =1;
+        } elsif($event->[0] eq 'note_off') {
+        	delete $pkp->{$event->[3]};
+        }
+        $self->piano_keys_pressed($pkp);
     }
 
 }
@@ -150,14 +158,11 @@ sub stdin_read {
         ($cmd, $name)=split /\s+/, $bytes;
     }
     $self->silence_timer(-1);
-#    if (defined $cmd && grep { $cmd eq $_ } ('h','help')) {
-#        $self->print_help();
-#    } else {
 	if(!defined $cmd) {
 		if ($self->comp) {
-		$self->action->do_comp($self->comp);
+			$self->action->do_comp($self->comp);
 		} else {
-		$self->action->do_endtune();
+			$self->action->do_endtune();
 		}
 	} else {
 		for my $c(@{$self->commands}) {
@@ -175,26 +180,8 @@ sub stdin_read {
 		}
 	}
 
-#        }
-#        } elsif (grep {$cmd eq $_} 'q','quit' ) {
-#        	$self->do_quit;
-#        } elsif (grep {$cmd eq $_} ('c','comp')) {
-#            $self->action->do_comp($name);
-#        } else {
-#            $self->action->do_endtune;
-#            if (grep { $cmd eq $_ } ('s','save')) {
-#                $self->action->do_save($name);
-#            } elsif (grep { $cmd eq $_} ('sm','savemidi')) {
-#                $self->action->do_save_midi($name);
-#            } elsif (grep { $cmd eq $_} ('p','play')) {
-#                $self->action->do_play($name);
-#            } elsif (grep {$cmd eq $_} ('l','list')) {
-#                $self->action->do_list($name);
-#            }
-    #    }
-        $self->action->midi_events([]); # clear history
-        $self->input_object->reset_time();
-   # }
+    $self->action->midi_events([]); # clear history
+    $self->input_object->reset_time();
 }
 
 sub print_help {

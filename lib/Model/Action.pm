@@ -51,7 +51,6 @@ has midi_events => sub {[]};
 has shortest_note_time => 9;
 has blueprints_dir => sub {path("$FindBin::Bin/../blueprints")};
 has blueprints => sub{[]}; # [ [65,66,...], Mojo::File ]
-
 =head1 METHODS
 
 =head2 init
