@@ -291,7 +291,9 @@ sub guessed_blueprint {
     my $i =0;
     my $bestname;
     for my $n( map {$_->note} @{$self->tune->notes}) {
+    	next if ! defined $n;
         for my $j(reverse 0 .. $#candidates) {
+        	next if ! defined $candidates[$j][0][$i];
             splice(@candidates,$j,1) if $n != $candidates[$j][0][$i];
         }
         if (@candidates == 1) {
