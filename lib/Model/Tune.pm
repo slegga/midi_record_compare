@@ -35,6 +35,8 @@ has delta_beat_score =>0;
 has total_score => 0;
 has startbeat => 0;
 has debug => 0;
+has hand_left_max => 'H4';
+has hand_logic => 'static';
 
 =head1 NAME
 
@@ -497,6 +499,22 @@ sub get_beat_sum {
     return $return;
 }
 
+=head2 get_enriched_notes
+
+Return al notes enriched with hand (left/right)
+
+TODO:
+
+=cut
+
+sub get_enriched_notes {
+	my $self = shift;
+	my $return=[];
+	@$return = map{ $_->to_hash } @{ $self->notes };
+	...; # TODO enrich with hand
+	return $return;
+}
+
 =head2 notes2score
 
 Generate score data from notefile data.
@@ -674,8 +692,11 @@ Return a text with all notes and some general variables for the tune.
 
 
 sub to_string {
-  my $self = shift;
-  my @notes = map{$_->to_string({scale => $self->{scale}, end =>"\n"})} grep {$_} @{$self->notes};
+	my $self = shift;
+#	my $args = shift;
+
+	my @notes;
+	@notes = map{$_->to_string({scale => $self->{scale}, end =>"\n"})} grep {$_} @{$self->notes};
 
 	my $return='';
     for my $name (qw/denominator shortest_note_time beat_score scale startbeat/) {

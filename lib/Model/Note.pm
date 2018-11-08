@@ -83,7 +83,6 @@ sub from_score {
         warn Dumper $score;
         return;
     }
-#    die "Need tune_starttime" if ! $options->{tune_starttime};
     my $prev_startbeat = $options->{prev_startbeat} || 0;
     my $self =  $class->new(starttime => $score->[1] - ($options->{tune_starttime}//0)
     , duration => $score->[2], note =>$score->[4], velocity =>$score->[5]);
@@ -100,6 +99,23 @@ sub from_score {
     my $delta = $startbeat - $prev_startbeat;
     $self->delta_place_numerator($delta->to_int);
     return $self;
+}
+
+=head2 to_hash_ref
+
+	Return note as a hash_ref
+
+=cut
+
+sub to_hash_ref {
+	my $self = shift;
+	my $hash = {};
+	for my $key(qw/starttime duration note velocity delta_time note_name startbeat length_numerator
+	 delta_place_numerator length_name order/) {
+	 	$hash->{$key} = $self->$key;
+	}
+
+	return $hash;
 }
 
 =head2 to_score
@@ -146,6 +162,7 @@ sub to_string {
                 $format .='%5s' ;
                 push  @args, sprintf("-%.2f",$dt);
             }
+
 		    $return =  sprintf $format,@args;
 		}
 		else {

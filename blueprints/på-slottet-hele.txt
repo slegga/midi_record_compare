@@ -2,6 +2,9 @@ denominator=6
 shortest_note_time=58.695652173913
 beat_score=15
 scale=c_dur
+hand_left_max=H4
+hand_logic=static
+
 0;1;G5        # 0.0-1/8
 0;6;C4        # 0.0-3/4
 2;1;G5        # 0.2-1/8
