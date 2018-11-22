@@ -60,7 +60,19 @@ sub main {
     if ($self->ticsprbeat) {
         $tune->denominator($self->ticprbeat);
     }
+   	$self->print_colornotes($tune);
 
+    while (1) {
+		if (-s ) {
+   			$self->print_colornotes($tune);
+		}
+		select undef, undef, undef, 10;
+   }
+}
+
+sub print_colornotes {
+	my $self = shift;
+	my $tune  = shift;
     for my $line(@{ $tune->notes }) {
     	# code for split left and right
     	# split
@@ -74,6 +86,7 @@ sub main {
     	print $line;
     }
     print color('reset');
+
 }
 
 __PACKAGE__->new(options_cfg=>{extra=>1})->main();
