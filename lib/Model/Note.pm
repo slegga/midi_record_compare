@@ -46,15 +46,25 @@ Keep data for one note. Handle transaction etc.
 =over
 
 =item starttime
+
 =item duration
+
 =item note
+
 =item velocity
+
 =item delta_time
+
 =item note_name
+
 =item startbeat
+
 =item length_numerator
+
 =item delta_place_numerator
+
 =item length_name
+
 =item order
 
 =back

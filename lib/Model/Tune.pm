@@ -515,6 +515,15 @@ sub get_enriched_notes {
 	return $return;
 }
 
+=head2 get_num_of_beats
+
+=cut
+
+sub get_num_of_beats {
+	my $self = shift;
+
+}
+
 =head2 notes2score
 
 Generate score data from notefile data.
@@ -617,6 +626,35 @@ sub score2notes {
     return $self;
 }
 
+=head2 to_data_split_hands
+
+Return a data object.
+
+$data->{left}[0][0]
+
+my ($data,$num_of_beats,$beat_size) = $tune->to_data_split_hands();
+
+
+=cut
+
+sub to_data_split_hands {
+	my $self = shift;
+	my $return={left=>[],right=>[]};
+
+	for my $note(@{ $self->notes }) {
+	       # code for split left and right
+	       # split
+	       # look back to se if ok
+	   my $hash = $note->to_hash_ref;
+	   if ($hash->{note} > 56) {# right
+	        $return->{'right'}[$note->startbeat->number][$note->startbeat->nominator]= $note;
+	   } else { # left
+	        $return->{'left'}[$note->stertbeat->number][$note->startbeat->nominator]= $note;
+
+   	   }
+	}
+	return $return;
+}
 
 =head2 to_midi_file
 
