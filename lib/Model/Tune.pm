@@ -416,7 +416,7 @@ sub from_midi_file {
     my $data = $tracks[0]->data;
     my $events = MIDI::Event::decode( \$data );
     my $score = MIDI::Score::events_r_to_score_r( $events );
-    return $class->from_midi_score($score, {midi_file => $midi_filename});
+    return $class->from_midi_score($score, { midi_file => $midi_filename, hand_split_on => 56 } );
 
 }
 
@@ -647,10 +647,9 @@ sub to_data_split_hands {
 	       # look back to se if ok
 	   my $hash = $note->to_hash_ref;
 	   if ($hash->{note} > 56) {# right
-	        $return->{'right'}[$note->startbeat->number][$note->startbeat->nominator]= $note;
+	       push @{ $return->{'right'} }, $note;
 	   } else { # left
-	        $return->{'left'}[$note->stertbeat->number][$note->startbeat->nominator]= $note;
-
+	      push @{ $return->{'left'} }, $note;
    	   }
 	}
 	return $return;

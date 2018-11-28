@@ -25,6 +25,7 @@ has length_numerator => 0;
 has delta_place_numerator => 0;
 has length_name => '';
 has order =>0;  #lowest first
+has 'hand';
 #has tickpersec =>96;
 
 use overload
@@ -108,6 +109,13 @@ sub from_score {
 #    say Dumper $self;
     my $delta = $startbeat - $prev_startbeat;
     $self->delta_place_numerator($delta->to_int);
+    if ( ! $options->{hand_split_on} ) {
+    } elsif ($self->note < $options->{hand_split_on} ) {
+    	$self->hand('left');
+    } else {
+    	$self->hand('right');
+    }
+
     return $self;
 }
 
