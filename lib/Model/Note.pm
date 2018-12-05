@@ -24,8 +24,8 @@ has length_numerator => 0;
 #note help
 has delta_place_numerator => 0;
 has length_name => '';
-has order =>0;  #lowest first
 has 'hand';
+has 'prev_silence'; # used by colornotes.pl script
 #has tickpersec =>96;
 
 use overload
@@ -119,6 +119,18 @@ sub from_score {
     return $self;
 }
 
+=head2 order
+
+Return a unique number for ordering/sorting notes in a note paper/file.
+
+=cut
+
+sub order {
+    my $self = shift;
+    shift && die "No more arguments";
+    return $self->startbeat->to_int * 1000 + 128 - $self->note;
+}
+
 =head2 to_hash_ref
 
 	Return note as a hash_ref
@@ -180,6 +192,12 @@ sub to_string {
                 $format .='%5s' ;
                 push  @args, sprintf("-%.2f",$dt);
             }
+            # TODO: LEGG INN PRINT AV HAND
+            if ( $self->hand) {
+                $format .=' %-5s';
+                push @args, $self->hand;
+            }
+            #...;
 
 		    $return =  sprintf $format,@args;
 		}

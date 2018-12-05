@@ -517,11 +517,14 @@ sub get_enriched_notes {
 
 =head2 get_num_of_beats
 
+Count number of beats.
+
 =cut
 
 sub get_num_of_beats {
 	my $self = shift;
-
+  my $lastnote = @{$self->notes}[-1];
+  return $lastnote->startbeat->to_int + $lastnote->duration;
 }
 
 =head2 notes2score
@@ -601,7 +604,7 @@ sub score2notes {
         die "MINUS" if $numerator<0;
         $startbeat = $startbeat + $numerator;
         $note->startbeat($startbeat->clone);
-        $note->order($note->startbeat->to_int*1000 + 128 - $note->note);
+        #$note->order($note->startbeat->to_int*1000 + 128 - $note->note);
         printf "%6d %3d %3d %3s\n" ,$note->order,$startbeat->to_int,$note->duration,Model::Utils::Scale::value2notename($self->{scale}//'c_dur',$note->note);# if $self->debug;
 
     }
