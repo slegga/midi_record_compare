@@ -2,6 +2,11 @@ denominator=6
 shortest_note_time=67
 beat_score=91
 scale=c_dur
+
+#colornotes.pl
+allowed_note_lengths=1,2,3,4,6,12
+allowed_note_types=stacato,accord
+
 0;6;C5        # 0.0-3/4
 2;1;G5        # 0.2-1/8
 0;1;E5        # 0.2-1/8
@@ -23,7 +28,7 @@ scale=c_dur
 2;1;G5        # 3.4-1/8
 0;1;E5        # 3.4-1/8
 2;6;A4        # 4.0-3/4
-2;0;G5        # 4.2-0/1
+2;1;G5        # 4.2-0/1
 0;1;F5        # 4.2-1/8
 2;1;G5        # 4.4-1/8
 0;1;F5        # 4.4-1/8

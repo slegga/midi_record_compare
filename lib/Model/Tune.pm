@@ -37,6 +37,8 @@ has startbeat => 0;
 has debug => 0;
 has hand_left_max => 'H4';
 has hand_logic => 'static';
+has 'allowed_note_lengths';
+has 'allowed_note_types';
 
 =head1 NAME
 
@@ -448,7 +450,13 @@ sub from_note_file {
     #scan for variables
     for my $line (split/\n/,$content) {
         if ($line=~/([\w\_\-]+)\s*=\s*(.+)$/) {
-            $self->$1($2);
+            my ($key,$value) = ($1,$2);
+            if ($key =~/s$/ ) {
+                my $tmp = [split /\s*\,\s*/,$value];
+                $self->$key($tmp);
+            } else {
+                $self->$key($value);
+            }
         }
     }
     my $beat = Model::Beat->new(integer => $self->startbeat, denominator => $self->denominator);
