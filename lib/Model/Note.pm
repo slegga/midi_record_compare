@@ -25,7 +25,7 @@ has length_numerator => 0;
 has delta_place_numerator => 0;
 has length_name => '';
 has 'hand';
-has ['prev_silence','stacato']; # used by colornotes.pl script
+has ['next_silence','stacato']; # used by colornotes.pl script
 #has tickpersec =>96;
 
 use overload

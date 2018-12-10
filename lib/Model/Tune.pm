@@ -39,6 +39,7 @@ has hand_left_max => 'H4';
 has hand_logic => 'static';
 has 'allowed_note_lengths';
 has 'allowed_note_types';
+has ['hand_left_max','hand_right_min','hand_default'];
 
 =head1 NAME
 
@@ -645,6 +646,15 @@ $data->{left}[0][0]
 
 my ($data,$num_of_beats,$beat_size) = $tune->to_data_split_hands();
 
+attributes for this function is
+
+=over 4
+
+=item hand_left_max i.e. H4
+
+=item hand_right_min i.e C5
+
+=item hand_default - Set to this if uncertain
 
 =cut
 
@@ -652,16 +662,46 @@ sub to_data_split_hands {
 	my $self = shift;
 	my $return={left=>[],right=>[]};
 
+    my ($max_left, $min_right);
+    $max_left  = Model::Utils::Scale::notename2value($self->hand_left_max ) if $self->hand_left_max;
+    $min_right = Model::Utils::Scale::notename2value($self->hand_right_min) if $self->hand_right_min;
+    if ($max_left && ! $min_right) {
+        $min_right = $max_left +1;
+    } elsif (! $max_left && $min_right) {
+        $max_left = $min_right - 1;
+    } elsif (! $max_left && ! $min_right) {
+        $max_left = 55;
+        $min_right = $max_left + 1;
+    } elsif ($max_left - $min_right > -1) {
+        my ($tmp_left,$tmp_right) = ( $max_left, $min_right );
+        $max_left = $tmp_right - 1;
+        $min_right = $tmp_left + 1;
+    }
+    # warn "hands $max_left $min_right";
 	for my $note(@{ $self->notes }) {
 	       # code for split left and right
 	       # split
 	       # look back to se if ok
 	   my $hash = $note->to_hash_ref;
-	   if ($hash->{note} > 56) {# right
+	   if ($hash->{note} >= $min_right) {# right
 	       push @{ $return->{'right'} }, $note;
-	   } else { # left
+	   } elsif($hash->{note} <= $max_left) { # left
 	      push @{ $return->{'left'} }, $note;
-   	   }
+      } else {
+          # Algorithm
+          # which hand expect note played
+          if (0) {
+              # which hand plays similar length
+          } elsif(0) {
+          }
+          if ($self->hand_default) {
+              # choose hand_default if set
+              push @{ $return->{$self->hand_default} }, $note;
+          } else {
+              # dies in end and ask for advice
+              die "Tried all rules. Pleae have a look and give me an advice.";
+          }
+      }
 	}
 	return $return;
 }

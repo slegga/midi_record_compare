@@ -92,26 +92,25 @@ sub print_colornotes {
 #	warn $stacato;
     # code for split left and right
     for my $hand(qw/left right/) {
-        my $exp_beat_int=0;
-        my $prev_note;
-        for my $note( @{ $data->{$hand} } ) {
+        for my $i(0 .. $#{ $data->{$hand} } ) {
             # Add silence flag to note.
+            my $note = $data->{$hand}->[$i];
+            my $next_note = $data->{$hand}->[$i + 1];
             my $beat_int = $note->startbeat->to_int;
-            if ($beat_int != $exp_beat_int && defined $prev_note) {
-                if ($stacato && $prev_note->length_numerator == $beat_int - $exp_beat_int) {
-                    warn "HUURA";
-                    $prev_note->stacato(1);
-                } elsif ( $prev_note->startbeat->to_int == $beat_int
-                	&& $prev_note->length_numerator == $note->length_numerator ) {
-                	# accord manybe mark as accord. $prev_note->
+            my $next_int = defined $next_note ? $next_note->startbeat->to_int :
+                $beat_int + $note->length_numerator;# last note
+            if ($next_int != $beat_int + $note->length_numerator && defined $next_note) {
+                if ($stacato && $next_int == $beat_int + 2 * $note->length_numerator ) {
+                    $note->stacato(1);
+                } elsif ( $next_note->startbeat->to_int == $beat_int
+                	&& $next_note->length_numerator == $note->length_numerator ) {
+                	# accord maybe mark as accord. $prev_note->
                 } else {
 #                warn sprintf"%s == %s - %s",$prev_note->length_numerator,$beat_int,$exp_beat_int;
-                    $note->prev_silence( $beat_int - $exp_beat_int);
+                    $note->next_silence( $next_int - $beat_int + $note->length_numerator);
                 }
             }
             $note->hand($hand);
-            $exp_beat_int = $beat_int + $note->length_numerator;
-            $prev_note = $note;
     	}
     }
 
@@ -120,24 +119,27 @@ sub print_colornotes {
 
      for my $n( @handsplice) {
          #Delay
-        if(!defined $n->prev_silence || $n->prev_silence == 0) {
+        if(!defined $n->next_silence || $n->next_silence == 0) {
             print color('green');
-        } elsif ($n->prev_silence > 0 && ! $n->stacato) {
+        } elsif ($n->next_silence > 0 && ! $n->stacato) {
             print color('yellow');
-        } elsif ($n->prev_silence < 0  && ! $n->stacato) {
+        } elsif ($n->next_silence < 0  && ! $n->stacato) {
             print color('bright_green');
         } else {
-            print color('red');
+            print color('bright_red');
         }
 
         # allowed_note_lengths
         if (ref $tune->allowed_note_lengths) {
             if (! grep {$n->length_numerator == $_}
                 @{ $tune->allowed_note_lengths }) {
+#                    die;
+#                    warn sprintf("%s: %s",$n->length_numerator,join(',',@{ $tune->allowed_note_lengths }));
                 print color('red');
             }
         }
         print $n->to_string,"\n";
+        print color('reset');
     }
     print color('reset');
 }

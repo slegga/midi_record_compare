@@ -6,7 +6,9 @@ scale=c_dur
 #colornotes.pl
 allowed_note_lengths=1,2,3,4,6,12
 allowed_note_types=stacato,accord
-
+hand_left_max=C5
+hand_right_min=C5
+hand_default=left
 0;6;C5        # 0.0-3/4
 2;1;G5        # 0.2-1/8
 0;1;E5        # 0.2-1/8
