@@ -708,23 +708,32 @@ sub to_data_split_hands {
                 push @{ $return->{'right'} }, $note;
             }
             elsif (scalar @{$return->{right}} && scalar @{$return->{left}}
-            && $note->startbeat->to_int == $return->{right}->[-1]->startbeat->to_int
-            + $return->{right}->[-1]->length_numerator
-            && $note->startbeat->to_int != $return->{left}->[-1]->startbeat->to_int
-            + $return->{left}->[-1]->length_numerator
-            ) {
-                # right hand ready not left
-                push @{ $return->{'right'} }, $note;
+                && $note->startbeat->to_int == $return->{right}->[-1]->startbeat->to_int
+                + $return->{right}->[-1]->length_numerator
+                && $note->startbeat->to_int != $return->{left}->[-1]->startbeat->to_int
+                + $return->{left}->[-1]->length_numerator
+                ) {
+                    # right hand ready not left
+                    push @{ $return->{'right'} }, $note;
             }# which hand plays similar length
-            elsif ($self->hand_default) {
-              # choose hand_default if set
-              die if $self->hand_default ne 'left' || $self->hand_default ne 'right';
-              push @{ $return->{$self->hand_default} }, $note;
-            } else {
-              # dies in end and ask for advice
-              say STDERR Dumper $hash;
-              warn $i;
-              die "Tried all rules. Please have a look and give me an advice.";
+            elsif (scalar @{$return->{left}} && scalar @{$return->{right}}
+                && $note->startbeat->to_int == $return->{left}->[-1]->startbeat->to_int
+                + $return->{left}->[-1]->length_numerator
+                && $note->startbeat->to_int != $return->{right}->[-1]->startbeat->to_int
+                + $return->{right}->[-1]->length_numerator
+                ) {
+                    # left hand ready not right
+                    push @{ $return->{'left'} }, $note;
+            }# which hand plays similar length
+			elsif ($self->hand_default) {
+	            # choose hand_default if set
+	            die if $self->hand_default ne 'left' || $self->hand_default ne 'right';
+	            push @{ $return->{$self->hand_default} }, $note;
+	        } else {
+	            # dies in end and ask for advice
+	            say STDERR Dumper $hash;
+	            warn $i;
+	            die "Tried all rules. Please have a look and give me an advice.";
             }
         }
     }
