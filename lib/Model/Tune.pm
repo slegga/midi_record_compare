@@ -680,35 +680,54 @@ sub to_data_split_hands {
         $min_right = $tmp_left + 1;
     }
     # warn "hands $max_left $min_right";
-	for my $note(@{ $self->notes }) {
+	for my $i(0 .. $#{ $self->notes }) {
+        my $note = $self->notes->[$i];
 	       # code for split left and right
 	       # split
 	       # look back to se if ok
-	   my $hash = $note->to_hash_ref;
-	   if ($hash->{note} == -1 ) {
+        my $hash = $note->to_hash_ref;
+        if ($hash->{note} == -1 ) {
 	   		push @{ $return->{'left'} }, $note;
-	   	} elsif ( $hash->{note} == -2) {
+        } elsif ( $hash->{note} == -2) {
    	  		push @{ $return->{'right'} }, $note;
 		} elsif ($hash->{note} >= $min_right) {#	 right
 	    	push @{ $return->{'right'} }, $note;
 	   	} elsif($hash->{note} <= $max_left) { # left
 	      	push @{ $return->{'left'} }, $note;
-      } else {
-          # Algorithm
-          # which hand expect note played
-          if (0) {
-              # which hand plays similar length
-          } elsif(0) {
-          }
-          if ($self->hand_default) {
+        } else {
+            # Algorithm
+            my $p = $self->notes->[$i-1];
+            my $n = $self->notes->[$i+1];
+            if ($p->note==-2 && $note->delta_place_numerator == 0) {
+                # right hand puse on same beat place.
+                push @{ $return->{'left'} }, $note;
+
+            }
+            elsif ($n->note==-1 && $n->delta_place_numerator == 0) {
+                # left hand pause on same beat place.
+                push @{ $return->{'right'} }, $note;
+            }
+            elsif (scalar @{$return->{right}} && scalar @{$return->{left}}
+            && $note->startbeat->to_int == $return->{right}->[-1]->startbeat->to_int
+            + $return->{right}->[-1]->length_numerator
+            && $note->startbeat->to_int != $return->{left}->[-1]->startbeat->to_int
+            + $return->{left}->[-1]->length_numerator
+            ) {
+                # right hand ready not left
+                push @{ $return->{'right'} }, $note;
+            }# which hand plays similar length
+            elsif ($self->hand_default) {
               # choose hand_default if set
+              die if $self->hand_default ne 'left' || $self->hand_default ne 'right';
               push @{ $return->{$self->hand_default} }, $note;
-          } else {
+            } else {
               # dies in end and ask for advice
-              die "Tried all rules. Pleae have a look and give me an advice.";
-          }
-      }
-	}
+              say STDERR Dumper $hash;
+              warn $i;
+              die "Tried all rules. Please have a look and give me an advice.";
+            }
+        }
+    }
 	return $return;
 }
 

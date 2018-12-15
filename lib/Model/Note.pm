@@ -128,6 +128,8 @@ Return a unique number for ordering/sorting notes in a note paper/file.
 sub order {
     my $self = shift;
     shift && die "No more arguments";
+    return $self->startbeat->to_int * 1000 -250 if ($self->note == -2);
+
     return $self->startbeat->to_int * 1000 + 128 - $self->note;
 }
 
