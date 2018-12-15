@@ -130,7 +130,7 @@ sub print_colornotes {
         }
 
         # allowed_note_lengths
-        if (ref $tune->allowed_note_lengths) {
+        if (ref $tune->allowed_note_lengths eq 'ARRAY') {
             if (! grep {$n->length_numerator == $_}
                 @{ $tune->allowed_note_lengths }) {
 #                    die;

@@ -26,6 +26,9 @@ Make scale object based on note name.
 
 sub notename2value {
     my $notename = shift;
+    chomp $notename;
+    return -1 if $notename eq 'PL';
+    return -2 if $notename eq 'PR';
     my ($name,$oct) = ($notename =~ /(\w+)(\d+)/);
     my %note_names =(
         "C"  => 0,
@@ -48,7 +51,7 @@ sub notename2value {
         "H"  =>11,
         "B"  =>11,
         );
-    die "Bad name $notename $name $oct" if !exists $note_names{$name};
+    die "Bad name $notename, $name, $oct" if !$name || !exists $note_names{$name};
     return $note_names{$name} + $oct * 12;
 }
 
@@ -104,6 +107,8 @@ Takes scalename and a number for note and return note name.
 sub value2notename {
     my $scale = shift//'c_dur';
     my $value = shift;
+    return 'PL' if $value == -1;
+    return 'PR' if $value == -2;
     die "Need a number" if ! looks_like_number($value);
     my $oct = int($value /12);
     return _bit_from_value($scale,$value % 12) . $oct;

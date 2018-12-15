@@ -35,12 +35,12 @@ has delta_beat_score =>0;
 has total_score => 0;
 has startbeat => 0;
 has debug => 0;
-has hand_left_max => 'H4';
-has hand_logic => 'static';
+#has hand_left_max => 'H4';
+#has hand_logic => 'static';
 has 'allowed_note_lengths';
 has 'allowed_note_types';
 has ['hand_left_max','hand_right_min','hand_default'];
-
+has 'comment';
 =head1 NAME
 
 Model::Tune - Handle tunes
@@ -656,6 +656,8 @@ attributes for this function is
 
 =item hand_default - Set to this if uncertain
 
+=back
+
 =cut
 
 sub to_data_split_hands {
@@ -683,10 +685,14 @@ sub to_data_split_hands {
 	       # split
 	       # look back to se if ok
 	   my $hash = $note->to_hash_ref;
-	   if ($hash->{note} >= $min_right) {# right
-	       push @{ $return->{'right'} }, $note;
-	   } elsif($hash->{note} <= $max_left) { # left
-	      push @{ $return->{'left'} }, $note;
+	   if ($hash->{note} == -1 ) {
+	   		push @{ $return->{'left'} }, $note;
+	   	} elsif ( $hash->{note} == -2) {
+   	  		push @{ $return->{'right'} }, $note;
+		} elsif ($hash->{note} >= $min_right) {#	 right
+	    	push @{ $return->{'right'} }, $note;
+	   	} elsif($hash->{note} <= $max_left) { # left
+	      	push @{ $return->{'left'} }, $note;
       } else {
           # Algorithm
           # which hand expect note played
@@ -785,10 +791,25 @@ sub to_string {
 
 	my @notes;
 	@notes = map{$_->to_string({scale => $self->{scale}, end =>"\n"})} grep {$_} @{$self->notes};
+has 'allowed_note_lengths';
+has 'allowed_note_types';
+has ['hand_left_max','hand_right_min','hand_default'];
 
 	my $return='';
-    for my $name (qw/denominator shortest_note_time beat_score scale startbeat/) {
-        $return .=  sprintf "$name=%s\n", $self->$name if $self->$name;
+    for my $name (qw/denominator shortest_note_time beat_score scale startbeat
+    	allowed_note_lengths allowed_note_types hand_left_max hand_right_min hand_default
+    	comment /) {
+
+    	if ($self->$name ) {
+    		my $value = $self->$name;
+    		if (! ref $value) {
+    			$return .=  sprintf "$name=%s\n", $self->$name;
+    		} elsif ( ref $value eq 'ARRAY' ) {
+    			$return .=  sprintf "$name=%s\n", join(',',@{ $self->$name });
+    		} else {
+    			die "no support for ". ref $value;
+    		}
+    	}
     }
   return $return . join('',@notes)."\n";
 }
