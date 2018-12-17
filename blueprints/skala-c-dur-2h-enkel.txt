@@ -2,6 +2,10 @@ denominator=4
 shortest_note_time=38.4
 beat_score=44
 scale=c_dur
+allowed_note_lengths=1
+hand_left_max=C5
+hand_right_min=C5
+hand_default=right
 0;1;C5        # 0.0-1/4-0.60
 0;1;C4        # 0.0-1/4
 1;1;D5        # 0.2-1/4-62.51
@@ -30,6 +34,6 @@ scale=c_dur
 0;1;E4        # 5.0-1/4-0.36
 1;1;D5        # 5.2-1/4-65.26
 0;1;D4        # 5.2-1/4-0.82
-1;2;C5        # 5.4-1/4-65.06
-0;2;C4        # 5.4-1/4-4.07
+1;1;C5        # 5.4-1/4-65.06
+0;1;C4        # 5.4-1/4-4.07
 

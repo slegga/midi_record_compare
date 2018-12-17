@@ -114,8 +114,13 @@ sub print_colornotes {
     	}
     }
 
+	# info
+	for my $k (qw/comment denominator startbeat allowed_note_lengths/) {
+		printf"%-15s %-30s\n",$k,(ref $tune->$k? join(',',@{$tune->$k}):$tune->$k) if $tune->$k;
+		}
+
     # splice hands
-    my @handsplice = sort {$a->order <=> $b->order} ( @{$data->{left}}, @{ $data->{right} });
+    my @handsplice = sort {$a->order <=> $b->order} ( @{$data->{left}}, @{ $data->{right} }, @{$data->{unknown}});
 
      for my $n( @handsplice) {
          #Delay
@@ -128,6 +133,16 @@ sub print_colornotes {
         } else {
             print color('bright_red');
         }
+        if( 1+int($n->startbeat->to_int/$tune->denominator)<($n->startbeat->to_int + $n->length_numerator)/$tune->denominator ) {
+            my $t= ($n->startbeat->to_int + $n->length_numerator)/$tune->denominator;
+            if($t - int $t) {
+                print color('magenta');
+            }
+        }
+
+        #if($n->length_numerator $n->length_numerator)
+        # legg inn sjekk på at note ikke overskriver takt.
+        # farg magnetta
 
         # allowed_note_lengths
         if (ref $tune->allowed_note_lengths eq 'ARRAY') {
@@ -137,6 +152,9 @@ sub print_colornotes {
 #                    warn sprintf("%s: %s",$n->length_numerator,join(',',@{ $tune->allowed_note_lengths }));
                 print color('red');
             }
+        }
+        if (!defined $n->hand ||$n->hand eq 'unknown') {
+        	print color('cyan');
         }
         print $n->to_string,"\n";
         print color('reset');

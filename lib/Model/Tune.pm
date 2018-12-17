@@ -662,7 +662,7 @@ attributes for this function is
 
 sub to_data_split_hands {
 	my $self = shift;
-	my $return={left=>[],right=>[]};
+	my $return={left=>[],right=>[],unknown=>[]};
 
     my ($max_left, $min_right);
     $max_left  = Model::Utils::Scale::notename2value($self->hand_left_max ) if $self->hand_left_max;
@@ -697,13 +697,13 @@ sub to_data_split_hands {
         } else {
             # Algorithm
             my $p = $self->notes->[$i-1];
-            my $n = $self->notes->[$i+1];
+            my $n = $self->notes->[$i+1] ;
             if ($p->note==-2 && $note->delta_place_numerator == 0) {
                 # right hand puse on same beat place.
                 push @{ $return->{'left'} }, $note;
 
             }
-            elsif ($n->note==-1 && $n->delta_place_numerator == 0) {
+            elsif (defined $n && $n->note==-1 && $n->delta_place_numerator == 0) {
                 # left hand pause on same beat place.
                 push @{ $return->{'right'} }, $note;
             }
@@ -727,13 +727,19 @@ sub to_data_split_hands {
             }# which hand plays similar length
 			elsif ($self->hand_default) {
 	            # choose hand_default if set
-	            die if $self->hand_default ne 'left' || $self->hand_default ne 'right';
+	            die "default can either be left or right: ".$self->hand_default if $self->hand_default !~ 'left' && $self->hand_default !~ 'right';
 	            push @{ $return->{$self->hand_default} }, $note;
 	        } else {
 	            # dies in end and ask for advice
 	            say STDERR Dumper $hash;
-	            warn $i;
-	            die "Tried all rules. Please have a look and give me an advice.";
+	            if (scalar @{$return->{left}} && scalar @{$return->{right}} ) {
+		            printf STDERR "%s  %s  %s", $i,$return->{left}->[-1]->startbeat->to_int
+	                + $return->{left}->[-1]->length_numerator,
+	                $return->{right}->[-1]->startbeat->to_int
+	                + $return->{right}->[-1]->length_numerator ;
+	            }
+	            push @{ $return->{'unknown' }}, $note;
+	  	  #          die "Tried all rules. Please have a look and give me an advice.";
             }
         }
     }
