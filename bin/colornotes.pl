@@ -91,7 +91,7 @@ sub print_colornotes {
 	my $stacato = ref $tune->allowed_note_types &&  grep {$_ eq 'stacato' } @{ $tune->allowed_note_types };
 #	warn $stacato;
     # code for split left and right
-    for my $hand(qw/left right/) {
+    for my $hand(qw/left right unknown/) {
         for my $i(0 .. $#{ $data->{$hand} } ) {
             # Add silence flag to note.
             my $note = $data->{$hand}->[$i];

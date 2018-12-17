@@ -698,12 +698,12 @@ sub to_data_split_hands {
             # Algorithm
             my $p = $self->notes->[$i-1];
             my $n = $self->notes->[$i+1] ;
-            if ($p->note==-2 && $note->delta_place_numerator == 0) {
+            if (($p->note==-2 || $p->note>= $min_right) && $note->delta_place_numerator == 0) {
                 # right hand puse on same beat place.
                 push @{ $return->{'left'} }, $note;
 
             }
-            elsif (defined $n && $n->note==-1 && $n->delta_place_numerator == 0) {
+            elsif (defined $n && ($n->note==-1 || $n->note<=$max_left ) && $n->delta_place_numerator == 0) {
                 # left hand pause on same beat place.
                 push @{ $return->{'right'} }, $note;
             }
