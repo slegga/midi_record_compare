@@ -115,15 +115,18 @@ sub print_colornotes {
     }
 
 	# info
-	for my $k (qw/comment denominator startbeat allowed_note_lengths/) {
+	for my $k (qw/comment denominator startbeat allowed_note_lengths allowed_note_types/) {
 		printf"%-15s %-30s\n",$k,(ref $tune->$k? join(',',@{$tune->$k}):$tune->$k) if $tune->$k;
 		}
+	my $allow_all_pause_lengths=0;
+	$allow_all_pause_lengths = scalar grep {$_ eq 'all_pause_lengths'} @{ $tune->allowed_note_types } if ref $tune->allowed_note_types eq 'ARRAY';
 
+#	say color('red').$allow_all_pause_lengths.color('reset');
     # splice hands
-    my @handsplice = sort {$a->order <=> $b->order} ( @{$data->{left}}, @{ $data->{right} }, @{$data->{unknown}});
+	my @handsplice = sort {$a->order <=> $b->order} ( @{$data->{left}}, @{ $data->{right} }, @{$data->{unknown}});
 
-     for my $n( @handsplice) {
-         #Delay
+	for my $n( @handsplice) {
+	    #Delay
         if(!defined $n->next_silence || $n->next_silence == 0) {
             print color('green');
         } elsif ($n->next_silence > 0 && ! $n->stacato) {
@@ -133,10 +136,14 @@ sub print_colornotes {
         } else {
             print color('bright_red');
         }
+
+        # note end in another beat or later than the beginning
         if( 1+int($n->startbeat->to_int/$tune->denominator)<($n->startbeat->to_int + $n->length_numerator)/$tune->denominator ) {
             my $t= ($n->startbeat->to_int + $n->length_numerator)/$tune->denominator;
             if($t - int $t) {
-                print color('magenta');
+            	if (! $n->note<0 || ! $allow_all_pause_lengths) {
+	                print color('magenta');
+	            }
             }
         }
 
@@ -148,9 +155,9 @@ sub print_colornotes {
         if (ref $tune->allowed_note_lengths eq 'ARRAY') {
             if (! grep {$n->length_numerator == $_}
                 @{ $tune->allowed_note_lengths }) {
-#                    die;
-#                    warn sprintf("%s: %s",$n->length_numerator,join(',',@{ $tune->allowed_note_lengths }));
-                print color('red');
+                if ($n->note>= 0 || ! $allow_all_pause_lengths ) {
+	                print color('red');
+	            }
             }
         }
         if (!defined $n->hand ||$n->hand eq 'unknown') {

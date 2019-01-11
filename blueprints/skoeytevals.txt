@@ -3,7 +3,7 @@ shortest_note_time=67
 beat_score=91
 scale=f_dur
 allowed_note_lengths=1,2,4,6,8,12,16
-allowed_note_types=stacato
+allowed_note_types=stacato,all_pause_lengths
 hand_left_max=C5
 hand_right_min=C5
 0;2;PR        # 0.0-1/4
