@@ -8,7 +8,7 @@ use lib "$FindBin::Bin/../../utilities-perl/lib";
 use SH::UseLib;
 
 #warn $lib;
-
+plugin 'OpenAPI';
 get '/:name' => {name => '🌍 world!'} => sub {
   my $c = shift;
   $c->render('hello');
