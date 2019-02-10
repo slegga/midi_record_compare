@@ -144,7 +144,10 @@ sub _bit_from_value {
             return "Am" if ($bit == 8) ;
             return "Hm" if ($bit == 10) ;
         }
-    return $note_names{$bit};
+        elsif (grep {$scale eq $_} (qw/f_dur/)) {
+            return "Hm" if ($bit == 10) ;
+        }
+        return $note_names{$bit};
 }
 
 

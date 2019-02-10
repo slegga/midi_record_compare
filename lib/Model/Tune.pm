@@ -306,19 +306,19 @@ sub evaluate_with_blueprint {
 			} else {
                 print color('red');
             }
-			printf $format, $n->[0],defined $self->notes->[$n->[1]]? $self->notes->[$n->[1]]->to_string( {no_comment=>1}) :''
-			, defined $blueprint->notes->[$n->[2]] ? $blueprint->notes->[$n->[2]]->to_string:'';
+			printf $format, $n->[0],defined $self->notes->[$n->[1]]? $self->notes->[$n->[1]]->to_string( {no_comment=>1, scale=>$blueprint->scale}) :''
+			, defined $blueprint->notes->[$n->[2]] ? $blueprint->notes->[$n->[2]]->to_string({scale=>$blueprint->scale}) : '';
 		}
 		elsif (! defined $n->[1] && defined $n->[2]) {
 			print color('red');
             if (defined $blueprint->notes->[$n->[2]]) {
                 printf $format,$n->[0],''
-					, $blueprint->notes->[$n->[2]]->to_string;
+					, $blueprint->notes->[$n->[2]]->to_string({scale=>$blueprint->scale});
             }
 		}
 		elsif (! defined $n->[2] && defined $n->[1]) {
 			print color('red');
-			printf $format,$n->[0],$self->notes->[$n->[1]]->to_string( {no_comment=>1} )
+			printf $format,$n->[0],$self->notes->[$n->[1]]->to_string( {no_comment=>1, scale=>$blueprint->scale} )
 						,'';
 		}
 		else {
