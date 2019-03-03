@@ -58,6 +58,18 @@ Model::Tune - Handle tunes
 
 =head1 METHODS
 
+=head2 calc_length
+
+Calculate length of song
+
+=cut
+
+sub calc_length {
+    my $self = shift;
+    my $last_note = $self->notes->[-1];
+    return $last_note->startbeat->to_int + $last_note->length_numerator;
+}
+
 =head2 calc_shortest_note
 
 Guess the shorest note. If shorter than 64 it is a 1/8 else 1/4.
@@ -327,6 +339,8 @@ sub evaluate_with_blueprint {
 		print color('reset');
 	}
     say '';
+    printf "%-16s %3.1f%%\n", "Palyed length:",	   $self->calc_length;
+    printf "%-16s %3.1f%%\n", "Blueprint length:", $self->calc_length;
 	printf "%-16s %3.1f%%\n", "Beat score:",	   $self->beat_score;
 	printf "%-16s %3.1f%%\n", "Note score:",       $self->note_score;
 	printf "%-16s %3.1f%%\n", "Length score:",     $self->length_score;

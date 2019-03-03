@@ -67,7 +67,7 @@ sub alsaevent2midievent {
     }
     if ( grep {$type == $_ } values %$ALSA_CODE ) {
         my $event_name = ( grep {$type == $ALSA_CODE->{$_} } keys %$ALSA_CODE )[0];
-        say "ignore $event_name: ".to_json(\@_);
+#        say "ignore $event_name: ".to_json(\@_);
         return;
     }
     say "Unregisered type = $type: " .to_json(\@_) ;
