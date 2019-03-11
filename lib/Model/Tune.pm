@@ -339,8 +339,8 @@ sub evaluate_with_blueprint {
 		print color('reset');
 	}
     say '';
-    printf "%-16s %3.1f%%\n", "Palyed length:",	   $self->calc_length;
-    printf "%-16s %3.1f%%\n", "Blueprint length:", $self->calc_length;
+    printf "%-16s %3d\n",     "Played length:",	   $self->calc_length;
+    printf "%-16s %3d\n",     "Blueprint length:", $blueprint->calc_length;
 	printf "%-16s %3.1f%%\n", "Beat score:",	   $self->beat_score;
 	printf "%-16s %3.1f%%\n", "Note score:",       $self->note_score;
 	printf "%-16s %3.1f%%\n", "Length score:",     $self->length_score;

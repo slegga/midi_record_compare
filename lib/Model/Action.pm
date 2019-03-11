@@ -310,7 +310,7 @@ sub guessed_blueprint {
         }
     }
     if (! defined $bestname) {
-        say "Ingen passende fasit er funnet etter $i noter";
+        printf "Ingen passende fasit er funnet etter %s noter", $i+1;
         return;
     }
     return $bestname;
