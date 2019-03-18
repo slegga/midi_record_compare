@@ -611,18 +611,7 @@ sub score2notes {
         $note->length_name($length_name);
         $note->length_numerator($length_numerator);
         #step up beat
-        my $numerator = int( 1/2
-        + $note->delta_time / $self->shortest_note_time );
-
-        # TROR LINJENE UNDER ROTER DET TIL HVIS FLERE TANGENTER PRESSES SAMTIDIG.
-        # Try to correct to get better startbeat
-#        if ($note->starttime) {
-            #if(! $numerator) {
-                #$numerator = int( 1/2 + ($note->starttime - $prev_starttime)/$self->shortest_note_time );
-            #} else {
-#                $prev_starttime = $note->starttime;
-            #}
-#        }
+        my $numerator = int( 0.5 + ($note->delta_time +0.0) / ($self->shortest_note_time+0.0) );
 
         die "MINUS" if $numerator<0;
         $startbeat = $startbeat + $numerator;
@@ -632,22 +621,29 @@ sub score2notes {
 
     }
 
-    @notes = sort {$a->order <=> $b->order} @notes;
-    say "score2notes  1:      ".join(',',map {Model::Utils::Scale::value2notename($self->{scale},$_->note).' '.$_->order} @notes) if $self->debug;
+    #sort notes
+    my @onotes = sort {$a->order <=> $b->order} @notes;
 
-    say "score2notes  1:      ".join(',',map {Model::Utils::Scale::value2notename($self->{scale},$_->note)} @notes) if $self->debug;
+    # Notes changed place but not starttime, delta_time
+    for my $i(0 .. $#onotes) {
+        $onotes[$i]->starttime( $notes->[$i]->starttime );
+        $onotes[$i]->delta_time($notes->[$i]->delta_time);
+    }
+    say "score2notes  1:      ".join(',',map {Model::Utils::Scale::value2notename($self->{scale},$_->note).' '.$_->order} @onotes) if $self->debug;
+
+    say "score2notes  1:      ".join(',',map {Model::Utils::Scale::value2notename($self->{scale},$_->note)} @onotes) if $self->debug;
 
     #loop another time through notes to calc delta_place_numerator after notes is sorted.
     my $prev_note_int = 0;#Model::Note->new(startbeat=>Model::Beat->new(number=>0, numerator=>0));
-    for my $note(@notes) {
+    for my $note(@onotes) {
 		my $tb = $note->startbeat->to_int - $prev_note_int;#->startbeat->to_int;
 		$note->delta_place_numerator($tb);
 		$prev_note_int = $note->startbeat->to_int;
     }
 
-    say "score2notes  2:      ".join(',',map {Model::Utils::Scale::value2notename($self->{scale},$_->note)} @notes) if $self->debug;
+    say "score2notes  2:      ".join(',',map {Model::Utils::Scale::value2notename($self->{scale},$_->note)} @onotes) if $self->debug;
 
-    $self->notes(\@notes);
+    $self->notes(\@onotes);
     $self->scale(Model::Utils::Scale::guess_scale_from_notes($self->notes));
     return $self;
 }

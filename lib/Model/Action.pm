@@ -127,19 +127,18 @@ sub do_comp {
    	my $blueprint_bs = $tune_blueprint->get_beat_sum;
     printf "beatlengde før   fasit: %s, spilt: %s\n",$blueprint_bs,$play_bs;
    	if ($play_bs*1.5 <$blueprint_bs || $play_bs > 1.5*$blueprint_bs) {
-        say "######";
+        say "###### NÅ BLIR DET FEIL!!!!";
         $self->tune->beat_score($self->tune->beat_score/2) ;
         my $old_shortest_note_time = $self->tune->shortest_note_time;
         #my @new_score = map{$_->to_score({factor=>$blueprint_bs/$play_bs})} @{$self->tune->notes};
 #	    $self->tune(Model::Tune->from_midi_score(\@new_score));
-	    say "SHORTEST NOTE TIME $self->tune->shortest_note_time $old_shortest_note_time * $play_bs / $blueprint_bs";
+	    say "SHORTEST NOTE TIME " .$self->tune->shortest_note_time . "$old_shortest_note_time * $play_bs / $blueprint_bs";
         $self->tune->shortest_note_time($old_shortest_note_time * $play_bs / $blueprint_bs);
 #        $self->tune->calc_shortest_note;
         $self->tune->score2notes;
-
+        $play_bs = $self->tune->get_beat_sum;
+        printf "beatlengde etter fasit: %s, spilt: %s\n",$blueprint_bs,$play_bs;
     }
-    $play_bs = $self->tune->get_beat_sum;
-    printf "beatlengde etter fasit: %s, spilt: %s\n",$blueprint_bs,$play_bs;
 
     $self->denominator($self->tune->denominator);
 
