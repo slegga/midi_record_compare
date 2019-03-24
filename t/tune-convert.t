@@ -6,7 +6,7 @@ use Model::Tune;
 use Mojo::Base -strict;
 use Mojo::File qw /path tempfile/;
 use Data::Dumper;
-my $orginal_file = path("$FindBin::Bin/../blueprints/lista_gikk_til_skolen_en_haand.txt");
+my $orginal_file = path("$FindBin::Bin/blueprints/lista_gikk_til_skolen_en_haand.txt");
 my $note_file = tempfile;
 my $tune = Model::Tune->from_note_file("$orginal_file");
 $tune->to_note_file($note_file);

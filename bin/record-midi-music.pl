@@ -79,7 +79,6 @@ sub main {
     	$self->input_object->port();
     	$self->input_object->init();
     }
-
     $self->action->init; #load blueprints
 
     $self->input_object->register_events( $self->loop, $self );
