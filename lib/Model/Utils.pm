@@ -14,6 +14,8 @@ our $ALSA_CODE = {      'SND_SEQ_EVENT_SYSTEM'      => 0
                     ,   'SND_SEQ_EVENT_PORT_UNSUBSCRIBED'=>67
                 };
 
+=encoding utf8
+
 =head1 NAME
 
 Model::Utils - A place to store common functions.
@@ -106,6 +108,20 @@ sub calc_length {
          $s = $s /2;
      }
      return (sprintf("%d/%d",$p,$s), $numerator);
+
+}
+
+=head2 tune_as_text_validate
+
+For å brukes til openapi grensesnittet iforbindelse med lagring av filer
+
+Retruns 1 if valid and 0 if not valid tune
+
+=cut
+
+sub tune_as_text_validate {
+	my $tune= shift;
+	...;
 
 }
 
