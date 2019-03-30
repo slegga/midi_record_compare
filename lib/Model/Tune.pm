@@ -20,7 +20,8 @@ has length => 0;
 has shortest_note_time => 0;
 has denominator => 4;
 has beat_interval =>100000000;
-has 'notes' =>sub {return []};
+has 'scores' => sub {return []}; # hash_ref
+has 'notes' =>sub {return []}; # Model::Note
 has midi_file  => '';
 has note_file  => '';
 
@@ -41,6 +42,7 @@ has 'allowed_note_lengths';
 has 'allowed_note_types';
 has ['hand_left_max','hand_right_min','hand_default'];
 has 'comment';
+
 =head1 NAME
 
 Model::Tune - Handle tunes
@@ -79,7 +81,7 @@ Set denominator, beat_interval, beat_score,shortest_note_time
 
 sub calc_shortest_note {
 	my $self =shift;
-	my $numnotes = $self->notes;
+	my $numnotes = $self->scores;
     if(! @$numnotes || @$numnotes == 1) {
 #        warn Dumper \@$numnotes;
     	say "Zero or one note is not a tune.";
@@ -381,31 +383,31 @@ sub from_midi_score {
     my $tune_start;
 
     # Order score_notes on starttime
+    my $self = $class->new(%$options);
     my @score_t = sort {$a->[1] <=> $b->[1]} @$score;
-    my@notes;
+    my @score;
     for my $sp(@score_t) {#0=type,1=dtime,2=duration,3=0,4=note,5=volumne
         next if $sp->[0] ne 'note';
         $tune_start=$sp->[1] if ! defined $tune_start;
-        push @notes, Model::Note->new(starttime => $sp->[1] - $tune_start
-        , duration => $sp->[2], note =>$sp->[4], velocity =>$sp->[5]);
+        push @score, {starttime => $sp->[1] - $tune_start
+        , duration => $sp->[2],channel =>$sp->[3], note =>$sp->[4], velocity =>$sp->[5]};
 
     }
         # warn Dumper \@notes;
     #@notes = sort { $a->{'starttime'} <=> $b->{'starttime'} }  @notes;
 
-    my $self = $class->new(%$options);
 
     my $pre_time;
-    for my $note (@notes) {
+    for my $note (@score) {
         if (! defined $pre_time) {
             # firt note in tune
-            $pre_time = $note->starttime;
-            $note->delta_time(0);
+            $pre_time = $note->{starttime};
+            $note->{delta_time} = 0;
         } else {
-            $note->delta_time($note->starttime - $pre_time);
-            $pre_time = $note->starttime;
+            $note->{delta_time} = ($note->{starttime} - $pre_time);
+            $pre_time = $note->{starttime};
         }
-        push @{$self->notes}, $note;
+        push @{$self->scores}, $note;
     }
     # warn Dumper $self->notes;
     return $self;
@@ -564,27 +566,28 @@ sub notes2score {
 
     # generate a temporary MIDI
     #(startbeat,length_numerator) => (starttime, duration)
-    my @new_notes;
+    my @scores;
     my $prev_stime=0;
     for my $note (@notes) {
+        my $score ={};
 	    my $num = $note->startbeat->to_int;
 # warn $num." * ".$self->shortest_note_time ;
 
-        $note->starttime($note->startbeat->to_int * $self->shortest_note_time); #or shortest_note_time?
-        $note->duration($note->length_numerator * $self->shortest_note_time - 5); #or shortest_note_time?
-        $note->delta_time( $note->starttime - $prev_stime );
-        $note->velocity(96); #hardcoded for now
-        $prev_stime = $note->starttime;
-        push(@new_notes, $note);
+        $score->{starttime} = $note->startbeat->to_int * $self->shortest_note_time; #or shortest_note_time?
+        $score->{duration} = ($note->length_numerator * $self->shortest_note_time - 5); #or shortest_note_time?
+        $score->{delta_time} = $score->{starttime} - $prev_stime;
+        $score->{velocity}=96; #hardcoded for now
+        $prev_stime = $score->{starttime};
+        $score->{note} = $note->note;
+        push(@scores, $score);
     }
-    $self->notes(\@new_notes);
+    $self->scores(\@scores);
 	return $self;
 }
 
 =head2 score2notes
 
-
-Enrich notes with: point in startbeat,delta_place_numerator, length_numerator,length_name, sound
+Populate and change order for notes. Keep score as is.
 and guess scale.
 
 Contatinate beats.
@@ -596,42 +599,38 @@ i.e
  0.1;0.1;D4
 ...
 
+Reseason for clone is to evaluate and see if right shortest_note is choosen outside of this sub or try again with different shortest_note with out adjusting order.
+
 =cut
 
 sub score2notes {
     my $self = shift;
     die "Missing denominator" if !$self->denominator;
-    my $notes = $self->notes;
-    my @notes = @$notes;
+
+    my @notes;
     my $startbeat = Model::Beat->new(denominator=>$self->denominator);
     my $prev_starttime=0;
-    for my $note(@notes) {
-        my ($length_name, $length_numerator) = Model::Utils::calc_length( { time => $note->duration }
+    for my $score(@{$self->scores}) {
+        my $note= Model::Note->new;
+        my ($length_name, $length_numerator) = Model::Utils::calc_length( { time => $score->{duration} }
             ,{shortest_note_time=>$self->shortest_note_time, denominator=>$self->denominator} );
         $note->length_name($length_name);
         $note->length_numerator($length_numerator);
         #step up beat
-        my $numerator = int( 0.5 + ($note->delta_time +0.0) / ($self->shortest_note_time+0.0) );
+        my $numerator = int( 0.5 + ($score->{delta_time} +0.0) / ($self->shortest_note_time+0.0) );
 
         die "MINUS" if $numerator<0;
         $startbeat = $startbeat + $numerator;
         $note->startbeat($startbeat->clone);
+        $note->note($score->{note});
         #$note->order($note->startbeat->to_int*1000 + 128 - $note->note);
-        printf "%6d %3d %3d %3s\n" ,$note->order,$startbeat->to_int,$note->duration,Model::Utils::Scale::value2notename($self->{scale}//'c_dur',$note->note);# if $self->debug;
-
+        printf "%6d %3d %3d %3s\n" ,$note->order,$startbeat->to_int,$score->{duration},Model::Utils::Scale::value2notename($self->{scale}//'c_dur',$note->note);# if $self->debug;
+        push @notes,$note;
     }
 
     #sort notes
     my @onotes = sort {$a->order <=> $b->order} @notes;
 
-    # Notes changed place but not starttime, delta_time
-    for my $i(0 .. $#onotes) {
-        $onotes[$i]->starttime( $notes->[$i]->starttime );
-        $onotes[$i]->delta_time($notes->[$i]->delta_time);
-    }
-    say "score2notes  1:      ".join(',',map {Model::Utils::Scale::value2notename($self->{scale},$_->note).' '.$_->order} @onotes) if $self->debug;
-
-    say "score2notes  1:      ".join(',',map {Model::Utils::Scale::value2notename($self->{scale},$_->note)} @onotes) if $self->debug;
 
     #loop another time through notes to calc delta_place_numerator after notes is sorted.
     my $prev_note_int = 0;#Model::Note->new(startbeat=>Model::Beat->new(number=>0, numerator=>0));
@@ -759,7 +758,7 @@ sub to_data_split_hands {
 =head2 to_midi_file
 
 Takes midi filename. If none use $class->midi_file instead.
-Write midi file to disk.
+Write midi file to disk based on score data (and not note data(must use note2score first)).
 
 =cut
 
@@ -775,9 +774,9 @@ sub to_midi_file {
     my $file = path($midi_file);
     say $file;
     my $score_r=[];
-    for my $note(@{$self->notes}) {
+    for my $score(@{$self->scores}) {
         # ('note', starttime, duration, channel, note, velocity)
-        push @$score_r, ['note', $note->starttime, $note->duration, 0, $note->note, $note->velocity//96];
+        push @$score_r, ['note', $score->{starttime}, $score->{duration}, 0, $score->{note}, $score->{velocity}//96];
     }
     my $events_r = MIDI::Score::score_r_to_events_r( $score_r );
 
@@ -866,12 +865,12 @@ sub _calc_time_diff {
 	my $self = shift;
 
   my $try = shift||confess"Miss try";
-	my $notes = $self->notes;
+	my $notes = $self->scores;
 	my @notes = @$notes;
 	my $return=0;
 	for my $note(@notes) {
 		my $i = 1;
-		my $nd = $note->delta_time;
+		my $nd = $note->{delta_time};
 		my $d1 = $nd;
 		my $d2 = abs( $nd - $try);
 		while ( $d1 > $d2 || $d1 > $try) {

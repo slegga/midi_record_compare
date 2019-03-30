@@ -88,7 +88,7 @@ sub do_comp {
     my $filename = $name;
     if (! -e $filename) {
 	    my $bluedir = $self->blueprints_dir->to_string;
-        say $bluedir;
+        #say $bluedir;
         if ( -e $self->blueprints_dir->child($filename)) {
 	        $filename = $self->blueprints_dir->child($filename);
         } else {
