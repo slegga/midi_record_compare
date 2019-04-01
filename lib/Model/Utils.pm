@@ -115,14 +115,21 @@ sub calc_length {
 
 For å brukes til openapi grensesnittet iforbindelse med lagring av filer
 
-Retruns 1 if valid and 0 if not valid tune
+Returns 1 if valid and 0 if not valid tune
 
 =cut
 
 sub tune_as_text_validate {
 	my $tune= shift;
-	...;
-
+	my @lines = split(/\n/, $tune);
+    for my $l (@lines) {
+        next if ( ! $l );
+        next if ($l =~ /^\w+=\w+/);
+        next if ($l =~ /^\d+\;\d+\;\w\d\s*/);
+        next if ($l =~ /^\s*\#/);
+        return 0;
+    }
+    return 1;
 }
 
 1;

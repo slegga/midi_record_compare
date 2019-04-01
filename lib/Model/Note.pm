@@ -142,7 +142,7 @@ sub order {
 sub to_hash_ref {
 	my $self = shift;
 	my $hash = {};
-	for my $key(qw/starttime duration note velocity delta_time note_name startbeat length_numerator
+	for my $key(qw/note note_name startbeat length_numerator
 	 delta_place_numerator length_name order/) {
 	 	$hash->{$key} = $self->$key;
 	}
