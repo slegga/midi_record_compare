@@ -29,7 +29,7 @@ sub notename2value {
     chomp $notename;
     return -1 if $notename eq 'PL';
     return -2 if $notename eq 'PR';
-    my ($name,$oct) = ($notename =~ /(\w+)(\d+)/);
+    my ($name,$oct) = ($notename =~ /(\w+)(-?\d+)/);
     my %note_names =(
         "C"  => 0,
         "Cs" => 1,
