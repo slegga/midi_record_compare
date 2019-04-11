@@ -8,13 +8,13 @@ my $ALSA_CODE = {'SND_SEQ_EVENT_SYSTEM'=>0,'SND_SEQ_EVENT_RESULT'=>1
 
 
 # score
-has starttime => 0;
-has duration => 0;
+#has starttime => 0;
+#has duration => 0;
 has note => 0;
 has velocity => 0;
 
 # score help
-has delta_time => 0;
+#has delta_time => 0;
 has note_name =>'';
 
 # note
@@ -96,13 +96,13 @@ sub from_score {
     }
     my $prev_startbeat = $options->{prev_startbeat} || 0;
     my $self =  $class->new(starttime => $score->[1] - ($options->{tune_starttime}//0)
-    , duration => $score->[2], note =>$score->[4], velocity =>$score->[5]);
+    , note =>$score->[4], velocity =>$score->[5]);
     my ($length_name, $length_numerator) =
-        Model::Utils::calc_length( { time => $self->duration }, $options );
+        Model::Utils::calc_length( { time => $score->[2] }, $options );
     $self->length_name($length_name);
     $self->length_numerator($length_numerator);
     #step up beat
-    my $numerator = int( 1/2 + $self->delta_time / $options->{shortest_note_time} );
+    my $numerator = int( 1/2 + ($score->[1] - $options->{prev_starttime}) / $options->{shortest_note_time} );
     my $startbeat = Model::Beat->new(denominator=>$options->{denominator});
     $startbeat = $startbeat + $numerator;
     $self->startbeat($startbeat->clone);
@@ -142,7 +142,7 @@ sub order {
 sub to_hash_ref {
 	my $self = shift;
 	my $hash = {};
-	for my $key(qw/starttime duration note velocity delta_time note_name startbeat length_numerator
+	for my $key(qw/note note_name startbeat length_numerator
 	 delta_place_numerator length_name order/) {
 	 	$hash->{$key} = $self->$key;
 	}
@@ -188,12 +188,12 @@ sub to_string {
 		my $core = sprintf "%s;%s;%s",$self->delta_place_numerator,$self->length_numerator,Model::Utils::Scale::value2notename($opts->{scale}//'c_dur',$self->note());
 		if (! exists $opts->{no_comment} || ! $opts->{no_comment}) {
             my $format = '%-12s  #%4s-%3s';
-            my $dt = $self->delta_time;
+#            my $dt = $self->delta_time;
             my @args = ($core, $self->startbeat, $self->length_name);
-            if (defined $dt && $dt) {
-                $format .='%5s' ;
-                push  @args, sprintf("-%.2f",$dt);
-            }
+#            if (defined $dt && $dt) {
+#                $format .='%5s' ;
+#                push  @args, sprintf("-%.2f",$dt);
+#            }
             # TODO: LEGG INN PRINT AV HAND
             if ( $self->hand) {
                 $format .=' %-5s';

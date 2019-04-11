@@ -6,7 +6,7 @@ use Model::Tune;
 use Mojo::Base -strict;
 use Mojo::File qw /path tempfile/;
 use Data::Dumper;
-my $orginal_file = path("$FindBin::Bin/../blueprints/lista_gikk_til_skolen_en_haand.txt");
+my $orginal_file = path("$FindBin::Bin/blueprints/lista_gikk_til_skolen_en_haand.txt");
 my $note_file = tempfile;
 my $tune = Model::Tune->from_note_file("$orginal_file");
 $tune->to_note_file($note_file);
@@ -25,19 +25,19 @@ is(remove_comments($score2notes_file->slurp),remove_comments($orginal_file->slur
 my $midi_file = tempfile(SUFFIX =>'.mid');
 $tune->to_midi_file($midi_file);
 my $midi_tune = Model::Tune->from_midi_file($midi_file);
-is_deeply( extract_midi($midi_tune->notes), extract_midi($tune->notes) );
+is_deeply( extract_midi($midi_tune->scores), extract_midi($tune->scores) );
 
 #
 #	SUBS
 #
 
 sub extract_midi {
-	my $notes = shift; #array_ref of notes
+	my $scores = shift; #array_ref of notes
 	my $return=[]; #arrays of hashes as midi note data
-	for my $note (@$notes) {
+	for my $score (@$scores) {
 		my $rr={};
 		for my $key(qw/starttime duration note/) {
-			$rr->{$key} = $note->$key;
+			$rr->{$key} = $score->{$key};
 		}
 		push @$return, $rr;
 	}

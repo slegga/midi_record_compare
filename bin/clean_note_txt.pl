@@ -25,6 +25,8 @@ Can change scale.
 option 'extend=s', 'Extend these periods to next valid length. Takes , separated list';
 option 'scale=s', 'Set scale. Convert from old to given scale. Example c_dur';
 option 'ticsprbeat=i', 'Number of tics. Examle 6.';
+option 'reduce_octave!', 'Move tune one octave down';
+
 #,{return_uncatched_arguments => 1});
  sub main {
     my $self = shift;
@@ -42,6 +44,13 @@ option 'ticsprbeat=i', 'Number of tics. Examle 6.';
     if ($new_scale ne $tune->scale) {
         $tune->scale($new_scale);
     }
+	if ($self->reduce_octave) {
+        my @new_notes;
+		for my $n(@{$tune->notes}) {
+			$n->note($n->note -12);
+		}
+
+	}
 
     if ($self->ticsprbeat) {
         $tune->denominator($self->ticprbeat);
@@ -52,4 +61,3 @@ option 'ticsprbeat=i', 'Number of tics. Examle 6.';
 }
 
 __PACKAGE__->new(options_cfg=>{extra=>1})->main();
-

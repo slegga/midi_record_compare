@@ -1,5 +1,6 @@
 use Mojo::Base -strict;
 use Test::More;
+use Mojo::File 'path';
 use Test::FailWarnings;
 use Carp::Always;
 use FindBin;
@@ -16,6 +17,7 @@ $ENV{MOJO_MODE}='dry-run';
 require "$FindBin::Bin/../bin/record-midi-music.pl";
 ok(1,'test');
 my $t = __PACKAGE__->new;
+$t->action->blueprints_dir(path('t/blueprints'));
 ok($t->action->do_list,'OK');
 ok($t->action->do_save('test'),'OK');
 

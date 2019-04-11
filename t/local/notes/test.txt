@@ -1,0 +1,3 @@
+denominator=4
+scale=c_dur
+

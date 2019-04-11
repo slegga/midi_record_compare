@@ -29,7 +29,7 @@ sub notename2value {
     chomp $notename;
     return -1 if $notename eq 'PL';
     return -2 if $notename eq 'PR';
-    my ($name,$oct) = ($notename =~ /(\w+)(\d+)/);
+    my ($name,$oct) = ($notename =~ /(\w+)(-?\d+)/);
     my %note_names =(
         "C"  => 0,
         "Cs" => 1,
@@ -52,7 +52,7 @@ sub notename2value {
         "B"  =>11,
         );
     die "Bad name $notename, $name, $oct" if !$name || !exists $note_names{$name};
-    return $note_names{$name} + $oct * 12;
+    return $note_names{$name} + ($oct + 1) * 12;
 }
 
 =head2 guess_scale_from_notes
@@ -110,7 +110,7 @@ sub value2notename {
     return 'PL' if $value == -1;
     return 'PR' if $value == -2;
     die "Need a number" if ! looks_like_number($value);
-    my $oct = int($value /12);
+    my $oct = int($value /12)-1;
     return _bit_from_value($scale,$value % 12) . $oct;
 }
 

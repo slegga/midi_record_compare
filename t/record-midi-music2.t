@@ -11,5 +11,6 @@ use Test::ScriptX;
 $ENV{MOJO_MODE}='dry-run';
 ok(1,'test');
 my $t = Test::ScriptX->new('bin/record-midi-music.pl',input_object => Model::Input::EventTest->new, debug=>1);
-$t->run->stderr_ok->stdout_like(qr{note_on});
+$t->run;
+$t->stderr_ok->stdout_like(qr{note_on});
 done_testing;
