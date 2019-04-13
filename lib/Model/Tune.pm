@@ -13,6 +13,7 @@ use Carp;
 use List::Util qw/min max/;
 use Term::ANSIColor;
 use Algorithm::Diff qw/diff compact_diff/;
+
 use overload
     '""' => sub { shift->to_string({end=>"\n"}) }, fallback => 1;
 
