@@ -104,7 +104,7 @@ sub do_comp {
 
     #midi_event: ['note_on', dtime, channel, note, velocity]
     if  ( @{$self->midi_events } < 8 ) {
-        if (scalar @{$self->notes} <8) {
+        if (scalar @{$self->tune->notes} <8) {
             say "Notthing to work with. Less than 8 notes";
             return;
         }

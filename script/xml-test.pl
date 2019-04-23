@@ -32,9 +32,35 @@ if(0) {
 for my $n(@{ $xml->{'score-partwise'}->{part}->{measure} }) {
 #	p $n;
 #	next;
-	for my $m(sort {$a->{'default-x'} <=> $b->{'default-x'}}@{$n->{note}}) {
+	if (0) {
+		for my $x (@{$n->{note}}) {
+			if (! exists $x->{'default-x'}) {
+				warn "unhandeled";
+				p $x;
+			}
+		}
+	}
+	my $prev = {x=>0,d=>10000};
+	for my $m(sort {int($a->{'default-x'}/12) <=> int($b->{'default-x'}/12)} grep {exists $_->{'default-x'}} @{$n->{note}}) {
 #		p $m;
-		say join(' ',$m->{'default-x'}, $m->{'default-y'}, $m->{duration}->{text},j($m->{pitch}));
+		my $x = int($m->{'default-x'}/12);
+		my $d = $m->{duration}->{text};
+		#say join(' ',$x, $m->{'default-y'}, $m->{duration}->{text},j($m->{pitch}));
+		# 0;1;G4        # 0.0-1/2
+		my $pause=0;
+		if (!$prev->{x}) {
+			$prev->{x} = $x;
+		}
+		if ( $prev->{x} == $x ) {
+			if ($prev->{d} > $d) {
+				$prev->{d} = $d;
+			}
+			$pause = 0;
+		} else {
+			$pause = $prev->{d};
+		}
+
+		printf "%s;%s;%s%s\n", $pause, $m->{duration}->{text}, $m->{pitch}->{step}->{text}, $m->{pitch}->{octave}->{text};
 	}
 }
 #	$xml_converter->fromXMLStringtoHash($xml);

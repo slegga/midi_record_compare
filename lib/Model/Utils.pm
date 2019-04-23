@@ -87,7 +87,7 @@ Return (length_name,numerator) i.e. ('1/4',2)
 sub calc_length {
     my $input=shift;
     my $options = shift; #{shortest_note_time=>...,denominator=>...}
-    die "ERROR: Calculate shortest_note_time before calling _calc_length" if ! $options->{shortest_note_time};
+    die "ERROR: Calculate shortest_note_time before calling _calc_length ".($options->{shortest_note_time}//'__UNDEF__') if ! $options->{shortest_note_time};
     die "ERROR: Calculate denominator before calling _calc_length" if ! $options->{denominator};
     my $numerator;
     if (exists $input->{'time'} ) {

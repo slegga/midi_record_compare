@@ -54,5 +54,5 @@ sub main {
     print `timidity $tmpfile`;
 }
 
-__PACKAGE__->new->with_options->main() if ! caller;
+__PACKAGE__->new(options_cfg=>{extra=>1})->main() if ! caller;
 1;
