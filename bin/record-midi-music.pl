@@ -49,7 +49,6 @@ Type h + [enter]
 
 
 has loop  => sub { Mojo::IOLoop->singleton };
-has loop  => sub { Mojo::IOLoop->singleton };
 has stdin_loop => sub { Mojo::IOLoop::Stream->new(\*STDIN)->timeout(0) };
 has silence_timer=> -1;
 has piano_keys_pressed =>sub{ {} };

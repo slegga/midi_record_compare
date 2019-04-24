@@ -70,10 +70,10 @@ lissening.
 
  sub init {
     my ($self) = @_;
-         say "input port: ".$self->port();
-         MIDI::ALSA::client( 'Perl MIDI::ALSA client', 1, 1, 0 );
-         MIDI::ALSA::connectfrom( 0, $self->port, 0 );  # input port is lower (0)
-         MIDI::ALSA::start() or die "start failed";
+	say "input port: ".$self->port();
+	MIDI::ALSA::client( 'Perl MIDI::ALSA client', 1, 1, 0 );
+	MIDI::ALSA::connectfrom( 0, $self->port, 0 );  # input port is lower (0)
+	MIDI::ALSA::start() or die "start failed";
 
 }
 
