@@ -150,5 +150,20 @@ sub _bit_from_value {
         return $note_names{$bit};
 }
 
+=head2 alter_notename
 
+Takes scalename, notename and a modifier.
+Return new notename
+
+Example:
+
+# 'Cs'
+print alter_name('c_dur','C',1);
+
+=cut
+
+sub alter_notename {
+	my ($scale, $notename, $modifier) = @_;
+	return value2notename($scale, notename2value($notename)+ $modifier);
+}
 1;
