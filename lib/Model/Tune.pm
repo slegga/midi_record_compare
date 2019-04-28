@@ -484,6 +484,7 @@ sub from_note_file {
     # Remove comments and add new
     for my $line (split/\n/,$content) {
         $line =~ s/\s*\#.*$//;
+        last if $line eq '__END__';
         next if ! $line;
         if ($line=~/([\w\_\-]+)\s*=\s*(.+)$/) {
             next
