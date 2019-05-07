@@ -267,7 +267,7 @@ sub evaluate_with_blueprint {
 		last if ! defined $m && ! defined $b;
 		if ( $i < $m && $j < $b ) {
 			while( $i < $m && $j < $b ) {
-				print "$i,$j $m,$b\n";
+#				print "$i,$j $m,$b\n";
 				push @note_diff, ['1',$i,$j];
 				$i++;$j++;
 			}
@@ -626,7 +626,7 @@ sub score2notes {
         $note->startbeat($startbeat->clone);
         $note->note($score->{note});
         #$note->order($note->startbeat->to_int*1000 + 128 - $note->note);
-        printf "%6d %3d %3d %3s\n" ,$note->order,$startbeat->to_int,$score->{duration},Model::Utils::Scale::value2notename($self->{scale}//'c_dur',$note->note);# if $self->debug;
+        printf "%6d %3d %3d %3s\n" ,$note->order,$startbeat->to_int,$score->{duration},Model::Utils::Scale::value2notename($self->{scale}//'c_dur',$note->note) if $self->debug;
         push @notes,$note;
     }
 

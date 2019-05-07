@@ -52,8 +52,11 @@ sub main {
     my ($tunefile) = ($self->extra_options)[0];
     my $tune = Model::Tune->from_note_file($tunefile);
     my $new_scale;
+    warn $tune->scale;
     if ($self->scale) {
         $new_scale = $self->scale;
+    } elsif( $tune->scale) {
+    	$new_scale = $tune->scale;
     } else {
         $new_scale = Model::Utils::Scale::guess_scale_from_notes($tune->notes);
     }
@@ -115,7 +118,7 @@ sub print_colornotes {
     }
 
 	# info
-	for my $k (qw/comment denominator startbeat allowed_note_lengths allowed_note_types/) {
+	for my $k (qw/comment denominator startbeat allowed_note_lengths allowed_note_types scale hand_left_max hand_right_min/) {
 		printf"%-15s %-30s\n",$k,(ref $tune->$k? join(',',@{$tune->$k}):$tune->$k) if $tune->$k;
 		}
 	my $allow_all_pause_lengths=0;
@@ -163,7 +166,7 @@ sub print_colornotes {
         if (!defined $n->hand ||$n->hand eq 'unknown') {
         	print color('cyan');
         }
-        print $n->to_string,"\n";
+        print $n->to_string({scale=>$tune->{scale}}),"\n";
         print color('reset');
     }
     print color('reset');
