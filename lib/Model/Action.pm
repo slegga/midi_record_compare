@@ -248,6 +248,31 @@ sub do_play {
     print `timidity $tmpfile`;
 }
 
+=head2 do_play_blueprint
+
+Play compared blueprint
+
+=cut
+
+sub do_play_blueprint {
+    my ($self, $note_file) = @_;
+    my $tmpfile = tempfile(DIR=>'/tmp');
+    my $blueprint;
+    if (defined $note_file) {
+        if (! -f $note_file) {
+            warn "note_file does not exists $note_file";
+            return;
+        }
+        $blueprint = Model::Tune->from_note_file($note_file);
+    } else {
+        $blueprint = Model::Tune->from_note_file($self->blueprint_file);
+    }
+    $blueprint->notes2score;
+    $blueprint->to_midi_file("$tmpfile");
+    print `timidity $tmpfile`;
+
+}
+
 =head2 do_save
 
 Save played tune to disk in local/notes directory as notes (txt)

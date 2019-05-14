@@ -57,6 +57,7 @@ has commands => sub{[
     [[qw/h help/],     0, 'This help text', sub{$_[0]->print_help}],
     [[qw/l list/],     1, 'List saved tunes.', sub{$_[0]->action->do_endtune;			$_[0]->action->do_list($_[1])}],
     [[qw/p play/],     1, ' Play last tune. If none defaults to the not ended play.', sub{$_[0]->action->do_endtune; $_[0]->action->do_play($_[1])}],
+    [[qw/pb playblueprint/],     1, ' Play compared blueprint. If none play none.', sub{$_[0]->action->do_endtune; $_[0]->action->do_play_blueprint($_[1])}],
     [[qw/s save/],     1, 'Save play to disk as notes.', sub{$_[0]->action->do_endtune;	$_[0]->action->do_save($_[1])}],
     [[qw/c comp/],     0, 'Compare last tune with given name. If not name then test with --comp argument', sub{   $_[0]->action->do_comp($_[1])}],
     [[qw/sm savemidi/],1, 'Save as midi file. Add .midi if not present in name.', sub{$_[0]->action->do_endtune;  $_[0]->action->do_save_midi($_[1])}],

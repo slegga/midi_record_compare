@@ -1,0 +1,40 @@
+denominator=4
+shortest_note_time=75
+beat_score=51
+scale=c_dur
+0;2;E4        #
+2;1;D4        # 0.2-1/4 right
+1;1;C4        # 0.3-1/4 right
+1;2;D4        # 1.0-1/2 right
+2;2;D4        # 1.2-1/2 right
+2;1;E4        # 2.0-1/4 right
+1;1;E4        # 2.1-1/4 right
+1;1;D4        # 2.2-1/4 right
+1;1;C4        # 2.3-1/4 right
+1;1;D4        # 3.0-1/4 right
+1;1;E4        # 3.1-1/4 right
+1;2;D4        # 3.2-1/2 right
+2;2;C4        # 4.0-1/2 right
+2;1;G4        # 4.2-1/4 right
+1;1;F4        # 4.3-1/4 right
+1;2;E4        # 5.0-1/2 right
+2;2;D4        # 5.2-1/2 right
+2;1;C4        # 6.0-1/4 right
+1;1;G4        # 6.1-1/4 right
+1;1;G4        # 6.2-1/4 right
+1;1;F4        # 6.3-1/4 right
+1;1;E4        # 7.0-1/4 right
+1;1;F4        # 7.1-1/4 right
+1;2;D4        # 7.2-1/2 right
+2;2;E4        # 8.0-1/2 right
+2;1;D4        # 8.2-1/4 right
+1;1;C4        # 8.3-1/4 right
+1;2;D4        # 9.0-1/2 right
+2;2;D4        # 9.2-1/2 right
+2;1;E4        #10.0-1/4 right
+1;1;E4        #10.1-1/4 right
+1;1;D4        #10.2-1/4 right
+1;1;C4        #10.3-1/4 right
+1;1;D4        #11.0-1/4 right
+1;1;E4        #11.1-1/4 right
+1;2;D4        #11.2-1/2 right
