@@ -791,7 +791,7 @@ sub to_midi_file {
 	my $one_track = MIDI::Track->new;
 	$one_track->events_r( $events_r );
 	my $opus = MIDI::Opus->new(
-	 {  'format' => 1,  'ticks' =>120 # to slow :$self->shortest_note_time
+	 {  'format' => 1,  'ticks' =>60 # to slow :$self->shortest_note_time
      , 'tracks' => [ $one_track ] }	);
         die "Missing midi_file. Do not know what todo" if (! $midi_file);
     $opus->dump;
