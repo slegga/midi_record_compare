@@ -53,4 +53,29 @@ is($tune->notes->[1]->to_string, "1;2;D5        # 0.1-1/2", 'Expected');
 is(Model::Note->from_score($score->[1],{tune_starttime=>0
 ,shortest_note_time=>$tune->shortest_note_time, denominator=>4, prev_starttime=>$score->[0]->[1]}
     )->to_string, '1;2;D5        # 0.1-1/2','Not working yet');
+
+# test Olavs piano
+my @alsaevents = ([
+  6,  0,  0,  253,  0,  [    20,    0  ],
+  [    128,    0  ],
+  [    0,    72,    71,    0  ],{dtime_sec=>0}
+],[
+  6,  0,  0,  253,  0,  [    20,    0  ],
+  [    128,    0  ],
+  [    0,    74,    76,    0  ],{dtime_sec=>1}
+],
+[
+  7,  0,  0,  253,  0,  [    20,    0  ],
+  [    128,    0  ],
+  [    0,    72,    0,    50  ],{dtime_sec=>1.5}
+],[
+  7,  0,  0,  253,  0,  [    20,    0  ],
+  [    128,    0  ],
+  [    0,    74,    0,   100  ],{dtime_sec=>0}
+]);
+$res = Model::Utils::alsaevent2midievent(@{$alsaevents[2]});
+#warn "0event: ".Dumper $alsaevents[0];
+# warn Dumper $res;
+is(encode_json($res), '["note_off",144.0,0,72,0]');
+
 done_testing;
