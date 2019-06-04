@@ -258,15 +258,28 @@ sub do_play_blueprint {
     my ($self, $note_file) = @_;
     my $tmpfile = tempfile(DIR=>'/tmp');
     my $blueprint;
+    my $bdf = $self->blueprints_dir->child($note_file)->to_string;
     if (defined $note_file) {
-        if (! -f $note_file) {
-            warn "note_file does not exists $note_file";
-            return;
+        if ( -f $note_file) {
+            $blueprint = Model::Tune->from_note_file($note_file);
+ 		} elsif (-f $bdf) {
+            $blueprint = Model::Tune->from_note_file($bdf);
+  		} else {
+  			for my $f(sort {length $a <=> $b} $self->blueprints_dir->list->each) {
+  				if ("$f" =~ /$note_file/) {
+  					$blueprint = Model::Tune->from_note_file("$f");
+  					last;
+  				}
+  			}
+  		}
+  		if(! $blueprint) {
+        	warn "note_file does not exists $note_file";
+        	return;
         }
-        $blueprint = Model::Tune->from_note_file($note_file);
-    } else {
-        $blueprint = Model::Tune->from_note_file($self->blueprint_file);
+    } elsif ($self->tune->blueprint_file) {
+        $blueprint = Model::Tune->from_note_file($self->tune->blueprint_file);
     }
+    say path($blueprint->note_file)->basename;
     $blueprint->notes2score;
     $blueprint->to_midi_file("$tmpfile");
     print `timidity $tmpfile`;
