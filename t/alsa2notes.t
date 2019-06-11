@@ -55,7 +55,7 @@ is(Model::Note->from_score($score->[1],{tune_starttime=>0
     )->to_string, '1;2;D5        # 0.1-1/2','Not working yet');
 
 # test Olavs piano
-my @alsaevents = ([
+@alsaevents = ([
   6,  0,  0,  253,  0,  [    20,    0  ],
   [    128,    0  ],
   [    0,    72,    71,    0  ],{dtime_sec=>0}
