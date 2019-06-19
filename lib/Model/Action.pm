@@ -3,6 +3,8 @@ use Mojo::Base -base;
 use Mojo::File qw(tempfile path);
 use File::Basename;
 use MIDI;
+use Encode 'decode';
+use open ':encoding(UTF-8)';
 
 # TODO fjern linjen under. Ingen printing fra denne modulen
 use Term::ANSIColor;
@@ -96,8 +98,13 @@ sub do_comp {
         	if (-e $lbf) {
         		$filename = $lbf;
         	} else {
-	            warn "$filename or ".$self->blueprints_dir->child($filename)." or $lbf not found";
-    	        return;
+                my ($cand) = grep {$_=~ /$name/} $self->blueprints_dir->list;
+                if ($cand) {
+                    $filename = $cand;
+                } else {
+                   warn "$filename or ".$self->blueprints_dir->child($filename).", $lbf or regex $name not found.";
+                   return;
+                }
     	    }
         }
 	}
@@ -115,8 +122,6 @@ sub do_comp {
         $self->tune(Model::Tune->from_midi_score($score));
     }
 
-    #say "Played notes:       ".join(',',map {$self->pn($_->note)} @{$self->tune->notes});
-
     my $tune_blueprint= Model::Tune->from_note_file($filename);
     $self->tune->denominator($tune_blueprint->denominator);
 
@@ -130,11 +135,8 @@ sub do_comp {
         say "###### NÅ BLIR DET FEIL!!!!";
         $self->tune->beat_score($self->tune->beat_score/2) ;
         my $old_shortest_note_time = $self->tune->shortest_note_time;
-        #my @new_score = map{$_->to_score({factor=>$blueprint_bs/$play_bs})} @{$self->tune->notes};
-#	    $self->tune(Model::Tune->from_midi_score(\@new_score));
 	    say "SHORTEST NOTE TIME " .$self->tune->shortest_note_time . "$old_shortest_note_time * $play_bs / $blueprint_bs";
         $self->tune->shortest_note_time($old_shortest_note_time * $play_bs / $blueprint_bs);
-#        $self->tune->calc_shortest_note;
         $self->tune->score2notes;
         $play_bs = $self->tune->get_beat_sum;
         printf "beatlengde etter fasit: %s, spilt: %s\n",$blueprint_bs,$play_bs;
@@ -143,10 +145,11 @@ sub do_comp {
     $self->denominator($self->tune->denominator);
 
     $self->shortest_note_time($self->tune->shortest_note_time);
-    printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
-    #say "Played notes after2:".join(',',map {$self->pn($_->note)} @{$self->tune->notes});
-
     $self->tune->evaluate_with_blueprint($tune_blueprint);
+    printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
+    printf "Navn: %s\n", $tune_blueprint->note_file;
+    printf "Korteste note: %s\n", $self->tune->shortest_note_time;
+    printf "Totaltid: %s\n", $self->tune->totaltime;
     return $self;
 }
 
@@ -166,7 +169,7 @@ sub do_list {
 
     say '';
     say "blueprints/";
-    say $self->blueprints_dir->list_tree->map(sub{basename($_)})->join("\n");
+    say decode('utf8',$self->blueprints_dir->list_tree->map(sub{basename($_)})->join("\n"));
 }
 
 =head2 do_endtune

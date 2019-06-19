@@ -27,8 +27,9 @@ Make scale object based on note name.
 sub notename2value {
     my $notename = shift;
     chomp $notename;
-    return -1 if $notename eq 'PL';
-    return -2 if $notename eq 'PR';
+    return -1 if $notename eq 'PL'; #pause left
+    return -2 if $notename eq 'PR'; #pause $right
+    return -3 if $notename eq 'PD'; # pedal
     my ($name,$oct) = ($notename =~ /(\w+)(-?\d+)/);
     my %note_names =(
         "C"  => 0,
@@ -68,6 +69,7 @@ sub guess_scale_from_notes {
     my %profile= map{$_,0} 0..11; # put 0 al over
     for my  $n (@$notes) {
         my $value=$n;
+        next if $value !~/^.+;.+;[A-H]\w?\d/;
         $value =~ s/\s+\#.*//;          # remove commments
         $value =~ s/^.*\;//;            # remove extra info
         $value = notename2value($value); # text to numbers
@@ -107,8 +109,9 @@ Takes scalename and a number for note and return note name.
 sub value2notename {
     my $scale = shift//'c_dur';
     my $value = shift;
-    return 'PL' if $value == -1;
-    return 'PR' if $value == -2;
+    return 'PL' if $value == -1; # pause left
+    return 'PR' if $value == -2; # pause right
+    return 'PD' if $value == -3; # Pedal
     die "Need a number" if ! looks_like_number($value);
     my $oct = int($value /12)-1;
     return _bit_from_value($scale,$value % 12) . $oct;

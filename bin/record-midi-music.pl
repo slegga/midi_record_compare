@@ -59,7 +59,15 @@ has commands => sub{[
     [[qw/p play/],     1, ' Play last tune. If none defaults to the not ended play.', sub{$_[0]->action->do_endtune; $_[0]->action->do_play($_[1])}],
     [[qw/pb playblueprint/],     1, ' Play compared blueprint. If none play none.', sub{$_[0]->action->do_endtune; $_[0]->action->do_play_blueprint($_[1])}],
     [[qw/s save/],     1, 'Save play to disk as notes.', sub{$_[0]->action->do_endtune;	$_[0]->action->do_save($_[1])}],
-    [[qw/c comp/],     0, 'Compare last tune with given name. If not name then test with --comp argument', sub{   $_[0]->action->do_comp($_[1])}],
+    [[qw/c comp/],     0, 'Compare last tune with given name. If not name then test with --comp argument. 0=reset', sub{
+        my ($self, $name)=@_;
+        if (! $name) {
+            $self->comp('');
+            say "Reset blueprint";
+        } else {
+           $self->action->do_comp($name);
+        }
+    }],
     [[qw/sm savemidi/],1, 'Save as midi file. Add .midi if not present in name.', sub{$_[0]->action->do_endtune;  $_[0]->action->do_save_midi($_[1])}],
     [[qw/q quit/],     0, 'End session.',sub{$_[0]->do_quit}],
     [[qw/defaults/],   0, 'Stop last tune and start on new.', sub{$_[0]->action->do_endtune()}],
@@ -162,7 +170,7 @@ sub stdin_read {
     }
     $self->silence_timer(-1);
 	if(!defined $cmd) {
-		if ($self->comp) {
+		if (defined $self->comp) {
 			$self->action->do_comp($self->comp);
 		} else {
 			$self->action->do_endtune();

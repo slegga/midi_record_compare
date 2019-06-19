@@ -111,7 +111,10 @@ sub alsa_read {
 
     my @alsaevent = MIDI::ALSA::input(); #
     return if ! @alsaevent;
-    return if scalar @alsaevent < 8;
+    if (scalar @alsaevent < 8) {
+    	say "Unknown" . to_json( \@alsaevent );
+    	return;
+    }
     return if ! defined $alsaevent[0];
 
     # remove miss pressed keys. Usually when hit another key in addition to the one wanted pressed.

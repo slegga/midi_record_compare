@@ -183,24 +183,15 @@ sub to_string {
 	my $opts = shift;
 	my $return = '';
 	die "Missing note" . Dumper $self if ! defined $self->note;
-	#  return '' if $self->length<3;
 	if ($self->startbeat)  {
 		my $core = sprintf "%s;%s;%s",$self->delta_place_numerator,$self->length_numerator,Model::Utils::Scale::value2notename($opts->{scale}//'c_dur',$self->note());
 		if (! exists $opts->{no_comment} || ! $opts->{no_comment}) {
             my $format = '%-12s  #%4s-%3s';
-#            my $dt = $self->delta_time;
             my @args = ($core, $self->startbeat, $self->length_name);
-#            if (defined $dt && $dt) {
-#                $format .='%5s' ;
-#                push  @args, sprintf("-%.2f",$dt);
-#            }
-            # TODO: LEGG INN PRINT AV HAND
             if ( $self->hand) {
                 $format .=' %-5s';
                 push @args, $self->hand;
             }
-            #...;
-
 		    $return =  sprintf $format,@args;
 		}
 		else {

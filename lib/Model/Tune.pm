@@ -43,6 +43,7 @@ has 'allowed_note_lengths';
 has 'allowed_note_types';
 has ['hand_left_max','hand_right_min','hand_default'];
 has 'comment';
+has 'totaltime';
 
 =head1 NAME
 
@@ -215,7 +216,7 @@ sub evaluate_with_blueprint {
 #	say "171\n".Dumper $wrongs;
 	# Calculate a note score
 	my $n = ((scalar @{ $blueprint->notes } - scalar @$wrongs * 3)/(scalar @{ $blueprint->notes }))*100;
-   warn $self->note_score($n);
+#   warn $self->note_score($n);
 
 
 	# Calculate a note map
@@ -249,8 +250,7 @@ sub evaluate_with_blueprint {
 	$self->length_score(    100*$rln/scalar @{ $blueprint->notes });
 	$self->delta_beat_score(100*$rdb/scalar @{ $blueprint->notes });
 
-	# Calculate dalta_note_beat score
-	say '';
+	# Calculate delta_note_beat score
 
 	# create array for print. Each entry has [diff_code,midi_note_place,blueprint_note_place]
 	my $i=0;
@@ -259,6 +259,7 @@ sub evaluate_with_blueprint {
 	my @maps = map { $_, $map{$_} } sort {$a <=> $b} keys %map;
     if ($self->debug) {
         for ( my $i = 0;$i < $#maps-2; $i += 2) {
+			say '';
             printf "mapping: %s,%s\n", $maps[$i],$maps[$i+1]
         }
     }
@@ -612,8 +613,10 @@ sub score2notes {
     my @notes;
     my $startbeat = Model::Beat->new(denominator=>$self->denominator);
     my $prev_starttime=0;
+    $self->totaltime(0);
     for my $score(@{$self->scores}) {
         my $note= Model::Note->new;
+        $self->totaltime($self->totaltime + $score->{duration});
         my ($length_name, $length_numerator) = Model::Utils::calc_length( { time => $score->{duration} }
             ,{shortest_note_time=>$self->shortest_note_time, denominator=>$self->denominator} );
         $note->length_name($length_name);
