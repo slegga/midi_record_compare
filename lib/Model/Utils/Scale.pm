@@ -80,9 +80,10 @@ sub guess_scale_from_notes {
         'f_dur' =>      [0,2,4,5,7,9,10], # F, G, A, Bb, C, D, E, F
         'g_dur' =>      [0,2,4,6,7,9,11], # G, A, B, C, D, E, F#, G
         'eis_dur' =>     [0,2,3,5,7,8,10], # C, D, Eb, F, G, Ab, Hb, C
-        'd_dur' =>      [1,2,4,6,7,9,11],
+        'd_dur' =>      [1,2,4,6,7,9,11], # C, D, Eb, F, G, Ab, Hb, C
+        'b_dur' =>     [0,2,3,5,7,9,10],  # Hb, C, D,Eb, F, G, A
         'cis_dur' =>    [0,1,3,5,6,8,10], # H#, C#, D#, E#,  F#, G#, A#
-    );
+        );
     my $best='';
     my $best_score=0;
     for my $k (sort keys %scales) {
