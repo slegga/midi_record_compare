@@ -53,6 +53,7 @@ has stdin_loop => sub { Mojo::IOLoop::Stream->new(\*STDIN)->timeout(0) };
 has silence_timer=> -1;
 has piano_keys_pressed =>sub{ {} };
 has input_object => sub { Model::Input::ALSA->new };
+has prev_controller => sub { {} };
 has commands => sub{[
     [[qw/h help/],     0, 'This help text', sub{$_[0]->print_help}],
     [[qw/l list/],     1, 'List saved tunes.', sub{$_[0]->action->do_endtune;			$_[0]->action->do_list($_[1])}],
@@ -128,12 +129,24 @@ sub register_midi_event {
     return if ! defined $event;
 
 	#if ($self->debug) {
+    if ($event->[0] eq 'control_change') {
+        my $crl = $self->prev_controller;
+        if (($crl->{$event->[3]} && ! $event->[4])
+        or  (! $crl->{$event->[3]} && $event->[4])
+        )
+        {
+            $crl->{$event->[3]} = $event->[4];
+            say join('  ', grep {defined } @$event);
+            $self->prev_controller($crl);
+        }
+    } else    {
 	    printf("%-8s %-3s %3d %.3f %5d\n",$event->[0]
 	    ,(defined($event->[3]) ? Model::Utils::Scale::value2notename($self->action->tune->scale,$event->[3]):'__UNDEF__')
 	    ,($event->[4]//0),
 	    ($event->[2]//0),
 	    ($event->[1]//0)
 	    );
+    }
 	#}
     if ($event->[0] eq 'port_unsubscribed') { # piano is turned off.
         $self->action->do_endtune;
@@ -151,6 +164,8 @@ sub register_midi_event {
         	delete $pkp->{$event->[3]};
         }
         $self->piano_keys_pressed($pkp);
+    } else {
+    	to_json($event);
     }
 
 }

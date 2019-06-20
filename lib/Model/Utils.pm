@@ -63,6 +63,15 @@ sub alsaevent2midievent {
 #        my $duration = int($opts->{duration} *96);
         return ['note_off', $dtime, 0, $data->[1], $data->[2]];
     }
+
+    if ( $type == $ALSA_CODE->{SND_SEQ_EVENT_CONTROLLER}) {
+#        warn "PEDAL";
+#        my $starttime = int ($extra->{starttime} * 96);
+#        my $duration = int($opts->{duration} *96);
+        #('control_change', starttime, channel, controller(0-127), value(0-127))
+        return ['control_change', $dtime, 0, $data->[4], $data->[5]];
+    }
+
     if ( $type == $ALSA_CODE->{SND_SEQ_EVENT_PORT_UNSUBSCRIBED} ) {
         say "got SND_SEQ_EVENT_PORT_UNSUBSCRIBED: ".to_json(@_);
         return ['port_unsubscribed'];

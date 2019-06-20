@@ -216,7 +216,7 @@ sub evaluate_with_blueprint {
 #	say "171\n".Dumper $wrongs;
 	# Calculate a note score
 	my $n = ((scalar @{ $blueprint->notes } - scalar @$wrongs * 3)/(scalar @{ $blueprint->notes }))*100;
-#   warn $self->note_score($n);
+   warn $self->note_score($n);
 
 
 	# Calculate a note map

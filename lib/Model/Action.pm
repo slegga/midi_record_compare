@@ -5,6 +5,7 @@ use File::Basename;
 use MIDI;
 use Encode 'decode';
 use open ':encoding(UTF-8)';
+use File::Basename 'basename';
 
 # TODO fjern linjen under. Ingen printing fra denne modulen
 use Term::ANSIColor;
@@ -147,9 +148,9 @@ sub do_comp {
     $self->shortest_note_time($self->tune->shortest_note_time);
     $self->tune->evaluate_with_blueprint($tune_blueprint);
     printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
-    printf "Navn: %s\n", $tune_blueprint->note_file;
+    printf "Navn:          %s\n", basename($tune_blueprint->note_file);
     printf "Korteste note: %s\n", $self->tune->shortest_note_time;
-    printf "Totaltid: %s\n", $self->tune->totaltime;
+    printf "Totaltid:      %5.2f\n", $self->tune->totaltime;
     return $self;
 }
 
