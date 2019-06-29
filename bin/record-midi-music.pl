@@ -137,6 +137,12 @@ sub register_midi_event {
         {
             $crl->{$event->[3]} = $event->[4];
             say join('  ', grep {defined } @$event);
+
+            #end tune if left pedal pressed
+            if ($event->[3] == 67 && $event->[4]) {
+                $self->action->do_endtune;
+                return;
+            }
             $self->prev_controller($crl);
         }
     } else    {
