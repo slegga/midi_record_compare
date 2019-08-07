@@ -17,9 +17,9 @@ $ENV{MOJO_MODE}='dry-run';
 require "$FindBin::Bin/../bin/record-midi-music.pl";
 ok(1,'test');
 my $t = __PACKAGE__->new;
-$t->action->blueprints_dir(path('t/blueprints'));
-ok($t->action->do_list,'OK');
-ok($t->action->do_save('test'),'OK');
+$t->blueprints->blueprints_dir(path('t/blueprints'));
+ok($t->blueprints->do_list,'OK');
+ok($t->blueprints->do_save($t->tune,'test'),'OK');
 
 my @alsaevents = ([
   6,  0,  0,  253,  0,  [    20,    0  ],
@@ -59,6 +59,6 @@ my @alsaevents = ([
 ]);
 my @midievents = map{Model::Utils::alsaevent2midievent(@$_)} grep {defined} @alsaevents;
 
-$t->action->midi_events(\@midievents);
-ok($t->action->do_comp('lista_gikk_til_skolen_en_haand.txt'),'OK');
+$t->tune->in_midi_events(\@midievents);
+ok($t->blueprints->do_comp($t->tune, 'lista_gikk_til_skolen_en_haand.txt'),'OK');
 done_testing;

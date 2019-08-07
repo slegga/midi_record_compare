@@ -44,7 +44,7 @@ has 'allowed_note_types';
 has ['hand_left_max','hand_right_min','hand_default'];
 has 'comment';
 has 'totaltime';
-
+has in_midi_events => sub {[]}; # For storing input for later convertion
 =head1 NAME
 
 Model::Tune - Handle tunes
@@ -368,6 +368,38 @@ sub find_best_scale {
     }
     return $return;
 }
+
+=head2 finish
+
+Make the tune ready (for comparing, saving etc)
+Execute after tune actions.
+After last played note is finished. End tune and look for blueprints to compare.
+
+=cut
+
+sub finish {
+    my ($self) = @_;
+    return $self if (@{$self->in_midi_events} <= 10);
+    my $score = MIDI::Score::events_r_to_score_r( $self->in_midi_events );
+    $self = Model::Tune->from_midi_score($score);
+
+    $self->calc_shortest_note;
+    $self->score2notes;
+
+#    print $self->tune->to_string;
+    #$self->shortest_note_time;
+    #$self->denominator;
+    printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
+
+#    my $guess = $self->guessed_blueprint();
+#    return $self if ! $guess;
+#    print color('green');
+#    say "Tippet låt: ". ($guess);
+#    print color('reset');
+#    $self->do_comp($guess);
+    return $self;
+}
+
 
 =head2 from_midi_score
 

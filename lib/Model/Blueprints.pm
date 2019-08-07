@@ -1,4 +1,4 @@
-package Model::Action;
+package Model::Blueprints;
 use Mojo::Base -base;
 use Mojo::File qw(tempfile path);
 use File::Basename;
@@ -16,11 +16,11 @@ use Model::Tune;
 
 =head1 NAME
 
-Model::Action - Takes order from UI
+Model::Blueprints - Takes order from UI
 
 =head1 SYNOPSIS
 
-use Model::Action;
+use Model::Blueprints;
 ...;
 
 =head1 DESCRIPTION
@@ -48,10 +48,10 @@ Talk with Model modules like Model::Tune
 
 =cut
 
-has denominator =>8;
-has tune => sub {Model::Tune->new};
-has midi_events => sub {[]};
-has shortest_note_time => 9;
+# has denominator =>8;
+# has tune => sub {Model::Tune->new};
+# has midi_events => sub {[]};
+# has shortest_note_time => 9;
 has blueprints_dir => sub {path("$FindBin::Bin/../blueprints")};
 has blueprints => sub{[]}; # [ [65,66,...], Mojo::File ]
 has 'last_comp';
@@ -59,7 +59,7 @@ has 'last_comp';
 
 =head2 init
 
-Initialize Action object loads all the blueprints
+Initialize Blueprints object loads all the blueprints
 
 =cut
 
@@ -84,9 +84,9 @@ Do compare played tune with an blueprint.
 =cut
 
 sub do_comp {
-    my ($self, $name) = @_;
+    my ($self, $tune, $name) = @_;
     die "Missing self" if !$self;
-
+    die "Missing (played) tune" if !$tune;
     return if ! $name;
     say "compare $name";
     my $filename = $name;
@@ -114,48 +114,48 @@ sub do_comp {
 	}
 
     #midi_event: ['note_on', dtime, channel, note, velocity]
-    if  ( @{$self->midi_events } < 8 ) {
-        if (scalar @{$self->tune->notes} <8) {
+    if  ( @{$tune->in_midi_events } < 8 ) {
+        if (scalar @{$tune->notes} <8) {
             say "Notthing to work with. Less than 8 notes";
             return;
         }
     } else {
-        my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
+        my $score = MIDI::Score::events_r_to_score_r( $tune->in_midi_events );
     #    warn p($score);
         #score:  ['note', startitme, length, channel, note, velocity],
-        $self->tune(Model::Tune->from_midi_score($score));
+        $tune = (Model::Tune->from_midi_score($score));
     }
     if ($filename) {
         $self->last_comp($filename);
     }
     my $tune_blueprint= Model::Tune->from_note_file($filename);
-    $self->tune->denominator($tune_blueprint->denominator);
+    $tune->denominator($tune_blueprint->denominator);
 
-    $self->tune->calc_shortest_note;
-    $self->tune->score2notes;
+    $tune->calc_shortest_note;
+    $tune->score2notes;
     #say "Played notes after:  ".join(',',map {$self->pn($_->note)} @{$self->tune->notes});
-    my $play_bs = $self->tune->get_beat_sum;
+    my $play_bs = $tune->get_beat_sum;
    	my $blueprint_bs = $tune_blueprint->get_beat_sum;
     printf "beatlengde før   fasit: %s, spilt: %s\n",$blueprint_bs,$play_bs;
    	if ($play_bs*1.5 <$blueprint_bs || $play_bs > 1.5*$blueprint_bs) {
         say "###### NÅ BLIR DET FEIL!!!!";
-        $self->tune->beat_score($self->tune->beat_score/2) ;
-        my $old_shortest_note_time = $self->tune->shortest_note_time;
-	    say "SHORTEST NOTE TIME " .$self->tune->shortest_note_time . "$old_shortest_note_time * $play_bs / $blueprint_bs";
-        $self->tune->shortest_note_time($old_shortest_note_time * $play_bs / $blueprint_bs);
-        $self->tune->score2notes;
-        $play_bs = $self->tune->get_beat_sum;
+        $tune->beat_score($tune->beat_score/2) ;
+        my $old_shortest_note_time = $tune->shortest_note_time;
+	    say "SHORTEST NOTE TIME " .$tune->shortest_note_time . "$old_shortest_note_time * $play_bs / $blueprint_bs";
+        $tune->shortest_note_time($old_shortest_note_time * $play_bs / $blueprint_bs);
+        $tune->score2notes;
+        $play_bs = $tune->get_beat_sum;
         printf "beatlengde etter fasit: %s, spilt: %s\n",$blueprint_bs,$play_bs;
     }
 
-    $self->denominator($self->tune->denominator);
+    #$self->denominator($self->tune->denominator);
 
-    $self->shortest_note_time($self->tune->shortest_note_time);
-    $self->tune->evaluate_with_blueprint($tune_blueprint);
-    printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
-    printf "Navn:          %s\n", basename($tune_blueprint->note_file);
-    printf "Korteste note: %s\n", $self->tune->shortest_note_time;
-    printf "Totaltid:      %5.2f\n", $self->tune->totaltime;
+    #$self->shortest_note_time($self->tune->shortest_note_time);
+    $tune->evaluate_with_blueprint($tune_blueprint);
+    printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$tune->shortest_note_time,$tune->denominator;
+    printf "Navn:          %s\n", color('blue') . basename($tune_blueprint->note_file);
+    printf "Korteste note: %s\n", $tune->shortest_note_time;
+    printf "Totaltid:      %5.2f\n", $tune->totaltime;
     return $self;
 }
 
@@ -178,35 +178,6 @@ sub do_list {
     say decode('utf8',$self->blueprints_dir->list_tree->map(sub{basename($_)})->join("\n"));
 }
 
-=head2 do_endtune
-
-Execute after tune actions.
-After last played note is finished. End tune and look for blueprints to compare.
-
-=cut
-
-sub do_endtune {
-    my ($self) = @_;
-    return $self if (@{$self->midi_events} <= 10);
-    my $score = MIDI::Score::events_r_to_score_r( $self->midi_events );
-    $self->tune(Model::Tune->from_midi_score($score));
-
-    $self->tune->calc_shortest_note;
-    $self->tune->score2notes;
-
-#    print $self->tune->to_string;
-    $self->shortest_note_time($self->tune->shortest_note_time);
-    $self->denominator($self->tune->denominator);
-    printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
-
-    my $guess = $self->guessed_blueprint();
-    return $self if ! $guess;
-    print color('green');
-    say "Tippet låt: ". ($guess);
-    print color('reset');
-    $self->do_comp($guess);
-    return $self;
-}
 
 =head2 do_play
 
@@ -302,9 +273,10 @@ Save played tune to disk in local/notes directory as notes (txt)
 =cut
 
 sub do_save {
-    my ($self, $name) = @_;
+    my ($self, $tune, $name) = @_;
+    return if !$name;
     $name .= '.txt' if ($name !~/\.midi?$/);
-    $self->tune->to_note_file($self->local_dir($self->blueprints_dir->child('notes'))->child($name));
+    $tune->to_note_file($self->local_dir($self->blueprints_dir->child('notes'))->child($name));
 }
 
 =head2 do_save_midi
@@ -319,15 +291,16 @@ sub do_save_midi {
     $self->tune->to_midi_file($self->local_dir($self->blueprints_dir->child('notes'))->child($name));
 }
 
-=head2 guessed_blueprint
+=head2 guess_blueprint
 
 Return guessed blueprint based on played notes.
 
 =cut
 
-sub guessed_blueprint {
+sub guess_blueprint {
     my $self = shift;
-    if (@{$self->tune->notes} <10) {
+    my $tune = shift;
+    if (@{$tune->notes} <10) {
         say "For kort låt for å sammenligne";
         return;
     }
@@ -336,7 +309,7 @@ sub guessed_blueprint {
     my @candidates = @{$self->blueprints};
     my $i =0;
     my $bestname;
-    for my $n( map {$_->note} @{$self->tune->notes}) {
+    for my $n( map {$_->note} @{$tune->notes}) {
     	next if ! defined $n;
         for my $j(reverse 0 .. $#candidates) {
         	next if ! defined $candidates[$j][0][$i];
@@ -385,11 +358,11 @@ Return note for print
 
 =cut
 
-sub pn {
-	my ($self, $note) = @_;
-	return if !defined $note;
-    return Model::Utils::Scale::value2notename($self->tune->scale,$note);
-}
+#sub pn {
+#	my ($self, $note) = @_;
+#	return if !defined $note;
+#    return Model::Utils::Scale::value2notename($self->tune->scale,$note);
+#}
 
 
 1;

@@ -16,7 +16,7 @@ sub register_events {
 
         $controller->register_midi_event($_) for @events;
     });
-    $loop->timer(0.1 => sub {$controller->action->do_endtune});
+    $loop->timer(0.1 => sub {$controller->tune->finish});
     $loop->timer(0.2 => sub {$controller->do_quit});
 }
 

@@ -10,7 +10,7 @@ use Mojo::JSON 'to_json';
 use FindBin;
 use lib "$FindBin::Bin/../../utilities-perl/lib";
 use lib "$FindBin::Bin/../lib";
-use Model::Action;
+use Model::Blueprints;
 use Model::Input::ALSA;
 use SH::ScriptX;
 use Mojo::Base 'SH::ScriptX';
@@ -56,24 +56,25 @@ has input_object => sub { Model::Input::ALSA->new };
 has prev_controller => sub { {} };
 has commands => sub{[
     [[qw/h help/],     0, 'This help text', sub{$_[0]->print_help}],
-    [[qw/l list/],     1, 'List saved tunes.', sub{$_[0]->action->do_endtune;			$_[0]->action->do_list($_[1])}],
-    [[qw/p play/],     1, ' Play last tune. If none defaults to the not ended play.', sub{$_[0]->action->do_endtune; $_[0]->action->do_play($_[1])}],
-    [[qw/pb playblueprint/],     1, ' Play compared blueprint. If none play none.', sub{$_[0]->action->do_endtune; $_[0]->action->do_play_blueprint($_[1])}],
-    [[qw/s save/],     1, 'Save play to disk as notes.', sub{$_[0]->action->do_endtune;	$_[0]->action->do_save($_[1])}],
+    [[qw/l list/],     1, 'List saved tunes.', sub{my $self =$_[0]; $self->tune->finish;$self->blueprints->do_list($_[1])}],
+    [[qw/p play/],     1, ' Play last tune. If none defaults to the not ended play.', sub{my $self =$_[0]; my $t = $self->tune->finish; $self->tune->do_play($_[1]//$t)}],
+    [[qw/pb playblueprint/],     1, ' Play compared blueprint. If none play none.', sub{$_[0]->tune->finish; $_[0]->tune->do_play_blueprint($_[1])}],
+    [[qw/s save/],     1, 'Save play to disk as notes.', sub{my $t = $_[0]->tune->finish;	$_[0]->blueprints->do_save($t, $_[1])}],
     [[qw/c comp/],     0, 'Compare last tune with given name. If not name then test with --comp argument. 0=reset', sub{
         my ($self, $name)=@_;
         if (! $name) {
             $self->comp('');
             say "Reset blueprint";
         } else {
-           $self->action->do_comp($name);
+           $self->comp($self->blueprints->do_comp($name)->last_comp);
         }
     }],
-    [[qw/sm savemidi/],1, 'Save as midi file. Add .midi if not present in name.', sub{$_[0]->action->do_endtune;  $_[0]->action->do_save_midi($_[1])}],
+    [[qw/sm savemidi/],1, 'Save as midi file. Add .midi if not present in name.', sub{$_[0]->tune->finish;  $_[0]->blueprints->do_save_midi($_[1])}],
     [[qw/q quit/],     0, 'End session.',sub{$_[0]->do_quit}],
-    [[qw/defaults/],   0, 'Stop last tune and start on new.', sub{$_[0]->action->do_endtune()}],
+    [[qw/defaults/],   0, 'Stop last tune and start on new.', sub{$_[0]->blueprints->finish()}],
 ]};
-has action => sub {Model::Action->new};
+has blueprints => sub {Model::Blueprints->new};
+has tune => sub {Model::Tune->new};
 option  'comp=s', 'Compare play with this blueprint';
 option  'dryrun!',  'Do not expect a linked piano';
 option  'debug!',   'Print debug info';
@@ -88,7 +89,7 @@ sub main {
     	$self->input_object->port();
     	$self->input_object->init();
     }
-    $self->action->init; #load blueprints
+    $self->blueprints->init; #load blueprints
 
     $self->input_object->register_events( $self->loop, $self );
     $self->loop->recurring( 1 => sub {
@@ -140,14 +141,16 @@ sub register_midi_event {
 
             #end tune if left pedal pressed
             if ($event->[3] == 67 && $event->[4]) {
-                $self->action->do_endtune;
+                $self->tune($self->tune->finish);
+                $self->blueprints->do_comp($self->tune, $self->blueprints->guess_blueprint($self->tune));
+
                 return;
             }
             $self->prev_controller($crl);
         }
     } else    {
 	    printf("%-8s %-3s %3d %.3f %5d\n",$event->[0]
-	    ,(defined($event->[3]) ? Model::Utils::Scale::value2notename($self->action->tune->scale,$event->[3]):'__UNDEF__')
+	    ,(defined($event->[3]) ? Model::Utils::Scale::value2notename($self->tune->scale,$event->[3]):'__UNDEF__')
 	    ,($event->[4]//0),
 	    ($event->[2]//0),
 	    ($event->[1]//0)
@@ -155,13 +158,14 @@ sub register_midi_event {
     }
 	#}
     if ($event->[0] eq 'port_unsubscribed') { # piano is turned off.
-        $self->action->do_endtune;
+        my $t = $self->tune->finish;
+        $self->blueprints->do_comp($t,$self->blueprints->guess_blueprint($t));
         say 'Forced quit';
         $self->do_quit;
         return;
     }
     if (defined $event && grep { $event->[0] eq $_ } qw/note_on note_off/) {
-        push @{ $self->action->midi_events }, $event;
+        push @{ $self->tune->in_midi_events }, $event;
         my $pks = $self->piano_keys_pressed;
         my $pkp = $self->piano_keys_pressed;
         if ($event->[0] eq 'note_on') {
@@ -192,9 +196,10 @@ sub stdin_read {
     $self->silence_timer(-1);
 	if(!defined $cmd) {
 		if (defined $self->comp) {
-			$self->action->do_comp($self->comp);
+			$self->comp($self->blueprints->do_comp($self->tune, $self->comp)->last_comp);
 		} else {
-			$self->action->do_endtune();
+            my $t = $self->tune->finish;
+			$self->blueprints->do_comp($t,$self->blueprints->guess_blueprint($t));
 		}
 	} else {
 		for my $c(@{$self->commands}) {
@@ -212,7 +217,7 @@ sub stdin_read {
 		}
 	}
 
-    $self->action->midi_events([]); # clear history
+    $self->tune->in_midi_events([]); # clear history
     $self->input_object->reset_time();
 }
 
