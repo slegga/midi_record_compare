@@ -6,8 +6,6 @@ use FindBin;
 use lib "$FindBin::Bin/../../utilities-perl/lib";
 use lib "$FindBin::Bin/../lib";
 
-use Model::Action;
-
 =head1 NAME
 
 piano-trainer.pl
