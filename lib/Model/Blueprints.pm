@@ -103,7 +103,7 @@ sub do_comp {
                 my ($cand) = grep {$_=~ /$name/} map{$_->to_string} $self->blueprints_dir->list->each;
                 if ($cand) {
                     $filename = $cand;
-                    warn $filename;
+                    print $filename;
 
                 } else {
                    warn "$filename or ".$self->blueprints_dir->child($filename).", $lbf or regex $name not found.";
@@ -153,7 +153,7 @@ sub do_comp {
     #$self->shortest_note_time($self->tune->shortest_note_time);
     $tune->evaluate_with_blueprint($tune_blueprint);
     printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$tune->shortest_note_time,$tune->denominator;
-    printf "Navn:          %s\n", color('blue') . basename($tune_blueprint->note_file);
+    printf "Navn:          %s\n", color('blue') . basename($tune_blueprint->note_file) . color('reset');
     printf "Korteste note: %s\n", $tune->shortest_note_time;
     printf "Totaltid:      %5.2f\n", $tune->totaltime;
     return $self;
