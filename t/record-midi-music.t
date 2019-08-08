@@ -61,4 +61,5 @@ my @midievents = map{Model::Utils::alsaevent2midievent(@$_)} grep {defined} @als
 
 $t->tune->in_midi_events(\@midievents);
 ok($t->blueprints->do_comp($t->tune, 'lista_gikk_til_skolen_en_haand.txt'),'OK');
+ok($t->blueprints->do_comp($t->tune, 'lista'),'OK');
 done_testing;

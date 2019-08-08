@@ -80,6 +80,7 @@ sub init {
 =head2 do_comp
 
 Do compare played tune with an blueprint.
+Return $self if success and undef if failed
 
 =cut
 
@@ -116,8 +117,12 @@ sub do_comp {
     #midi_event: ['note_on', dtime, channel, note, velocity]
     if  ( @{$tune->in_midi_events } < 8 ) {
         if (scalar @{$tune->notes} <8) {
-            say "Notthing to work with. Less than 8 notes";
-            return;
+            if ($filename) {
+                say "Notthing to work with. Less than 8 notes";
+                return;
+            } else {
+                return $self;
+            }
         }
     } else {
         my $score = MIDI::Score::events_r_to_score_r( $tune->in_midi_events );

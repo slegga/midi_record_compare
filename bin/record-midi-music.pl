@@ -66,7 +66,8 @@ has commands => sub{[
             $self->comp('');
             say "Reset blueprint";
         } else {
-           $self->comp($self->blueprints->do_comp($self->tune,$name)->last_comp);
+        	my $b = $self->blueprints->do_comp($self->tune,$name);
+           $self->comp($b->last_comp);
         }
     }],
     [[qw/sm savemidi/],1, 'Save as midi file. Add .midi if not present in name.', sub{$_[0]->tune->finish;  $_[0]->blueprints->do_save_midi($_[1])}],
