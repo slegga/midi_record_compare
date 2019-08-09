@@ -386,9 +386,6 @@ sub finish {
     $self->calc_shortest_note;
     $self->score2notes;
 
-#    print $self->tune->to_string;
-    #$self->shortest_note_time;
-    #$self->denominator;
     printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
 
 #    my $guess = $self->guessed_blueprint();

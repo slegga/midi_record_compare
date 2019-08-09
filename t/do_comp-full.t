@@ -39,7 +39,9 @@ my @alsaevents = (
 my @midievents = map{Model::Utils::alsaevent2midievent(@$_)} grep {defined} @alsaevents;
 $t->tune->in_midi_events(\@midievents);
 $t->tune($t->tune->finish);
-ok($t->blueprints->do_comp($t->tune,'polser_her.txt'),'OK');
+my $f = $t->blueprints->get_pathfile_by_name('polser_her.txt');
+like($f,qr'blueprints/polser_her.txt','correct fimename');
+ok($t->blueprints->do_comp($t->tune,$f),'OK');
 diag $t->blueprints->do_comp('polser_her.txt');
 $t->blueprints->init;
 diag p($t->blueprints->blueprints);

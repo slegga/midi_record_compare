@@ -54,7 +54,7 @@ Talk with Model modules like Model::Tune
 # has shortest_note_time => 9;
 has blueprints_dir => sub {path("$FindBin::Bin/../blueprints")};
 has blueprints => sub{[]}; # [ [65,66,...], Mojo::File ]
-has 'last_comp';
+
 =head1 METHODS
 
 =head2 init
@@ -79,40 +79,21 @@ sub init {
 
 =head2 do_comp
 
-Do compare played tune with an blueprint.
+Do compare played tune with an blueprint with relative path.
 Return $self if success and undef if failed
 
 =cut
 
 sub do_comp {
-    my ($self, $tune, $name) = @_;
+    my ($self, $tune, $filename) = @_;
     die "Missing self" if !$self;
     die "Missing (played) tune" if !$tune;
-    return if ! $name;
-    say "compare $name";
-    my $filename = $name;
-    if (! -e $filename) {
-	    my $bluedir = $self->blueprints_dir->to_string;
-        #say $bluedir;
-        if ( -e $self->blueprints_dir->child($filename)) {
-	        $filename = $self->blueprints_dir->child($filename);
-        } else {
-        	my $lbf = $self->local_dir($self->blueprints_dir);
-        	if (-e $lbf) {
-        		$filename = $lbf;
-        	} else {
-                my ($cand) = grep {$_=~ /$name/} map{$_->to_string} $self->blueprints_dir->list->each;
-                if ($cand) {
-                    $filename = $cand;
-                    print $filename;
-
-                } else {
-                   warn "$filename or ".$self->blueprints_dir->child($filename).", $lbf or regex $name not found.";
-                   return;
-                }
-    	    }
-        }
-	}
+    return if ! $filename;
+    if (! -f $filename) {
+        print STDERR "ERROR: File not found $filename";
+        return
+    }
+    say "compare $filename";
 
     #midi_event: ['note_on', dtime, channel, note, velocity]
     if  ( @{$tune->in_midi_events } < 8 ) {
@@ -121,7 +102,7 @@ sub do_comp {
                 say "Notthing to work with. Less than 8 notes";
                 return;
             } else {
-                return $self;
+                die "should never get here";
             }
         }
     } else {
@@ -129,9 +110,6 @@ sub do_comp {
     #    warn p($score);
         #score:  ['note', startitme, length, channel, note, velocity],
         $tune = (Model::Tune->from_midi_score($score));
-    }
-    if ($filename) {
-        $self->last_comp($filename);
     }
     my $tune_blueprint= Model::Tune->from_note_file($filename);
     $tune->denominator($tune_blueprint->denominator);
@@ -294,6 +272,39 @@ sub do_save_midi {
     my ($self, $name) = @_;
     $name .= '.midi' if ($name !~/\.midi?$/);
     $self->tune->to_midi_file($self->local_dir($self->blueprints_dir->child('notes'))->child($name));
+}
+
+=head2 get_pathfile_by_name
+
+Return filepath for tune name part
+
+=cut
+
+sub get_pathfile_by_name {
+    my ($self, $name) = @_;
+    my $filename = $name;
+    if (! -e $filename) {
+        my $bluedir = $self->blueprints_dir->to_string;
+        #say $bluedir;
+        if ( -e $self->blueprints_dir->child($filename)) {
+            $filename = $self->blueprints_dir->child($filename);
+        } else {
+            my $lbf = $self->local_dir($self->blueprints_dir);
+            if (-e $lbf) {
+                $filename = $lbf;
+            } else {
+                my ($cand) = grep {$_=~ /$name/} map{$_->to_string} $self->blueprints_dir->list->each;
+                if ($cand) {
+                    $filename = $cand;
+
+                } else {
+                   warn "$filename or ".$self->blueprints_dir->child($filename).", $lbf or regex $name not found.";
+                   return;
+                }
+            }
+        }
+    }
+    return $filename;
 }
 
 =head2 guess_blueprint

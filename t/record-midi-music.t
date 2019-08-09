@@ -60,6 +60,10 @@ my @alsaevents = ([
 my @midievents = map{Model::Utils::alsaevent2midievent(@$_)} grep {defined} @alsaevents;
 
 $t->tune->in_midi_events(\@midievents);
-ok($t->blueprints->do_comp($t->tune, 'lista_gikk_til_skolen_en_haand.txt'),'OK');
-ok($t->blueprints->do_comp($t->tune, 'lista'),'OK');
+my $fa = $t->blueprints->get_pathfile_by_name('lista_gikk_til_skolen_en_haand.txt');
+my $fb = $t->blueprints->get_pathfile_by_name('lista');
+#diag "$fa $fb";
+#like($fa,qr'lista_gikk_til_skolen_en_haand.txt$','Both gets is correct');
+#like($fb,qr'lista_gikk_til_skolen_en_haand.txt$','Both gets is correct');
+ok($t->blueprints->do_comp($t->tune, $fa ),'OK');
 done_testing;
