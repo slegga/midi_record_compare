@@ -162,92 +162,44 @@ sub do_list {
 }
 
 
-=head2 do_play
 
-Takes self, filepathname
-Plays self->tune or given filepathname
-
-=cut
-
-sub do_play {
-    my ($self, $name) = @_;
-    my $tmpfile = tempfile(DIR=>'/tmp');
-    my $tune;
-    if (defined $name) {
-        if (-e $name) {
-            if ($name =~ /midi?$/)  {
-                print `timidity $name`;
-                return;
-            } else {
-                $tune = Model::Tune->from_note_file($name);
-                $tune->notes2score;
-            }
-        } else {
-        	my $tmp = $self->blueprints_dir->child($name);
-        	if( -e $tmp) {
-	            $tune = Model::Tune->from_note_file($tmp);
-	            $tune->notes2score;
-	        } else {
-	 			$tmp = $self->blueprints_dir->sibling('local','notes')->child($name);
-	 			if (-e $tmp) {
-		            $tune = Model::Tune->from_note_file($tmp);
-		 	        $tune->notes2score;
-		 	    } else {
-	 				$tmp = $self->blueprints_dir->sibling('local','blueprints')->child($name);
-    	 			if (-e $tmp) {
-    		            $tune = Model::Tune->from_note_file($tmp);
-    		 	        $tune->notes2score;
-    		 	    } else {
-    		 	    	warn "Did not find $name. Play stored tune instead.";
-			            $tune = $self->tune;
-    		 	    }
-				}
-			}
-        }
-    } else {
-        $tune = $self->tune;
-    }
-    $tune->to_midi_file("$tmpfile");
-    print `timidity $tmpfile`;
-}
-
-=head2 do_play_blueprint
-
-Play compared blueprint
-
-=cut
-
-sub do_play_blueprint {
-    my ($self, $note_file) = @_;
-    my $tmpfile = tempfile(DIR=>'/tmp');
-    my $blueprint;
-    my $bdf = $self->blueprints_dir->child($note_file)->to_string;
-    if (defined $note_file) {
-        if ( -f $note_file) {
-            $blueprint = Model::Tune->from_note_file($note_file);
- 		} elsif (-f $bdf) {
-            $blueprint = Model::Tune->from_note_file($bdf);
-  		} else {
-  			for my $f(sort {length $a <=> $b} $self->blueprints_dir->list->each) {
-  				if ("$f" =~ /$note_file/) {
-  					$blueprint = Model::Tune->from_note_file("$f");
-  					last;
-  				}
-  			}
-  		}
-  		if(! $blueprint) {
-        	warn "note_file does not exists $note_file";
-        	return;
-        }
-    } elsif ($self->tune->blueprint_file) {
-        $blueprint = Model::Tune->from_note_file($self->tune->blueprint_file);
-    }
-    say path($blueprint->note_file)->basename;
-    $blueprint->notes2score;
-    $blueprint->to_midi_file("$tmpfile");
-    print `timidity $tmpfile`;
-
-}
+# =head2 do_play_blueprint
+#
+# Play compared blueprint
+#
+# =cut
+#
+# sub do_play_blueprint {
+#     my ($self, $note_file) = @_;
+#     my $tmpfile = tempfile(DIR=>'/tmp');
+#     my $blueprint;
+#     my $bdf = $self->blueprints_dir->child($note_file)->to_string;
+#     if (defined $note_file) {
+#         if ( -f $note_file) {
+#             $blueprint = Model::Tune->from_note_file($note_file);
+#  		} elsif (-f $bdf) {
+#             $blueprint = Model::Tune->from_note_file($bdf);
+#   		} else {
+#   			for my $f(sort {length $a <=> $b} $self->blueprints_dir->list->each) {
+#   				if ("$f" =~ /$note_file/) {
+#   					$blueprint = Model::Tune->from_note_file("$f");
+#   					last;
+#   				}
+#   			}
+#   		}
+#   		if(! $blueprint) {
+#         	warn "note_file does not exists $note_file";
+#         	return;
+#         }
+#     } elsif ($self->tune->blueprint_file) {
+#         $blueprint = Model::Tune->from_note_file($self->tune->blueprint_file);
+#     }
+#     say path($blueprint->note_file)->basename;
+#     $blueprint->notes2score;
+#     $blueprint->to_midi_file("$tmpfile");
+#     print `timidity $tmpfile`;
+#
+# }
 
 =head2 do_save
 
@@ -274,6 +226,17 @@ sub do_save_midi {
     $self->tune->to_midi_file($self->local_dir($self->blueprints_dir->child('notes'))->child($name));
 }
 
+=head2 get_blueprint_by_pathfile
+
+Same as Model::Tune->from_note_file("$name");
+
+=cut
+
+sub get_blueprint_by_pathfile {
+    my ($class,$name) = @_;
+    return Model::Tune->from_note_file("$name");
+}
+
 =head2 get_pathfile_by_name
 
 Return filepath for tune name part
@@ -296,7 +259,6 @@ sub get_pathfile_by_name {
                 my ($cand) = grep {$_=~ /$name/} map{$_->to_string} $self->blueprints_dir->list->each;
                 if ($cand) {
                     $filename = $cand;
-
                 } else {
                    warn "$filename or ".$self->blueprints_dir->child($filename).", $lbf or regex $name not found.";
                    return;

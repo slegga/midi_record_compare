@@ -13,6 +13,7 @@ use Carp;
 use List::Util qw/min max/;
 use Term::ANSIColor;
 use Algorithm::Diff qw/diff compact_diff/;
+use Mojo::File qw(tempfile path);
 
 use overload
     '""' => sub { shift->to_string({end=>"\n"}) }, fallback => 1;
@@ -616,6 +617,21 @@ sub notes2score {
     $self->scores(\@scores);
 	return $self;
 }
+
+=head2 play
+
+Takes self, filepathname
+Plays self->tune or given filepathname
+
+=cut
+
+sub play {
+    my $tmpfile = tempfile(DIR=>'/tmp');
+    $_[0]->to_midi_file("$tmpfile");
+    print `timidity $tmpfile`;
+}
+
+
 
 =head2 score2notes
 

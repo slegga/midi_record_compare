@@ -57,17 +57,31 @@ has prev_controller => sub { {} };
 has commands => sub{[
     [[qw/h help/],     0, 'This help text', sub{$_[0]->print_help}],
     [[qw/l list/],     1, 'List saved tunes.', sub{my $self =$_[0]; $self->tune->finish;$self->blueprints->do_list($_[1])}],
-    [[qw/p play/],     1, ' Play last tune. If none defaults to the not ended play.', sub{my $self =$_[0]; my $t = $self->tune->finish; $self->tune->do_play($_[1]//$t)}],
-    [[qw/pb playblueprint/],     1, ' Play compared blueprint. If none play none.', sub{$_[0]->tune->finish; $_[0]->tune->do_play_blueprint($_[1])}],
+    [[qw/p play/],     1, ' Play last played tune.', sub{my $self =$_[0]; my $t = $self->tune->finish; $t->play}],
+    [[qw/pb playblueprint/],     1, ' Play compared blueprint. If none play none.', sub{
+        my ($self, $name) = @ _;
+        my $filepath;
+        if ($name) {
+            $filepath = $self->blueprints->get_pathfile_by_name($name);
+        }
+        elsif ($self->comp_working) {
+            $filepath = $self->comp_working;
+        } else {
+            print STDERR "Notting to play. I do not know what to do\n";
+            return;
+        }
+        my $t =$self->blueprints->get_blueprint_by_pathfile($filepath);
+        $t->play;
+    }],
     [[qw/s save/],     1, 'Save play to disk as notes.', sub{my $t = $_[0]->tune->finish;	$_[0]->blueprints->do_save($t, $_[1])}],
     [[qw/c comp/],     0, 'Compare last tune with given name. If not name then test with --comp argument. 0=reset', sub{
         my ($self, $name)=@_;
         if (! $name) {
-            $self->comp('');
+            $self->comp_working('');
             say "Reset blueprint";
         } else {
             my $filename = $self->blueprints->get_pathfile_by_name($name);
-            $self->comp($filename);
+            $self->comp_working($filename);
         	$self->blueprints->do_comp($self->tune,$filename);
         }
     }],
@@ -77,6 +91,7 @@ has commands => sub{[
 ]};
 has blueprints => sub {Model::Blueprints->new};
 has tune => sub {Model::Tune->new};
+has 'comp_working';
 option  'comp=s', 'Compare play with this blueprint';
 option  'dryrun!',  'Do not expect a linked piano';
 option  'debug!',   'Print debug info';
@@ -196,9 +211,12 @@ sub stdin_read {
         ($cmd, $name)=split /\s+/, $bytes;
     }
     $self->silence_timer(-1);
+    if (! defined $self->comp_working && defined $self->comp) {
+        $self->comp_working($self->comp);
+    }
 	if(!defined $cmd) {
-		if (defined $self->comp) {
-			$self->blueprints->do_comp($self->tune, $self->comp);
+		if (defined $self->comp_working) {
+			$self->blueprints->do_comp($self->tune, $self->comp_working);
 		} else {
             my $t = $self->tune->finish;
 			$self->blueprints->do_comp($t,$self->blueprints->guess_blueprint($t));
