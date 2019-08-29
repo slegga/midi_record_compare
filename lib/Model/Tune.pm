@@ -350,7 +350,11 @@ sub evaluate_with_blueprint {
 	printf "%-16s %3.1f%%\n", "Note score:",       $self->note_score;
 	printf "%-16s %3.1f%%\n", "Length score:",     $self->length_score;
 	printf "%-16s %3.1f%%\n", "Delta beat score:", $self->delta_beat_score;
-	printf "%-16s %3.1f%%\n", "Total score:", (3 * $self->note_score + $self->length_score + $self->delta_beat_score + 2 * $self->delta_beat_score)/7;
+	my $tscore = (3 * $self->note_score + $self->length_score + $self->delta_beat_score + 2 * $self->delta_beat_score)/7;
+	if ($tscore < -100) {
+		$tscore = -100;
+	}
+	printf "%-16s %3.1f%%\n", "Total score:", $tscore;
 	return $self;
 }
 
