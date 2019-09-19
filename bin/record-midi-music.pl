@@ -56,8 +56,9 @@ has input_object => sub { Model::Input::ALSA->new };
 has prev_controller => sub { {} };
 has commands => sub{[
     [[qw/h help/],     0, 'This help text', sub{$_[0]->print_help}],
-    [[qw/l list/],     1, 'List saved tunes.', sub{my $self =$_[0]; $self->tune->finish;$self->blueprints->do_list($_[1])}],
-    [[qw/p play/],     1, ' Play last played tune.', sub{my $self =$_[0]; my $t = $self->tune->finish; $t->play}],
+    [[qw/l list/],     1, 'List saved tunes.', sub{
+        my $self =$_[0]; $self->finish;$self->blueprints->do_list($_[1])}],
+    [[qw/p play/],     1, ' Play last played tune.', sub{my $self =$_[0]; $self->finish; $self->tune->play}],
     [[qw/pb playblueprint/],     1, ' Play compared blueprint. If none play none.', sub{
         my ($self, $name) = @ _;
         my $filepath;
@@ -73,7 +74,7 @@ has commands => sub{[
         my $t =$self->blueprints->get_blueprint_by_pathfile($filepath);
         $t->play;
     }],
-    [[qw/s save/],     1, 'Save play to disk as notes.', sub{my $t = $_[0]->tune->finish;	$_[0]->blueprints->do_save($t, $_[1])}],
+    [[qw/s save/],     1, 'Save play to disk as notes.', sub{my $t = $_[0]->tune;	$_[0]->blueprints->do_save($t, $_[1])}],
     [[qw/c comp/],     0, 'Compare last tune with given name. If not name then test with --comp argument. 0=reset', sub{
         my ($self, $name)=@_;
         if (! $name) {
@@ -85,13 +86,19 @@ has commands => sub{[
         	$self->blueprints->do_comp($self->tune,$filename);
         }
     }],
-    [[qw/sm savemidi/],1, 'Save as midi file. Add .midi if not present in name.', sub{$_[0]->tune->finish;  $_[0]->blueprints->do_save_midi($_[1])}],
+    [[qw/sm savemidi/],1, 'Save as midi file. Add .midi if not present in name.', sub{$_[0]->finish;  $_[0]->blueprints->do_save_midi($_[1])}],
     [[qw/q quit/],     0, 'End session.',sub{$_[0]->do_quit}],
-    [[qw/defaults/],   0, 'Stop last tune and start on new.', sub{$_[0]->blueprints->finish()}],
+    [[qw/defaults/],   0, 'Stop last tune and start on new.', sub {
+        # my $self = $_[0];
+        # $self->finish;
+        # $self->blueprints->do_comp;
+        # $self->restart;
+    }]
 ]};
 has blueprints => sub {Model::Blueprints->new};
 has tune => sub {Model::Tune->new};
 has 'comp_working';
+has 'finished'; #tune is finished and can be
 option  'comp=s', 'Compare play with this blueprint';
 option  'dryrun!',  'Do not expect a linked piano';
 option  'debug!',   'Print debug info';
@@ -145,7 +152,9 @@ Saves as score in self->midi_events
 sub register_midi_event {
     my ($self, $event) = @_;
     return if ! defined $event;
-
+    if ($self->finished) {
+        $self->restart;
+    }
 	#if ($self->debug) {
     if ($event->[0] eq 'control_change') {
         my $crl = $self->prev_controller;
@@ -158,7 +167,7 @@ sub register_midi_event {
 
             #end tune if left pedal pressed
             if ($event->[3] == 67 && $event->[4]) {
-                $self->tune($self->tune->finish);
+                $self->finish;
                 $self->blueprints->do_comp($self->tune, $self->blueprints->guess_blueprint($self->tune));
 
                 return;
@@ -175,8 +184,8 @@ sub register_midi_event {
     }
 	#}
     if ($event->[0] eq 'port_unsubscribed') { # piano is turned off.
-        my $t = $self->tune->finish;
-        $self->blueprints->do_comp($t,$self->blueprints->guess_blueprint($t));
+        $self->finish;
+        $self->blueprints->do_comp($self->tune,$self->blueprints->guess_blueprint($self->tune));
         say 'Forced quit';
         $self->do_quit;
         return;
@@ -195,6 +204,24 @@ sub register_midi_event {
     	to_json($event);
     }
 
+}
+
+# make ready for a new emtpy tune
+sub restart {
+    my $self = shift;
+    $self->tune(Model::Tune->new); # clear history
+    $self->input_object->reset_time();
+    $self->finished(0);
+    return $self;
+}
+
+#finish mark tune as ended
+
+sub finish {
+    my $self = shift;
+    $self->tune($self->tune->finish);
+    $self->finished(1);
+    return $self;
 }
 
 # Read note pressed.
@@ -218,8 +245,8 @@ sub stdin_read {
 		if (defined $self->comp_working) {
 			$self->blueprints->do_comp($self->tune, $self->comp_working);
 		} else {
-            my $t = $self->tune->finish;
-			$self->blueprints->do_comp($t,$self->blueprints->guess_blueprint($t));
+            $self->finish;
+			$self->blueprints->do_comp($self->tune,$self->blueprints->guess_blueprint($self->tune));
 		}
 	} else {
 		for my $c(@{$self->commands}) {
@@ -237,8 +264,6 @@ sub stdin_read {
 		}
 	}
 
-    $self->tune->in_midi_events([]); # clear history
-    $self->input_object->reset_time();
 }
 
 sub print_help {
