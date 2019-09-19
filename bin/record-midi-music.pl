@@ -11,6 +11,7 @@ use FindBin;
 use lib "$FindBin::Bin/../../utilities-perl/lib";
 use lib "$FindBin::Bin/../lib";
 use Model::Blueprints;
+use Model::BlueprintsExt;
 use Model::Input::ALSA;
 use SH::ScriptX;
 use Mojo::Base 'SH::ScriptX';
@@ -95,14 +96,21 @@ has commands => sub{[
         # $self->restart;
     }]
 ]};
-has blueprints => sub {Model::Blueprints->new};
+has blueprints => sub {
+    my $self = shift;
+    if ($self->api) {
+        Model::BlueprintsExt->new
+    } else {
+        Model::Blueprints->new;
+    }
+    };
 has tune => sub {Model::Tune->new};
 has 'comp_working';
 has 'finished'; #tune is finished and can be
 option  'comp=s', 'Compare play with this blueprint';
 option  'dryrun!',  'Do not expect a linked piano';
 option  'debug!',   'Print debug info';
-
+option 'api!',  'Get blueprints from API';
 
 
 sub main {

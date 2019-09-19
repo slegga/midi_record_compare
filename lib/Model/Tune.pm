@@ -475,27 +475,18 @@ sub from_midi_file {
 
 }
 
-=head2 from_note_file
+=head2 from_note_file_content
 
-Create a new Model::Tune object baset on note file.
-Notes is registered with notefile data like (numerator,delta_place_numerator
-, length_numerator, length_name, note_name, denominator)
-Dies if not file is set.
+Input is the content of at note file, either from local disk or external api
 
 =cut
 
-sub from_note_file {
-    my $class = shift;
-    my $self = $class->new(note_file => shift);
-    die "note_file is not set" if ! $self->note_file;
-    die "Cant be midi file" if $self->note_file =~/.midi?$/i;
-    my $path = path( $self->note_file );
-    if (!-e $path) {
-        warn "Unknown file ".$path->to_abs;
-    }
 
-    # remove old comments
-    my $content = $path->slurp;
+sub from_note_file_content {
+    my $class = shift;
+    my $content = shift;
+    my $self = $class->new;
+
     my $newcont='';
     my %input;
     my @notes = ();
@@ -514,15 +505,12 @@ sub from_note_file {
     }
     my $beat = Model::Beat->new(integer => $self->startbeat, denominator => $self->denominator);
 
-    #read notes
-    #warn "#".$beat;
-    # Remove comments and add new
     for my $line (split/\n/,$content) {
         $line =~ s/\s*\#.*$//;
         last if $line eq '__END__';
         next if ! $line;
         if ($line=~/([\w\_\-]+)\s*=\s*(.+)$/) {
-            next
+            next;
         } else {
             my ($delta_place_numerator, $length_numerator, $note_name) = split(/\;/,$line);
             $beat = $beat + $delta_place_numerator;
@@ -539,9 +527,32 @@ sub from_note_file {
     }
 
     @notes = grep { defined $_ } @notes;
-    die"No notes $path" if ! @notes;
     $self->notes(\@notes);
     return $self;
+}
+
+=head2 from_note_file
+
+Create a new Model::Tune object baset on note file.
+Notes is registered with notefile data like numerator,delta_place_numerator, length_numerator, length_name, note_name, denominator
+Dies if not file is set.
+
+=cut
+
+sub from_note_file {
+    my $class = shift;
+    my $note_file = shift;
+    die "note_file is not set" if ! $note_file;
+    die "Cant be midi file" if $note_file =~/.midi?$/i;
+    my $path = path( $note_file );
+    if (!-e $path) {
+        warn "Unknown file ".$path->to_abs;
+    }
+
+    # remove old comments
+    return $class->from_note_file_content($path->slurp);
+#    die "No notes $path" if ! @notes;
+
 }
 
 =head2 get_beat_sum
