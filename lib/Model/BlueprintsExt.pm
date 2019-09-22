@@ -70,7 +70,9 @@ sub init {
     my $list = from_json($self->ua->get("$luri")->result->body);
     p $list;
     for my $b (@$list) {
-        my $tmp = Model::Tune->from_note_file("$b");
+    	$list->path("item/$b");
+    	my $cont = $self->ua->get("$luri")->result->body;
+        my $tmp = Model::Tune->from_note_file_content("$cont");
         my $num = scalar @{$tmp->notes};
         my $firstnotes;
         push @$firstnotes, $tmp->notes->[$_]->note for (0 .. 9);

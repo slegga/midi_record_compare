@@ -10,6 +10,7 @@ use Term::ANSIColor;
 use Model::Tune;
 use File::Modified;
 use Data::Printer;
+use Mojo::File 'path';
 use Clone 'clone';
 
 =head1 NAME
@@ -49,8 +50,8 @@ option 'nowait!','No waiting',{default=>0};
 
 sub main {
     my $self = shift;
-    my ($tunefile) = ($self->extra_options)[0];
-    my $tune = Model::Tune->from_note_file($tunefile);
+    my ($file) = path(($self->extra_options)[0]);
+    my $tune = Model::Tune->from_string($file->slurp);
     my $new_scale;
     warn $tune->scale;
     if ($self->scale) {
@@ -68,12 +69,12 @@ sub main {
         $tune->denominator($self->ticprbeat);
     }
    	$self->print_colornotes($tune);
-	my $d =  File::Modified->new(files=>[$tunefile,$0]);
+	my $d =  File::Modified->new(files=>["$file",$0]);
     while (1) {
     	my (@changed) =$d->changed;
     	#say @changed;
 		if ( @changed ) {
-		    my $tune = Model::Tune->from_note_file($tunefile);
+		    my $tune = Model::Tune->from_string($file->slurp);
 			say "\n";
    			$self->print_colornotes($tune);
    			$d->update();

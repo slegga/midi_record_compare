@@ -68,7 +68,7 @@ sub init {
     # load blueprints
     my $self = shift;
     for my $b ($self->blueprints_dir->list->each) {
-        my $tmp = Model::Tune->from_note_file("$b");
+        my $tmp = Model::Tune->from_string($b->slurp);
         my $num = scalar @{$tmp->notes};
         my $firstnotes;
         push @$firstnotes, $tmp->notes->[$_]->note for (0 .. 9);
@@ -111,7 +111,7 @@ sub do_comp {
         #score:  ['note', startitme, length, channel, note, velocity],
         $tune = (Model::Tune->from_midi_score($score));
     }
-    my $tune_blueprint= Model::Tune->from_note_file($filename);
+    my $tune_blueprint= Model::Tune->from_string($filename->slurp);
     $tune->denominator($tune_blueprint->denominator);
 
     $tune->calc_shortest_note;
@@ -211,7 +211,7 @@ sub do_save {
     my ($self, $tune, $name) = @_;
     return if !$name;
     $name .= '.txt' if ($name !~/\.midi?$/);
-    $tune->to_note_file($self->local_dir($self->blueprints_dir->child('notes'))->child($name));
+    $self->local_dir($self->blueprints_dir->child('notes'))->child($name)->spurt($tune->to_string);
 }
 
 =head2 do_save_midi

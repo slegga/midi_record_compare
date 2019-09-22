@@ -1,6 +1,5 @@
 package Model::Tune;
 use Mojo::Base -base;
-use Mojo::File 'path';
 use Model::Note;
 use Model::Beat;
 use Model::Utils;
@@ -14,7 +13,7 @@ use List::Util qw/min max/;
 use Term::ANSIColor;
 use Algorithm::Diff qw/diff compact_diff/;
 use Mojo::File qw(tempfile path);
-
+use IO::Scalar;
 use overload
     '""' => sub { shift->to_string({end=>"\n"}) }, fallback => 1;
 
@@ -60,6 +59,8 @@ Model::Tune - Handle tunes
 
 ('note_off', dtime, channel, note, velocity)
 ('note_on',  dtime, channel, note, velocity)
+
+No file interaction. Consumer object is responsible for writning to disk.
 
 =head1 METHODS
 
@@ -475,14 +476,14 @@ sub from_midi_file {
 
 }
 
-=head2 from_note_file_content
+=head2 from_string
 
 Input is the content of at note file, either from local disk or external api
 
 =cut
 
 
-sub from_note_file_content {
+sub from_string {
     my $class = shift;
     my $content = shift;
     my $self = $class->new;
@@ -531,29 +532,29 @@ sub from_note_file_content {
     return $self;
 }
 
-=head2 from_note_file
-
-Create a new Model::Tune object baset on note file.
-Notes is registered with notefile data like numerator,delta_place_numerator, length_numerator, length_name, note_name, denominator
-Dies if not file is set.
-
-=cut
-
-sub from_note_file {
-    my $class = shift;
-    my $note_file = shift;
-    die "note_file is not set" if ! $note_file;
-    die "Cant be midi file" if $note_file =~/.midi?$/i;
-    my $path = path( $note_file );
-    if (!-e $path) {
-        warn "Unknown file ".$path->to_abs;
-    }
-
-    # remove old comments
-    return $class->from_note_file_content($path->slurp);
-#    die "No notes $path" if ! @notes;
-
-}
+# =head2 from_note_file
+#
+# Create a new Model::Tune object baset on note file.
+# Notes is registered with notefile data like numerator,delta_place_numerator, length_numerator, length_name, note_name, denominator
+# Dies if not file is set.
+#
+# =cut
+#
+# sub from_note_file {
+#     my $class = shift;
+#     my $note_file = shift;
+#     die "note_file is not set" if ! $note_file;
+#     die "Cant be midi file" if $note_file =~/.midi?$/i;
+#     my $path = path( $note_file );
+#     if (!-e $path) {
+#         warn "Unknown file ".$path->to_abs;
+#     }
+#
+#     # remove old comments
+#     return $class->from_note_file_content($path->slurp);
+# #    die "No notes $path" if ! @notes;
+#
+# }
 
 =head2 get_beat_sum
 
@@ -820,24 +821,24 @@ sub to_data_split_hands {
 	return $return;
 }
 
-=head2 to_midi_file
+=head2 to_midi_file_content
 
 Takes midi filename. If none use $class->midi_file instead.
 Write midi file to disk based on score data (and not note data(must use note2score first)).
 
 =cut
 
-sub to_midi_file {
+sub to_midi_file_content {
     my $self =shift;
-    my $midi_file = shift;
-    if (! $midi_file) {
-        $midi_file = $self->midi_file;
-    } else {
-        $self->midi_file($midi_file);
-    }
-
-    my $file = path($midi_file);
-    say $file;
+    # my $midi_file = shift;
+    # if (! $midi_file) {
+    #     $midi_file = $self->midi_file;
+    # } else {
+    #     $self->midi_file($midi_file);
+    # }
+    #
+    # my $file = path($midi_file);
+#    say $file;
     my $score_r=[];
     for my $score(@{$self->scores}) {
         # ('note', starttime, duration, channel, note, velocity)
@@ -856,35 +857,38 @@ sub to_midi_file {
 	my $opus = MIDI::Opus->new(
 	 {  'format' => 1,  'ticks' =>120 # to slow :$self->shortest_note_time
      , 'tracks' => [ $one_track ] }	);
-        die "Missing midi_file. Do not know what todo" if (! $midi_file);
+#        die "Missing midi_file. Do not know what todo" if (! $midi_file);
     $opus->dump;
     print '['.join (', ',@$_)."]\n" for  $opus->tracks_r()->[0]->events;
-	$opus->write_to_file($midi_file);
-    return $self;
+    my $data;
+    my $SH = new IO::Scalar \$data;
+	$opus->write_to_handle($SH );
+    return $data;
+    #return $self;
 }
 
-=head2 to_note_file
-
-Write tune to note file
-
-=cut
-
-sub to_note_file {
-    my $self =shift;
-    my $note_file = shift;
-    $note_file = $self->note_file if ! $note_file;
-    my $file =  path($note_file);
-    say $file;
-    if (! $note_file) {
-        say "Missing name SYNTAX: s <SONGNAME>";
-        return $self;
-    }
-
-    my $content = $self->to_string({end=>"\n"});
-    die "No content" if ! $content;
-    $file->spurt($content);
-    return $self;
-}
+# =head2 to_note_file
+#
+# Write tune to note file
+#
+# =cut
+#
+# sub to_note_file {
+#     my $self =shift;
+# #    my $note_file = shift;
+#     $note_file = $self->note_file if ! $note_file;
+#     my $file =  path($note_file);
+#     say $file;
+#     if (! $note_file) {
+#         say "Missing name SYNTAX: s <SONGNAME>";
+#         return $self;
+#     }
+#
+#     my $content = $self->to_string({end=>"\n"});
+#     die "No content" if ! $content;
+#     $file->spurt($content);
+#     return $self;
+# }
 
 =head2 to_string
 

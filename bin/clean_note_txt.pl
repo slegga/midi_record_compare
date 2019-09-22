@@ -9,6 +9,7 @@ use SH::ScriptX;
 use Mojo::Base 'SH::ScriptX';
 #use Carp::Always;
 use Model::Tune;
+use Mojo::File 'path';
 
 =head1 NAME
 
@@ -32,9 +33,9 @@ option 'reduce_octave!', 'Move tune one octave down';
     my $self = shift;
     my @e = $self->extra_options;
     say Dumper \@e;
-    my $filename = ($self->extra_options)[0];
-    die "No file given" if ! $filename;
-    my $tune = Model::Tune->from_note_file($filename);
+    my $file = path(($self->extra_options)[0]);
+    die "No file given" if ! "$file";
+    my $tune = Model::Tune->from_string($file->slurp);
     my $new_scale;
     if ($self->scale) {
         $new_scale = $self->scale;
@@ -57,7 +58,7 @@ option 'reduce_octave!', 'Move tune one octave down';
     }
 
     say "$tune";
-    $tune->to_note_file; # will write notes based on $tune->scale
+    $file->spurt($tune->to_string); # will write notes based on $tune->scale
 }
 
 __PACKAGE__->new(options_cfg=>{extra=>1})->main();

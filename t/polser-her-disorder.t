@@ -9,9 +9,9 @@ use Data::Dumper;
 use Carp::Always;
 my $bluepr_file = path("$FindBin::Bin/../blueprints/polser_her.txt");
 my $played_file = path("$FindBin::Bin/notes/polser-her-disorder.txt");
-my $bluepr_tune = Model::Tune->from_note_file("$bluepr_file");
+my $bluepr_tune = Model::Tune->from_string($bluepr_file->slurp);
 is(Model::Utils::Scale::guess_scale_from_notes($bluepr_tune->notes),'c_dur','Guessed correct');
-my $played_tune = Model::Tune->from_note_file("$played_file");
+my $played_tune = Model::Tune->from_string($played_file->slurp);
 
 diag $played_tune->evaluate_with_blueprint($bluepr_tune);
 ok(1,'dummy');
