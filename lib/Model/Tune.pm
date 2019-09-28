@@ -25,7 +25,7 @@ has 'scores' => sub {return []}; # hash_ref
 has 'notes' =>sub {return []}; # Model::Note
 has midi_file  => '';
 has note_file  => '';
-
+has name => '';
 has scale => 'c_dur';
 # points:
 has blueprint_file =>'';
@@ -867,28 +867,6 @@ sub to_midi_file_content {
     #return $self;
 }
 
-# =head2 to_note_file
-#
-# Write tune to note file
-#
-# =cut
-#
-# sub to_note_file {
-#     my $self =shift;
-# #    my $note_file = shift;
-#     $note_file = $self->note_file if ! $note_file;
-#     my $file =  path($note_file);
-#     say $file;
-#     if (! $note_file) {
-#         say "Missing name SYNTAX: s <SONGNAME>";
-#         return $self;
-#     }
-#
-#     my $content = $self->to_string({end=>"\n"});
-#     die "No content" if ! $content;
-#     $file->spurt($content);
-#     return $self;
-# }
 
 =head2 to_string
 
@@ -910,7 +888,7 @@ has ['hand_left_max','hand_right_min','hand_default'];
 	my $return='';
     for my $name (qw/denominator shortest_note_time beat_score scale startbeat
     	allowed_note_lengths allowed_note_types hand_left_max hand_right_min hand_default
-    	comment /) {
+    	comment name/) {
 
     	if ($self->$name ) {
     		my $value = $self->$name;

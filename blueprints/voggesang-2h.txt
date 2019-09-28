@@ -2,6 +2,7 @@ denominator=4
 shortest_note_time=78
 beat_score=80
 scale=c_dur
+name=Voggesang
 0;1;G4        # 0.0-1/4
 0;4;G3        # 0.0-1/1
 0;4;C3        # 0.0-1/1

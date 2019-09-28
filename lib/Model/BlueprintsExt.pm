@@ -1,7 +1,7 @@
 package Model::BlueprintsExt;
 use Mojo::Base -base;
 use MIDI;
-use Encode 'decode';
+use Encode qw/decode encode/;
 use open ':encoding(UTF-8)';
 use Mojo::UserAgent;
 # TODO fjern linjen under. Ingen printing fra denne modulen
@@ -12,6 +12,7 @@ use Clone 'clone';
 use Model::Utils;
 use Model::Tune;
 use Data::Printer;
+
 
 =head1 NAME
 
@@ -67,12 +68,24 @@ sub init {
     my $luri = clone $self->blueprints_uri;
     $luri = $luri->path('list');
     say "$luri";
-    my $list = from_json($self->ua->get("$luri")->result->body);
+    my $body = $self->ua->get("$luri")->result->body;
+#    say $body;
+    $body = decode("UTF-8", $body);
+#    $body = decode("UTF-8", $body);
+    say $body;
+    my $list = from_json($body);
     p $list;
     for my $b (@$list) {
-    	$list->path("item/$b");
-    	my $cont = $self->ua->get("$luri")->result->body;
-        my $tmp = Model::Tune->from_note_file_content("$cont");
+    	$luri->path("item")->query(name => $b);
+    	my $tx = $self->ua->get("$luri")->result;
+    	if (!$tx->body) {
+    		die ($tx->error)
+    	}
+    	my $con = from_json($tx->body);
+    	p $con;
+#    	$con =~ s/\\n/\n/g;
+
+        my $tmp = Model::Tune->from_string($con->{tune});
         my $num = scalar @{$tmp->notes};
         my $firstnotes;
         push @$firstnotes, $tmp->notes->[$_]->note for (0 .. 9);
@@ -156,7 +169,22 @@ sub do_list {
     my ($self, $name) = @_;
     say '';
     say "notes/";
+
+# should make a common method for list blueprints
+# {
+#     my $luri = clone $self->blueprints_uri;
+#     $luri = $luri->path('list');
+#     say "$luri";
+#     my $body = $self->ua->get("$luri")->result->body;
+# #    say $body;
+#     $body = decode("UTF-8", $body);
+#     $body = decode("UTF-8", $body);
+#     say $body;
+#     my $list = from_json($body);
+# }
     my $notes_dir = path("$FindBin::Bin/../notes");
+
+
     say $notes_dir->list_tree->map(sub{basename($_)})->join("\n");
     say $notes_dir->list_tree->map(sub{basename($_)})->join("\n");
 

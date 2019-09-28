@@ -1,3 +1,4 @@
+name=På slottet
 denominator=6
 shortest_note_time=58.695652173913
 beat_score=15

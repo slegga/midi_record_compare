@@ -6,6 +6,7 @@ allowed_note_lengths=1,2,4,6,8,12,16
 allowed_note_types=stacato,all_pause_lengths
 hand_left_max=C4
 hand_right_min=C4
+name=Skøytevals
 #0;2;Hm-2      # 0.0-1/4
 0;6;C4        # 0.0-3/4
 2;1;G4        # 0.2-1/8

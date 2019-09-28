@@ -94,11 +94,11 @@ sub do_comp {
         return
     }
     say "compare $filename";
-
+	my $file = path($filename);
     #midi_event: ['note_on', dtime, channel, note, velocity]
     if  ( @{$tune->in_midi_events } < 8 ) {
         if (scalar @{$tune->notes} <8) {
-            if ($filename) {
+            if ("$file") {
                 say "Notthing to work with. Less than 8 notes";
                 return;
             } else {
@@ -111,7 +111,7 @@ sub do_comp {
         #score:  ['note', startitme, length, channel, note, velocity],
         $tune = (Model::Tune->from_midi_score($score));
     }
-    my $tune_blueprint= Model::Tune->from_string($filename->slurp);
+    my $tune_blueprint= Model::Tune->from_string($file->slurp);
     $tune->denominator($tune_blueprint->denominator);
 
     $tune->calc_shortest_note;
@@ -136,7 +136,7 @@ sub do_comp {
     #$self->shortest_note_time($self->tune->shortest_note_time);
     $tune->evaluate_with_blueprint($tune_blueprint);
     printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$tune->shortest_note_time,$tune->denominator;
-    printf "Navn:          %s\n", color('blue') . basename($tune_blueprint->note_file) . color('reset');
+    printf "Navn:          %s\n", color('blue') . decode('UTF-8',basename($tune_blueprint->name||$tune_blueprint->note_file) ) . color('reset');
     printf "Korteste note: %s\n", $tune->shortest_note_time;
     printf "Totaltid:      %5.2f\n", $tune->totaltime;
     return $self;
