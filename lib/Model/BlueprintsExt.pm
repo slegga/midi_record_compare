@@ -66,14 +66,15 @@ sub init {
     # load blueprints
     my $self = shift;
     my $luri = clone $self->blueprints_uri;
-    $luri = $luri->path('list');
-    say "$luri";
-    my $body = $self->ua->get("$luri")->result->body;
+#    $luri = $luri->path('list');
+#    say "$luri";
+#    my $body = $self->ua->get("$luri")->result->body;
 #    say $body;
-    $body = decode("UTF-8", $body);
 #    $body = decode("UTF-8", $body);
-    say $body;
-    my $list = from_json($body);
+#    $body = decode("UTF-8", $body);
+#    say $body;
+#    my $list = from_json($body);
+	my $list = $self->_get_api_data('list');
     p $list;
     for my $b (@$list) {
     	$luri->path("item")->query(name => $b);
@@ -84,7 +85,7 @@ sub init {
     	my $con = from_json($tx->body);
     	p $con;
 #    	$con =~ s/\\n/\n/g;
-
+		die "Undef name" if ! $con;
         my $tmp = Model::Tune->from_string($con->{tune});
         my $num = scalar @{$tmp->notes};
         my $firstnotes;
@@ -166,31 +167,10 @@ List files in the notes and blueprints directory
 =cut
 
 sub do_list {
-    my ($self, $name) = @_;
+    my ($self) = @_;
     say '';
-    say "notes/";
-
-# should make a common method for list blueprints
-# {
-#     my $luri = clone $self->blueprints_uri;
-#     $luri = $luri->path('list');
-#     say "$luri";
-#     my $body = $self->ua->get("$luri")->result->body;
-# #    say $body;
-#     $body = decode("UTF-8", $body);
-#     $body = decode("UTF-8", $body);
-#     say $body;
-#     my $list = from_json($body);
-# }
-    my $notes_dir = path("$FindBin::Bin/../notes");
-
-
-    say $notes_dir->list_tree->map(sub{basename($_)})->join("\n");
-    say $notes_dir->list_tree->map(sub{basename($_)})->join("\n");
-
-    say '';
-    say "blueprints/";
-    say decode('utf8',$self->blueprints_dir->list_tree->map(sub{basename($_)})->join("\n"));
+	my $list = $self->_get_api_data('list');
+	say "list:".join("\n", @$list);
 }
 
 
@@ -352,15 +332,15 @@ Find local dir. Where to save tunes.
 
 =cut
 
-sub local_dir {
-	my ($self, $mojofiledir) =@_;
-
-    my $mf = path("$mojofiledir");
-	my @l = @$mf;
-	my $remove=1;
-	splice(@l,$#$mf-1, $remove, 'local');
-	return path(@l);
-}
+# local_dir {
+#	my ($self, $mojofiledir) =@_;
+#
+#    my $mf = path("$mojofiledir");
+#	my @l = @$mf;
+#	my $remove=1;
+#	splice(@l,$#$mf-1, $remove, 'local');
+#	return path(@l);
+#}
 
 =head2 pn
 
@@ -374,5 +354,17 @@ Return note for print
 #    return Model::Utils::Scale::value2notename($self->tune->scale,$note);
 #}
 
+#
+#  _get_api_data('path') - return api structure.
+#
 
+sub _get_api_data {
+	my ($self,$path) = @_;
+    my $luri = clone $self->blueprints_uri;
+	$luri = $luri->path('list');
+	my $body = $self->ua->get("$luri")->result->body;
+	$body = decode("UTF-8", $body);
+	say "_get_api_data:".$body;
+	return from_json($body);
+}
 1;

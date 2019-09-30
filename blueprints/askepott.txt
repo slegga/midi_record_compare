@@ -5,6 +5,7 @@ scale=f_dur
 hand_left_max=F4
 hand_right_min=F4
 comment=Askepott
+name=Askepott
 0;2;A4        # 0.0-1/2
 0;3;F3        # 0.0-3/4
 2;1;G4        # 0.2-1/4
