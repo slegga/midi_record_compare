@@ -66,16 +66,8 @@ sub init {
     # load blueprints
     my $self = shift;
     my $luri = clone $self->blueprints_uri;
-#    $luri = $luri->path('list');
-#    say "$luri";
-#    my $body = $self->ua->get("$luri")->result->body;
-#    say $body;
-#    $body = decode("UTF-8", $body);
-#    $body = decode("UTF-8", $body);
-#    say $body;
-#    my $list = from_json($body);
 	my $list = $self->_get_api_data('list');
-    p $list;
+#    p $list;
     for my $b (@$list) {
     	$luri->path("item")->query(name => $b);
     	my $tx = $self->ua->get("$luri")->result;
@@ -83,8 +75,7 @@ sub init {
     		die ($tx->error)
     	}
     	my $con = from_json($tx->body);
-    	p $con;
-#    	$con =~ s/\\n/\n/g;
+#    	p $con;
 		die "Undef name" if ! $con;
         my $tmp = Model::Tune->from_string($con->{tune});
         my $num = scalar @{$tmp->notes};
