@@ -50,7 +50,7 @@ Use API
 =cut
 
 has blueprints_uri => sub {Mojo::URL->new('https://slegga.0x.no/api/piano/blueprints/')};
-has blueprints => sub{[]}; # [
+has blueprints => sub{{}}; # [
 has ua =>sub {Mojo::UserAgent->new};
 
 =head1 METHODS
@@ -65,6 +65,7 @@ Initialize Blueprints object loads all the blueprints
 sub init {
     # load blueprints
     my $self = shift;
+    my $blueprints = $self->blueprints;
     my $luri = clone $self->blueprints_uri;
 	my $list = $self->_get_api_data('list');
 #    p $list;
@@ -81,9 +82,9 @@ sub init {
         my $num = scalar @{$tmp->notes};
         my $firstnotes;
         push @$firstnotes, $tmp->notes->[$_]->note for (0 .. 9);
-        push @{$self->blueprints},[$firstnotes , "$b"];
+        $blueprints->{$b} = [$firstnotes , "$b"];
     }
-
+    $self->blueprints($blueprints);
 }
 
 =head2 do_comp
@@ -120,7 +121,7 @@ sub do_comp {
         #score:  ['note', startitme, length, channel, note, velocity],
         $tune = (Model::Tune->from_midi_score($score));
     }
-    my $tune_blueprint= Model::Tune->from_note_file($filename);
+    my $tune_blueprint= Model::Tune->from_string(path($filename));
     $tune->denominator($tune_blueprint->denominator);
 
     $tune->calc_shortest_note;
@@ -213,8 +214,10 @@ Save played tune to disk in local/notes directory as notes (txt)
 sub do_save {
     my ($self, $tune, $name) = @_;
     return if !$name;
-    $name .= '.txt' if ($name !~/\.midi?$/);
-    $tune->to_note_file($self->local_dir($self->blueprints_dir->child('notes'))->child($name));
+    $name .= '.txt';
+    my $string = $tune->to_string;
+    $self->_api_data('post','/blueprints',{name=>$name, body=>$string});
+    return $self;
 }
 
 =head2 do_save_midi
@@ -226,7 +229,9 @@ Save played tune as midi
 sub do_save_midi {
     my ($self, $name) = @_;
     $name .= '.midi' if ($name !~/\.midi?$/);
-    $self->tune->to_midi_file($self->local_dir($self->blueprints_dir->child('notes'))->child($name));
+    my $string = $self->tune->to_midi_content;
+    $self->_api_data('post','/blueprints',{name=>$name, body=>$string});
+    return $self;
 }
 
 =head2 get_blueprint_by_pathfile
@@ -287,7 +292,7 @@ sub guess_blueprint {
     }
 
     # Reduce number of candidates for each note played until one.
-    my @candidates = @{$self->blueprints};
+    my @candidates = values %{$self->blueprints};
     my $i =0;
     my $bestname;
     for my $n( map {$_->note} @{$tune->notes}) {
@@ -349,13 +354,14 @@ Return note for print
 #  _get_api_data('path') - return api structure.
 #
 
-sub _get_api_data {
-	my ($self,$path) = @_;
+sub _api_data {
+	my ($self,$method,$path,$params) = @_;
     my $luri = clone $self->blueprints_uri;
 	$luri = $luri->path('list');
-	my $body = $self->ua->get("$luri")->result->body;
+	my $body;
+    $body = $self->ua->$method("$luri" => {Accept => '*/*'} => json => ,$params)->result->body;
 	$body = decode("UTF-8", $body);
-	say "_get_api_data:".$body;
+	say "_api_data:".$body;
 	return from_json($body);
 }
 1;
