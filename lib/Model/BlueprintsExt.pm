@@ -67,7 +67,7 @@ sub init {
     my $self = shift;
     my $blueprints = $self->blueprints;
     my $luri = clone $self->blueprints_uri;
-	my $list = $self->_get_api_data('list');
+	my $list = $self->_api_data('get','list');
 #    p $list;
     for my $b (@$list) {
     	$luri->path("item")->query(name => $b);
@@ -161,7 +161,7 @@ List files in the notes and blueprints directory
 sub do_list {
     my ($self) = @_;
     say '';
-	my $list = $self->_get_api_data('list');
+	my $list = $self->_api_data('get','list');
 	say "list:".join("\n", @$list);
 }
 
