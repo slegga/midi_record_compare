@@ -532,29 +532,6 @@ sub from_string {
     return $self;
 }
 
-# =head2 from_note_file
-#
-# Create a new Model::Tune object baset on note file.
-# Notes is registered with notefile data like numerator,delta_place_numerator, length_numerator, length_name, note_name, denominator
-# Dies if not file is set.
-#
-# =cut
-#
-# sub from_note_file {
-#     my $class = shift;
-#     my $note_file = shift;
-#     die "note_file is not set" if ! $note_file;
-#     die "Cant be midi file" if $note_file =~/.midi?$/i;
-#     my $path = path( $note_file );
-#     if (!-e $path) {
-#         warn "Unknown file ".$path->to_abs;
-#     }
-#
-#     # remove old comments
-#     return $class->from_note_file_content($path->slurp);
-# #    die "No notes $path" if ! @notes;
-#
-# }
 
 =head2 get_beat_sum
 
@@ -643,7 +620,7 @@ Plays self->tune or given filepathname
 
 sub play {
     my $tmpfile = tempfile(DIR=>'/tmp');
-    $_[0]->to_midi_file("$tmpfile");
+    $tmpfile->spurt($_[0]->to_midi_file_content("$tmpfile"));
     print `timidity $tmpfile`;
 }
 

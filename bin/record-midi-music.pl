@@ -75,7 +75,9 @@ has commands => sub{[
         my $t =$self->blueprints->get_blueprint_by_pathfile($filepath);
         $t->play;
     }],
-    [[qw/s save/],     1, 'Save play to disk as notes.', sub{my $t = $_[0]->tune;	$_[0]->blueprints->do_save($t, $_[1])}],
+    [[qw/s save/],     1, 'Save play to disk as notes.', sub{
+        say "save action $_[1]";
+        my $t = $_[0]->tune;	$_[0]->blueprints->do_save($t, $_[1])}],
     [[qw/c comp/],     0, 'Compare last tune with given name. If not name then test with --comp argument. 0=reset', sub{
         my ($self, $name)=@_;
         if (! $name) {

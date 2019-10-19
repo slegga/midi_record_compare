@@ -41,7 +41,7 @@ Use API
 
 =item shortest_note_time: How long the shortest note is in length.
 
-=item blueprints_dir:     Where the blueprints are. Default to ./blueprints
+=item blueprints_uri:     Where the blueprints are. Default to /blueprints
 
 =item blueprints:         Loaded on startup. Container for all blueprints as Tune objects.
 
@@ -167,43 +167,43 @@ sub do_list {
 
 
 
-# =head2 do_play_blueprint
-#
-# Play compared blueprint
-#
-# =cut
-#
-# sub do_play_blueprint {
-#     my ($self, $note_file) = @_;
-#     my $tmpfile = tempfile(DIR=>'/tmp');
-#     my $blueprint;
-#     my $bdf = $self->blueprints_dir->child($note_file)->to_string;
-#     if (defined $note_file) {
-#         if ( -f $note_file) {
-#             $blueprint = Model::Tune->from_note_file($note_file);
-#  		} elsif (-f $bdf) {
-#             $blueprint = Model::Tune->from_note_file($bdf);
-#   		} else {
-#   			for my $f(sort {length $a <=> $b} $self->blueprints_dir->list->each) {
-#   				if ("$f" =~ /$note_file/) {
-#   					$blueprint = Model::Tune->from_note_file("$f");
-#   					last;
-#   				}
-#   			}
-#   		}
-#   		if(! $blueprint) {
-#         	warn "note_file does not exists $note_file";
-#         	return;
-#         }
-#     } elsif ($self->tune->blueprint_file) {
-#         $blueprint = Model::Tune->from_note_file($self->tune->blueprint_file);
-#     }
-#     say path($blueprint->note_file)->basename;
-#     $blueprint->notes2score;
-#     $blueprint->to_midi_file("$tmpfile");
-#     print `timidity $tmpfile`;
-#
-# }
+=head2 do_play_blueprint
+
+Play compared blueprint
+
+=cut
+
+sub do_play_blueprint {
+    my ($self, $note_file) = @_;
+    my $tmpfile = tempfile(DIR=>'/tmp'); # local file
+    my $blueprint;
+    my $bdf = $self->blueprints_dir->child($note_file)->to_string;
+    if (defined $note_file) {
+        if ( -f $note_file) {
+            $blueprint = Model::Tune->from_note_file($note_file);
+ 		} elsif (-f $bdf) {
+            $blueprint = Model::Tune->from_note_file($bdf);
+  		} else {
+  			for my $f(sort {length $a <=> $b} $self->blueprints_dir->list->each) {
+  				if ("$f" =~ /$note_file/) {
+  					$blueprint = Model::Tune->from_note_file("$f");
+  					last;
+  				}
+  			}
+  		}
+  		if(! $blueprint) {
+        	warn "note_file does not exists $note_file";
+        	return;
+        }
+    } elsif ($self->tune->blueprint_file) {
+        $blueprint = Model::Tune->from_note_file($self->tune->blueprint_file);
+    }
+    say path($blueprint->note_file)->basename;
+    $blueprint->notes2score;
+    $blueprint->to_midi_file("$tmpfile");
+    print `timidity $tmpfile`;
+
+}
 
 =head2 do_save
 

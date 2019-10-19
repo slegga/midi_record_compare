@@ -211,7 +211,9 @@ sub do_save {
     my ($self, $tune, $name) = @_;
     return if !$name;
     $name .= '.txt' if ($name !~/\.midi?$/);
-    $self->local_dir($self->blueprints_dir->child('notes'))->child($name)->spurt($tune->to_string);
+    my $new_file = $self->local_dir($self->blueprints_dir->child('notes'))->child($name);
+    $new_file->spurt($tune->to_string);
+    say "Saved $new_file";
 }
 
 =head2 do_save_midi
@@ -223,7 +225,9 @@ Save played tune as midi
 sub do_save_midi {
     my ($self, $name) = @_;
     $name .= '.midi' if ($name !~/\.midi?$/);
-    $self->tune->to_midi_file($self->local_dir($self->blueprints_dir->child('notes'))->child($name));
+    my $new_file = $self->local_dir($self->blueprints_dir->child('notes'))->child($name);
+    $self->tune->to_midi_file($new_file);
+    say "Saved $new_file";
 }
 
 =head2 get_blueprint_by_pathfile

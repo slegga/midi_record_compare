@@ -2,6 +2,7 @@ denominator=3
 shortest_note_time=66
 beat_score=71
 scale=c_dur
+name=Hermegåsa
 0;1;E4        # 0.0-1/4
 0;3;C3        # 0.0-3/4
 1;1;F4        # 0.1-1/4
