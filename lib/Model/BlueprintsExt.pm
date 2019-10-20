@@ -67,7 +67,7 @@ sub init {
     my $self = shift;
     my $blueprints = $self->blueprints;
     my $luri = clone $self->blueprints_uri;
-	my $list = $self->_api_data('get','list');
+	my $list = $self->_api_data('get','tunes');
 #    p $list;
     for my $b (@$list) {
     	$luri->path("item")->query(name => $b);
@@ -216,7 +216,7 @@ sub do_save {
     return if !$name;
     $name .= '.txt';
     my $string = $tune->to_string;
-    $self->_api_data('post','/blueprints',{name=>$name, body=>$string});
+    $self->_api_data('post','/blueprints/tunes',{name=>$name, body=>$string});
     return $self;
 }
 
@@ -230,7 +230,7 @@ sub do_save_midi {
     my ($self, $name) = @_;
     $name .= '.midi' if ($name !~/\.midi?$/);
     my $string = $self->tune->to_midi_content;
-    $self->_api_data('post','/blueprints',{name=>$name, body=>$string});
+    $self->_api_data('post','/blueprints/midi',{name=>$name, body=>$string});
     return $self;
 }
 
@@ -242,7 +242,8 @@ Same as Model::Tune->from_note_file("$name");
 
 sub get_blueprint_by_pathfile {
     my ($class,$name) = @_;
-    return Model::Tune->from_note_file("$name");
+    $name =~ s/\.txt$//;
+    return $self->_api_data('get',"/blueprints/tunes/$name");
 }
 
 =head2 get_pathfile_by_name
@@ -357,7 +358,7 @@ Return note for print
 sub _api_data {
 	my ($self,$method,$path,$params) = @_;
     my $luri = clone $self->blueprints_uri;
-	$luri = $luri->path('list');
+	$luri = $luri->path('tunes');
 	my $body;
     $body = $self->ua->$method("$luri" => {Accept => '*/*'} => json => ,$params)->result->body;
 	$body = decode("UTF-8", $body);
