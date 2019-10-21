@@ -67,10 +67,13 @@ sub init {
     my $self = shift;
     my $blueprints = $self->blueprints;
     my $luri = clone $self->blueprints_uri;
-	my $list = $self->_api_data('get','tunes');
-#    p $list;
+    my $list = $self->_api_data('get','tunes');
+   $luri = $luri->path('tunes/placeholder');
+ p $list;
     for my $b (@$list) {
-    	$luri->path("item")->query(name => $b);
+    	my $id = $b;
+    	$id=~ s/\..+//;
+    	$luri->path($id);
     	my $tx = $self->ua->get("$luri")->result;
     	if (!$tx->body) {
     		die ($tx->error)
@@ -78,6 +81,7 @@ sub init {
     	my $con = from_json($tx->body);
 #    	p $con;
 		die "Undef name" if ! $con;
+		die "Missing ->{tune}: ".to_json($con).' '.$id." $luri" if ! exists $con->{tune};
         my $tmp = Model::Tune->from_string($con->{tune});
         my $num = scalar @{$tmp->notes};
         my $firstnotes;
@@ -234,14 +238,14 @@ sub do_save_midi {
     return $self;
 }
 
-=head2 get_blueprint_by_pathfile
+=head2 get_blueprint_by_name
 
 Same as Model::Tune->from_note_file("$name");
 
 =cut
 
-sub get_blueprint_by_pathfile {
-    my ($class,$name) = @_;
+sub get_blueprint_by_name {
+    my ($self,$name) = @_;
     $name =~ s/\.txt$//;
     return $self->_api_data('get',"/blueprints/tunes/$name");
 }

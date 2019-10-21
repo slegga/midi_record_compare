@@ -485,7 +485,7 @@ Input is the content of at note file, either from local disk or external api
 
 sub from_string {
     my $class = shift;
-    my $content = shift;
+    my $content = shift or die "Missing content";
     my $self = $class->new;
 
     my $newcont='';
