@@ -2,6 +2,7 @@ denominator=4
 shortest_note_time=72
 beat_score=60
 scale=c_dur
+name=Blinke lille stjerne
 0;1;C4        # 0.0-1/4
 0;2;C3        # 0.0-1/2
 1;1;C4        # 0.1-1/4
@@ -36,7 +37,6 @@ scale=c_dur
 1;2;D4        # 5.2-1/2
 0;1;G3        # 5.2-1/4
 1;1;F3        # 5.3-1/4
-__END__
 1;1;G4        # 6.0-1/4
 0;2;E3        # 6.0-1/2
 1;1;G4        # 6.1-1/4
