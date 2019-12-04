@@ -486,6 +486,7 @@ Input is the content of at note file, either from local disk or external api
 sub from_string {
     my $class = shift;
     my $content = shift or die "Missing content";
+    my $options = shift;
     my $self = $class->new;
 
     my $newcont='';
@@ -508,7 +509,14 @@ sub from_string {
 
     for my $line (split/\n/,$content) {
         $line =~ s/\s*\#.*$//;
-        last if $line eq '__END__';
+        if ($line eq '__END__') {
+            if(! $options->{ignore_end}) {
+                last;
+            } else {
+                push(@notes,Model::Note->new(type=>'string',string=>'__END__'));
+                next;
+            }
+        }
         next if ! $line;
         if ($line=~/([\w\_\-]+)\s*=\s*(.+)$/) {
             next;

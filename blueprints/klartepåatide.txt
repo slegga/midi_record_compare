@@ -1,6 +1,7 @@
 denominator=4
 shortest_note_time=74
 beat_score=63
+name=Klatre på stige
 scale=c_dur
 allowed_note_lengths=1,2,4
 0;1;C4        # 0.0-1/4

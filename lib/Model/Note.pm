@@ -26,6 +26,8 @@ has delta_place_numerator => 0;
 has length_name => '';
 has 'hand';
 has ['next_silence','stacato']; # used by colornotes.pl script
+has 'type'; # currently null or storing
+has 'string'; #string like __END__
 #has tickpersec =>96;
 
 use overload
@@ -183,7 +185,9 @@ sub to_string {
 	my $opts = shift;
 	my $return = '';
 	die "Missing note" . Dumper $self if ! defined $self->note;
-	if ($self->startbeat)  {
+    if ($self->type && $self->type eq 'string') {
+        return $self->string;
+	} elsif ($self->startbeat)  {
 		my $core = sprintf "%s;%s;%s",$self->delta_place_numerator,$self->length_numerator,Model::Utils::Scale::value2notename($opts->{scale}//'c_dur',$self->note());
 		if (! exists $opts->{no_comment} || ! $opts->{no_comment}) {
             my $format = '%-12s  #%4s-%3s';
@@ -212,8 +216,10 @@ Calculate and fill missing values if able.
 sub compile {
     my $self = shift;
     if (! $self->note) {
-        if ($self->note_name) {
+        if ($self->note_name =~/\w/) {
             $self->note(Model::Utils::Scale::notename2value($self->note_name));
+        } elsif($self->type && $self->type eq 'string') {
+            $self->note($self->string);
         } else {
             die"Must have note";
         }
