@@ -3,6 +3,7 @@ shortest_note_time=57
 beat_score=79
 scale=f_dur
 hand_left_max=C4
+name=Raske på!
 0;1;A4        # 0.0-1/4
 0;4;C4        # 0.0-1/1
 0;4;F3        # 0.0-1/1
