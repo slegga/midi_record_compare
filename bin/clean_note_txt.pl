@@ -35,6 +35,7 @@ option 'reduce_octave!', 'Move tune one octave down';
     say Dumper \@e;
     my $file = path(($self->extra_options)[0]);
     die "No file given" if ! "$file";
+    die "Not a file.." if ! -f "$file";
     my $tune = Model::Tune->from_string($file->slurp,{ignore_end=>1});
     if (! $tune->name) {
     	my $tmp = $file->basename('.txt');
