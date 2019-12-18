@@ -6,7 +6,7 @@ use Model::Tune;
 use Mojo::Base -strict;
 use Mojo::File qw /path/;
 use Data::Dumper;
-use Carp::Always;
+# use Carp::Always;
 my $bluepr_file = path("$FindBin::Bin/../blueprints/polser_her.txt");
 my $played_file = path("$FindBin::Bin/notes/polser-her-disorder.txt");
 my $bluepr_tune = Model::Tune->from_string($bluepr_file->slurp);

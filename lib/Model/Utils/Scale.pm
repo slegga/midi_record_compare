@@ -80,7 +80,7 @@ sub guess_scale_from_notes {
         'f_dur' =>      [0,2,4,5,7,9,10], # F, G, A, Bb, C, D, E, F
         'g_dur' =>      [0,2,4,6,7,9,11], # G, A, B, C, D, E, F#, G
         'eis_dur' =>     [0,2,3,5,7,8,10], # C, D, Eb, F, G, Ab, Hb, C
-        'd_dur' =>      [1,2,4,6,7,9,11], # C, D, Eb, F, G, Ab, Hb, C
+        'd_dur' =>      [1,2,4,6,7,9,11], # C#, D, Eb, F, G, Ab, Hb, C
         'b_dur' =>     [0,2,3,5,7,9,10],  # Hb, C, D,Eb, F, G, A
         'cis_dur' =>    [0,1,3,5,6,8,10], # H#, C#, D#, E#,  F#, G#, A#
         );
@@ -149,6 +149,10 @@ sub _bit_from_value {
             return "Hm" if ($bit == 10) ;
         }
         elsif (grep {$scale eq $_} (qw/f_dur/)) {
+            return "Hm" if ($bit == 10) ;
+        }
+        elsif (grep {$scale eq $_} (qw/b_dur d_dur eis_dur/)) {
+            return "Em" if ($bit ==  3) ;
             return "Hm" if ($bit == 10) ;
         }
         return $note_names{$bit};
