@@ -9,7 +9,7 @@ use Time::HiRes;
 use autodie;
 use Model::Tune;
 use Model::Utils;
-use Carp::Always;
+#use Carp::Always;
 use Mojo::JSON qw(encode_json);
 
 my @alsaevents = ([

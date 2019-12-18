@@ -4,7 +4,7 @@ use Test::More;
 use FindBin;
 use lib "$FindBin::Bin/../../utilities-perl/lib";
 use Test::ScriptX;
-use Carp::Always;
+#use Carp::Always;
 use lib "$FindBin::Bin/../bin";
 use lib "$FindBin::Bin/../script";
 no warnings 'redefine';
