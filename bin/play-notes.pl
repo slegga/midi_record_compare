@@ -43,7 +43,7 @@ sudo apt timidity
 #,{return_uncatched_arguments => 1});
 sub main {
     my $self = shift;
-    my $note_file = ($self->extra_options)[0] or die "Did not get a filename";
+    my $note_file = $self->extra_options->[0] or die "Did not get a filename";
     die "File $note_file does not exists" if ! -e $note_file;
 
     my $tmpfile = tempfile(DIR=>'/tmp');

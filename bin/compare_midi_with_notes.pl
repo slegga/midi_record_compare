@@ -23,7 +23,7 @@ Compare played song as midi file with a blue print as note-text.
 
 sub main {
     my $self = shift;
-    my ($midifile, $tunefile) = ($self->extra_options)[0,1];
+    my ($midifile, $tunefile) = $self->extra_options->[0,1];
     my $tune_play = Model::Tune->from_midi_file($midifile);
     $tune_play->calc_shortest_note;
     $tune_play->score2notes;

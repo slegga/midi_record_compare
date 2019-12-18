@@ -50,7 +50,7 @@ option 'nowait!','No waiting',{default=>0};
 
 sub main {
     my $self = shift;
-    my ($file) = path(($self->extra_options)[0]);
+    my ($file) = path($self->extra_options->[0]);
     my $tune = Model::Tune->from_string($file->slurp);
     my $new_scale;
     warn $tune->scale;
