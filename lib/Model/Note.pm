@@ -186,7 +186,7 @@ sub to_string {
 	my $return = '';
 	die "Missing note" . Dumper $self if ! defined $self->note;
     if ($self->type && $self->type eq 'string') {
-        return $self->string;
+        $return = $self->string;
 	} elsif ($self->startbeat)  {
 		my $core = sprintf "%s;%s;%s",$self->delta_place_numerator,$self->length_numerator,Model::Utils::Scale::value2notename($opts->{scale}//'c_dur',$self->note());
 		if (! exists $opts->{no_comment} || ! $opts->{no_comment}) {
