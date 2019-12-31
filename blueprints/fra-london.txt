@@ -3,6 +3,7 @@ shortest_note_time=71
 beat_score=38
 scale=c_dur
 startbeat=6
+name=Fra London
 0;2;G3        # 0.6-1/4
 2;2;C4        # 1.0-1/4
 0;8;C3        # 1.0-1/1
