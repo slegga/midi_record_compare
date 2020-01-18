@@ -49,7 +49,7 @@ Use API
 
 =cut
 
-has blueprints_uri => sub {Mojo::URL->new('https://slegga.0x.no/api/piano/blueprints/')};
+has blueprints_uri => sub {Mojo::URL->new('https://piano.0x.no/api/piano/blueprints/')};
 has blueprints => sub{{}}; # [
 has ua =>sub {Mojo::UserAgent->new};
 
