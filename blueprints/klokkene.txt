@@ -3,7 +3,7 @@ shortest_note_time=66.1008403361345
 beat_score=28
 scale=b_dur
 hand_left_max=C4
-name=Klokkene.txt
+name=Klokkene
 0;1;G4        # 0.0-1/2
 0;2;C4        # 0.0-1/1
 1;1;A4        # 0.1-1/2
