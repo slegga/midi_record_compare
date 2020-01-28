@@ -2,6 +2,7 @@ denominator=6
 shortest_note_time=41
 beat_score=28
 scale=c_dur
+name=I telefon
 comment=39. I telefonen
 0;2;C4        # 0.0-1/4
 #0;12;H-2      # 0.0-3/2
