@@ -3,6 +3,7 @@ shortest_note_time=24
 beat_score=48
 scale=f_dur
 hand_right_min=E4
+name=Til Paris F-dur
 0;1;F4        # 0.0-1/4
 0;2;F3        # 0.0-1/2
 1;1;A4        # 0.1-1/4
