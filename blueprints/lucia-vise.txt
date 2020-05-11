@@ -5,6 +5,7 @@ scale=f_dur
 startbeat=4
 hand_left_max=C4
 hand_right_min=C4
+name=Lucia-vise
 0;1;C5        # 0.4-1/8
 1;1;Hm4       # 0.5-1/8
 1;2;A4        # 1.0-1/4
