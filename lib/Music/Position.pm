@@ -97,7 +97,7 @@ sub to_string {
     my $self = shift;
     my $number = int($self->integer/$self->denominator);
     my $numerator = $self->integer - $number * $self->denominator;
-    return sprintf "%d.%d",$number, $numerator;
+    return sprintf "%d.%d",$number +1, $numerator;
       # time, length,note
       # 3.8;1/4;C4
 

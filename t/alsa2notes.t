@@ -49,10 +49,10 @@ print $tune->to_string;
 $tune->calc_shortest_note;
 say  "# finish calc_shortest_note";
 $tune->score2notes;
-is($tune->notes->[1]->to_string, "1;2;D5        # 0.1-1/2", 'Expected');
+is($tune->notes->[1]->to_string, "1;2;D5        # 1.1-1/2", 'Expected');
 is(Music::Note->from_score($score->[1],{tune_starttime=>0
 ,shortest_note_time=>$tune->shortest_note_time, denominator=>4, prev_starttime=>$score->[0]->[1]}
-    )->to_string, '1;2;D5        # 0.1-1/2','Not working yet');
+    )->to_string, '1;2;D5        # 1.1-1/2','Not working yet');
 
 # test Olavs piano
 @alsaevents = ([
