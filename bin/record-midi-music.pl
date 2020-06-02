@@ -10,9 +10,9 @@ use Mojo::JSON 'to_json';
 use FindBin;
 use lib "$FindBin::Bin/../../utilities-perl/lib";
 use lib "$FindBin::Bin/../lib";
-use Model::Blueprints;
-use Model::BlueprintsExt;
-use Model::Input::ALSA;
+use Music::Blueprints;
+use Music::BlueprintsExt;
+use Music::Input::ALSA;
 use SH::ScriptX;
 use Mojo::Base 'SH::ScriptX';
 use Carp::Always;
@@ -33,7 +33,7 @@ record-midi-music.pl
 
 Read midi signal from a USB-cable.
 
-Present a cli User Interface and send request to Model::Action;
+Present a cli User Interface and send request to Music::Action;
 
 =head1 INSTALL GUIDE
 
@@ -53,7 +53,7 @@ has loop  => sub { Mojo::IOLoop->singleton };
 has stdin_loop => sub { Mojo::IOLoop::Stream->new(\*STDIN)->timeout(0) };
 has silence_timer=> -1;
 has piano_keys_pressed =>sub{ {} };
-has input_object => sub { Model::Input::ALSA->new };
+has input_object => sub { Music::Input::ALSA->new };
 has prev_controller => sub { {} };
 has commands => sub{[
     [[qw/h help/],     0, 'This help text', sub{$_[0]->print_help}],
@@ -101,12 +101,12 @@ has commands => sub{[
 has blueprints => sub {
     my $self = shift;
     if ($self->api) {
-        Model::BlueprintsExt->new
+        Music::BlueprintsExt->new
     } else {
-        Model::Blueprints->new;
+        Music::Blueprints->new;
     }
     };
-has tune => sub {Model::Tune->new};
+has tune => sub {Music::Tune->new};
 has 'comp_working';
 has 'finished'; #tune is finished and can be
 option  'comp=s', 'Compare play with this blueprint';
@@ -186,7 +186,7 @@ sub register_midi_event {
         }
     } else    {
 	    printf("%-8s %-3s %3d %.3f %5d\n",$event->[0]
-	    ,(defined($event->[3]) ? Model::Utils::Scale::value2notename($self->tune->scale,$event->[3]):'__UNDEF__')
+	    ,(defined($event->[3]) ? Music::Utils::Scale::value2notename($self->tune->scale,$event->[3]):'__UNDEF__')
 	    ,($event->[4]//0),
 	    ($event->[2]//0),
 	    ($event->[1]//0)
@@ -219,7 +219,7 @@ sub register_midi_event {
 # make ready for a new emtpy tune
 sub restart {
     my $self = shift;
-    $self->tune(Model::Tune->new); # clear history
+    $self->tune(Music::Tune->new); # clear history
     $self->input_object->reset_time();
     $self->finished(0);
     return $self;

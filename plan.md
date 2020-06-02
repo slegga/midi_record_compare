@@ -3,7 +3,7 @@ PLAN
 * Neste gang:
 * Jobb med register_event og fiks feil.
 * Test ut sak-programmet https://trello.com/b/LPO2GFPO Du har allerede en bruker.
-* Skill ut MIDI::ALSA til Model::Loop::ALSA (Model::Loop::WebUSB kommer)
+* Skill ut MIDI::ALSA til Music::Loop::ALSA (Music::Loop::WebUSB kommer)
 * Se på websocket støtten her: Writing websocket chat using Mojolicious Lite · kraih_mojo Wiki · GitHub.html
 ** https://github.com/kraih/mojo/wiki/Writing-websocket-chat-using-Mojolicious-Lite
 ** https://developers.google.com/web/updates/2016/03/access-usb-devices-on-the-web
@@ -25,7 +25,7 @@ DONE
 * Endre score. Teller mindre om man spiller stakato og mindre straff for å spille feil
 * Begynn med web støtte
 ** splitt record-midi-music.pl.
-*** lag ny lib: Model::Controller alle do_*,init,alle has, alsa_read, pn,guessed_blueprint,local_dir,...
+*** lag ny lib: Music::Controller alle do_*,init,alle has, alsa_read, pn,guessed_blueprint,local_dir,...
 *** Beholdes i record-midi-music.pl: main, stdin_read, print_help
 * Renskriv kommentarer script
 * midi2notes.pl fikser dette: Har Kunne lagre midi og trekke ut noter fra midi som en test.
@@ -49,7 +49,7 @@ DONE
 * Se https://mojolicious.io/blog/2017/12/21/day-21-virtually-a-lumberjack/index.html og https://perldoc.perl.org/IO/Handle.html (->fdopen)
 * Prøv først MIDI::ALSA for å lese input
 * od -A x -t x1z -v midi/T6ng-000.MID
-* flytt Model::Note->from_alsaevent ut til f.eks Model::Util og endre til å returnere MIDI::Score note
+* flytt Music::Note->from_alsaevent ut til f.eks Music::Util og endre til å returnere MIDI::Score note
 
 UTGÅR
 =====

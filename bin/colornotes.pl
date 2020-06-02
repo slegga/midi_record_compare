@@ -7,7 +7,7 @@ use SH::ScriptX;
 use Mojo::Base 'SH::ScriptX';
 use Mojo::File 'path';
 use Term::ANSIColor;
-use Model::Tune;
+use Music::Tune;
 use File::Modified;
 use Data::Printer;
 use Mojo::File 'path';
@@ -51,7 +51,7 @@ option 'nowait!','No waiting',{default=>0};
 sub main {
     my $self = shift;
     my ($file) = path($self->extra_options->[0]);
-    my $tune = Model::Tune->from_string($file->slurp);
+    my $tune = Music::Tune->from_string($file->slurp);
     my $new_scale;
     warn $tune->scale;
     if ($self->scale) {
@@ -59,7 +59,7 @@ sub main {
     } elsif( $tune->scale) {
     	$new_scale = $tune->scale;
     } else {
-        $new_scale = Model::Utils::Scale::guess_scale_from_notes($tune->notes);
+        $new_scale = Music::Utils::Scale::guess_scale_from_notes($tune->notes);
     }
     if ($new_scale ne $tune->scale) {
         $tune->scale($new_scale);
@@ -74,7 +74,7 @@ sub main {
     	my (@changed) =$d->changed;
     	#say @changed;
 		if ( @changed ) {
-		    my $tune = Model::Tune->from_string($file->slurp);
+		    my $tune = Music::Tune->from_string($file->slurp);
 			say "\n";
    			$self->print_colornotes($tune);
    			$d->update();

@@ -1,4 +1,4 @@
-package Model::Input::EventTest;
+package Music::Input::EventTest;
 use Mojo::Base -base;
 
 use Carp 'croak';
@@ -32,12 +32,12 @@ sub reset_time {
 
 =head1 NAME
 
-Model::Input::EventTest
+Music::Input::EventTest
 
 =head1 SYNOPSIS
 
-  package Model::Input::EventTest;
-  use Mojo::Base 'Model::Input::EventTest';
+  package Music::Input::EventTest;
+  use Mojo::Base 'Music::Input::EventTest';
 
   sub port =>{ 80 };
 

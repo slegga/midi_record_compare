@@ -1,4 +1,4 @@
-package Model::Beat;
+package Music::Position;
 use Mojo::Base -base;
 use Clone;
 
@@ -15,7 +15,7 @@ use overload
 
 =head1 NAME
 
-Model::Beat
+Music::Position
 
 =head1 DESCRIPTION
 
@@ -25,7 +25,7 @@ Beat object. number.part
 
 =head2 add
 
-my $new = $self->add(Model::Beat->new(number=>1,numerator=>2,denominator=>4);
+my $new = $self->add(Music::Position->new(number=>1,numerator=>2,denominator=>4);
 
 Add beats. Return new beat.
 
@@ -46,7 +46,7 @@ sub add {
 #		$number++;
 #        $numerator -= $self->denominator;
 #	}
-	return Model::Beat->new(integer => $integer, denominator => $self->denominator);
+	return Music::Position->new(integer => $integer, denominator => $self->denominator);
 }
 
 =head2 clone
@@ -57,7 +57,7 @@ Return a new similar beat with same values.
 
 sub clone {
     my $self = shift;
-    return Model::Beat->new(integer => $self->integer, denominator => $self->denominator);
+    return Music::Position->new(integer => $self->integer, denominator => $self->denominator);
 }
 
 =head2 subtract
@@ -83,7 +83,7 @@ sub subtract {
 #    $number--;
 #        $numerator += $self->denominator;
 #  }
-  return Model::Beat->new(integer => $integer, denominator => $self->denominator);
+  return Music::Position->new(integer => $integer, denominator => $self->denominator);
 
 }
 

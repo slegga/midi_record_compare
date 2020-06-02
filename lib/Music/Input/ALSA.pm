@@ -1,22 +1,22 @@
-package Model::Input::ALSA;
-use Mojo::Base 'Model::Input';
+package Music::Input::ALSA;
+use Mojo::Base 'Music::Input';
 use Mojo::JSON 'to_json';
 use MIDI::ALSA(':CONSTS');
 
 =head1 NAME
 
-Model::Input::ALSA
+Music::Input::ALSA
 
 =head1 SYNOPSIS
 
-use Model::Input::ALSA
+use Music::Input::ALSA
 ...;
 
 =head1 DESCRIPTION
 
 "Input plugin" for Mojo::IOLoop for ALSA protocoll for reading .
 
-inherits all methods from Model::Input and override following methods.
+inherits all methods from Music::Input and override following methods.
 
 [type, flags, tag, queue, time, source, destination, data] ALSA
 
@@ -124,7 +124,7 @@ sub alsa_read {
         $self->tune_starttime($on_time) if ! $self->tune_starttime();
     push @alsaevent,{dtime_sec=>
     	($on_time - ($self->last_event_starttime||$self->tune_starttime))};
-    my $event = Model::Utils::alsaevent2midievent(@alsaevent);
+    my $event = Music::Utils::alsaevent2midievent(@alsaevent);
     $self->last_event_starttime($on_time) if $event;
     $controller->register_midi_event($event);
 }

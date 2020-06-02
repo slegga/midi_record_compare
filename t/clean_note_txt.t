@@ -5,7 +5,7 @@ use Carp::Always;
 use FindBin;
 use lib "../lib";
 use lib "$FindBin::Bin/../../utilities-perl/lib";
-use Model::Input::EventTest;
+use Music::Input::EventTest;
 use Test::ScriptX;
 use File::Copy 'copy';
 $ENV{MOJO_MODE}='dry-run';

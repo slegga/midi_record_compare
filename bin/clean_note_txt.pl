@@ -8,7 +8,7 @@ use lib "$FindBin::Bin/../lib";
 use SH::ScriptX;
 use Mojo::Base 'SH::ScriptX';
 #use Carp::Always;
-use Model::Tune;
+use Music::Tune;
 use Mojo::File 'path';
 
 =head1 NAME
@@ -36,7 +36,7 @@ option 'reduce_octave!', 'Move tune one octave down';
     my $file = path($self->extra_options->[0]);
     die "No file given" if ! "$file";
     die "Not a file.. $file" if ! -f "$file";
-    my $tune = Model::Tune->from_string($file->slurp,{ignore_end=>1});
+    my $tune = Music::Tune->from_string($file->slurp,{ignore_end=>1});
     if (! $tune->name) {
     	my $tmp = $file->basename('.txt');
     	$tmp = uc(substr($tmp,0,1)).substr($tmp,1);
@@ -46,7 +46,7 @@ option 'reduce_octave!', 'Move tune one octave down';
     if ($self->scale) {
         $new_scale = $self->scale;
     } else {
-        $new_scale = Model::Utils::Scale::guess_scale_from_notes($tune->notes);
+        $new_scale = Music::Utils::Scale::guess_scale_from_notes($tune->notes);
     }
     if ($new_scale ne $tune->scale) {
         $tune->scale($new_scale);

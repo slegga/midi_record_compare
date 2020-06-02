@@ -36,7 +36,7 @@ my @alsaevents = (
 , [6,0,0,253,0,[20,0],[129,0],[0,62,94,0,0],{"dtime_sec"=>0.781949043273926}]
 , [6,0,0,253,0,[20,0],[129,0],[0,60,82,0,0],{"dtime_sec"=>0.633203029632568}]
 );
-my @midievents = map{Model::Utils::alsaevent2midievent(@$_)} grep {defined} @alsaevents;
+my @midievents = map{Music::Utils::alsaevent2midievent(@$_)} grep {defined} @alsaevents;
 $t->tune->in_midi_events(\@midievents);
 $t->tune($t->tune->finish);
 my $f = $t->blueprints->get_pathfile_by_name('polser_her.txt');

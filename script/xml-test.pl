@@ -21,7 +21,7 @@ use Mojo::JSON 'j';
 use FindBin;
 use lib "$FindBin::Bin/../../utilities-perl/lib";
 use SH::UseLib;
-use Model::Utils::Scale;
+use Music::Utils::Scale;
 my $handsplit_y=-80;
 # Convertion from a XML String to a Hash
 if(0) {
@@ -119,7 +119,7 @@ if(0) {
 
 	for my $note(@notes) {
 		my $nname = sprintf('%s%d',$note->{pitch}->{step}, $note->{pitch}->{octave});
-		$nname = Model::Utils::Scale::alter_notename($scale, $nname, $note->{pitch}->{alter});
+		$nname = Music::Utils::Scale::alter_notename($scale, $nname, $note->{pitch}->{alter});
 		printf "%s;%s;%s #%s %s %s %s %s\n", $note->{pause}, $note->{duration}, $nname, $note->{x}, $note->{y}
 		. (exists $note->{tie} ? $note->{tie} : ''), $note->{start}, $note->{end},$note->{hand};
 	}

@@ -1,11 +1,11 @@
-package Model::Utils::Scale;
+package Music::Utils::Scale;
 use Mojo::Base -strict;
 use Scalar::Util qw(looks_like_number);
 use Carp::Always;
 
 =head1 NAME
 
-Model::Utils::Scale - converting from to scale and numbers
+Music::Utils::Scale - converting from to scale and numbers
 
 =head1 SYNOPSIS
 

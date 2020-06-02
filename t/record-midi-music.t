@@ -57,7 +57,7 @@ my @alsaevents = ([
   [    128,    0  ],
   [    0,    74,    76,   100  ],{dtime_sec=>0}
 ]);
-my @midievents = map{Model::Utils::alsaevent2midievent(@$_)} grep {defined} @alsaevents;
+my @midievents = map{Music::Utils::alsaevent2midievent(@$_)} grep {defined} @alsaevents;
 
 $t->tune->in_midi_events(\@midievents);
 my $fa = $t->blueprints->get_pathfile_by_name('lista_gikk_til_skolen_en_haand.txt');

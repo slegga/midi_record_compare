@@ -1,7 +1,7 @@
-package Model::Note;
+package Music::Note;
 use Mojo::Base -base;
 use Clone;
-use Model::Utils::Scale;
+use Music::Utils::Scale;
 
 my $ALSA_CODE = {'SND_SEQ_EVENT_SYSTEM'=>0,'SND_SEQ_EVENT_RESULT'=>1
 ,'SND_SEQ_EVENT_NOTE'=>5,'SND_SEQ_EVENT_NOTEON'=>6,'SND_SEQ_EVENT_NOTEOFF'=>7};
@@ -18,7 +18,7 @@ has velocity => 0;
 has note_name =>'';
 
 # note
-has startbeat => sub {return Model::Beat->new()};
+has startbeat => sub {return Music::Position->new()};
 has length_numerator => 0;
 
 #note help
@@ -34,11 +34,11 @@ use overload
     '""' => sub { shift->to_string({end=>"\n"}) }, fallback => 1;
 
 # TODO Flytt from_alsaevent ut i egen modul og endre navn til alsaevent2score
-# returnerer en note i score format til bruk i Model::Tune->from_score
+# returnerer en note i score format til bruk i Music::Tune->from_score
 
 =head1 NAME
 
-Model::Note - Handle notes alias a score
+Music::Note - Handle notes alias a score
 
 =head1 DESCRIPTION
 
@@ -83,8 +83,8 @@ options {shortest_note_time=>..., denominator}
 score data is: 'note', starttime, duration, channel, note, velocity
 Notefile data is: startbeat, length_numerator
 
-Do calculate notes values (see Model::Tune::notes2score)
-Return a new Model::Note object.
+Do calculate notes values (see Music::Tune::notes2score)
+Return a new Music::Note object.
 
 =cut
 
@@ -100,12 +100,12 @@ sub from_score {
     my $self =  $class->new(starttime => $score->[1] - ($options->{tune_starttime}//0)
     , note =>$score->[4], velocity =>$score->[5]);
     my ($length_name, $length_numerator) =
-        Model::Utils::calc_length( { time => $score->[2] }, $options );
+        Music::Utils::calc_length( { time => $score->[2] }, $options );
     $self->length_name($length_name);
     $self->length_numerator($length_numerator);
     #step up beat
     my $numerator = int( 1/2 + ($score->[1] - $options->{prev_starttime}) / $options->{shortest_note_time} );
-    my $startbeat = Model::Beat->new(denominator=>$options->{denominator});
+    my $startbeat = Music::Position->new(denominator=>$options->{denominator});
     $startbeat = $startbeat + $numerator;
     $self->startbeat($startbeat->clone);
 #    say Dumper $self;
@@ -188,7 +188,7 @@ sub to_string {
     if ($self->type && $self->type eq 'string') {
         $return = $self->string;
 	} elsif ($self->startbeat)  {
-		my $core = sprintf "%s;%s;%s",$self->delta_place_numerator,$self->length_numerator,Model::Utils::Scale::value2notename($opts->{scale}//'c_dur',$self->note());
+		my $core = sprintf "%s;%s;%s",$self->delta_place_numerator,$self->length_numerator,Music::Utils::Scale::value2notename($opts->{scale}//'c_dur',$self->note());
 		if (! exists $opts->{no_comment} || ! $opts->{no_comment}) {
             my $format = '%-12s  #%4s-%3s';
             my @args = ($core, $self->startbeat, $self->length_name);
@@ -217,7 +217,7 @@ sub compile {
     my $self = shift;
     if (! $self->note) {
         if ($self->note_name =~/\w/) {
-            $self->note(Model::Utils::Scale::notename2value($self->note_name));
+            $self->note(Music::Utils::Scale::notename2value($self->note_name));
         } elsif($self->type && $self->type eq 'string') {
             $self->note($self->string);
         } else {

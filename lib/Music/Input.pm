@@ -1,4 +1,4 @@
-package Model::Input;
+package Music::Input;
 use Mojo::Base -base;
 
 use Carp 'croak';
@@ -19,12 +19,12 @@ sub reset_time {
 
 =head1 NAME
 
-Model::Input
+Music::Input
 
 =head1 SYNOPSIS
 
-  package Model::Input::ALSA;
-  use Mojo::Base 'Model::Input';
+  package Music::Input::ALSA;
+  use Mojo::Base 'Music::Input';
 
   sub port =>{ 80 };
 

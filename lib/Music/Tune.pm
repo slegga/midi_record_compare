@@ -1,9 +1,9 @@
-package Model::Tune;
+package Music::Tune;
 use Mojo::Base -base;
-use Model::Note;
-use Model::Beat;
-use Model::Utils;
-use Model::Utils::Scale;
+use Music::Note;
+use Music::Position;
+use Music::Utils;
+use Music::Utils::Scale;
 use Data::Dumper;
 use Mojo::JSON 'to_json';
 use MIDI;
@@ -22,7 +22,7 @@ has shortest_note_time => 0;
 has denominator => 4;
 has beat_interval =>100000000;
 has 'scores' => sub {return []}; # hash_ref
-has 'notes' =>sub {return []}; # Model::Note
+has 'notes' =>sub {return []}; # Music::Note
 has midi_file  => '';
 has note_file  => '';
 has name => '';
@@ -47,12 +47,12 @@ has 'totaltime';
 has in_midi_events => sub {[]}; # For storing input for later convertion
 =head1 NAME
 
-Model::Tune - Handle tunes
+Music::Tune - Handle tunes
 
 =head1 SYNOPSIS
 
- use Model::Tune
- my $tune = Model::tune->from_notefile('my-notefile.txt');
+ use Music::Tune
+ my $tune = Music::tune->from_notefile('my-notefile.txt');
  $tune->play;
 
 =head1 DESCRIPTION
@@ -154,7 +154,7 @@ sub clean {
 
     my $self = shift;
     my $opts = shift;
-    my $startbeat = Model::Beat->new(denominator=>$self->denominator);
+    my $startbeat = Music::Position->new(denominator=>$self->denominator);
     if ($opts) {
       my $extend;
       if ($opts->extend) {
@@ -169,7 +169,7 @@ sub clean {
             }
             if ( $note->length_numerator == $t ) {
               $note->length_numerator($note->length_numerator+1);
-              my ($ln,undef) = Model::Utils::calc_length({numerator => $note->length_numerator}
+              my ($ln,undef) = Music::Utils::calc_length({numerator => $note->length_numerator}
               ,,{shortest_note_time=>$self->shortest_note_time, denominator=>$self->denominator});
               $note->length_name($ln);
             }
@@ -188,7 +188,7 @@ sub clean {
 =head2 evaluate_with_blueprint
 
 Compare notes with notes.
-Self is the played tune in note format and the argument is a Model::Tune which is the blueprint.
+Self is the played tune in note format and the argument is a Music::Tune which is the blueprint.
 This method should give an over all score and partly socres for corerect played notes, correct beat, correct note length++.
 And the diff between the blueprint and the played should show what should be played better to get an higher score.
 
@@ -206,8 +206,8 @@ sub evaluate_with_blueprint {
 	my @blueprint_note_values = map{$_->note + 0} @{ $blueprint->notes};
 	my $diff = diff( \@played_note_values, \@blueprint_note_values );
     say "Sammenligne innput note" if $self->debug;
-    say "Spilt:              ".join(',',map{Model::Utils::Scale::value2notename($self->{scale},$_)} @played_note_values ) if $self->debug;
-    say "Fasit:              ".join(',',map{Model::Utils::Scale::value2notename($self->{scale},$_)} @blueprint_note_values ) if $self->debug;
+    say "Spilt:              ".join(',',map{Music::Utils::Scale::value2notename($self->{scale},$_)} @played_note_values ) if $self->debug;
+    say "Fasit:              ".join(',',map{Music::Utils::Scale::value2notename($self->{scale},$_)} @blueprint_note_values ) if $self->debug;
 	# remove first array_ref layer from diff
 	my $wrongs=[];
 	if (@$diff) {
@@ -387,7 +387,7 @@ sub finish {
     my ($self) = @_;
     return $self if (@{$self->in_midi_events} <= 10);
     my $score = MIDI::Score::events_r_to_score_r( $self->in_midi_events );
-    $self = Model::Tune->from_midi_score($score);
+    $self = Music::Tune->from_midi_score($score);
 
     $self->calc_shortest_note;
     $self->score2notes;
@@ -407,7 +407,7 @@ sub finish {
 =head2 from_midi_score
 
 
-Take an array_ref of (MIDI) score and return a new Model::Tune object
+Take an array_ref of (MIDI) score and return a new Music::Tune object
 Do not concatinate on beat yet.
 
 =cut
@@ -455,7 +455,7 @@ sub from_midi_score {
 
 =head2 from_midi_file
 
-Take midifilename read it. Create a new Model::Tune object. Populate notes
+Take midifilename read it. Create a new Music::Tune object. Populate notes
  with score data(starttime,duration,note,velocity)
 
 =cut
@@ -505,7 +505,7 @@ sub from_string {
             }
         }
     }
-    my $beat = Model::Beat->new(integer => $self->startbeat, denominator => $self->denominator);
+    my $beat = Music::Position->new(integer => $self->startbeat, denominator => $self->denominator);
 
     for my $line (split/\n/,$content) {
         $line =~ s/\s*\#.*$//;
@@ -513,7 +513,7 @@ sub from_string {
             if(! $options->{ignore_end}) {
                 last;
             } else {
-                push(@notes,Model::Note->new(type=>'string',string=>'__END__'));
+                push(@notes,Music::Note->new(type=>'string',string=>'__END__'));
                 next;
             }
         }
@@ -523,9 +523,9 @@ sub from_string {
         } else {
             my ($delta_place_numerator, $length_numerator, $note_name) = split(/\;/,$line);
             $beat = $beat + $delta_place_numerator;
-            my ($ln,undef) = Model::Utils::calc_length({numerator =>$length_numerator}
+            my ($ln,undef) = Music::Utils::calc_length({numerator =>$length_numerator}
             ,{shortest_note_time=>$self->shortest_note_time, denominator=>$self->denominator});
-            push(@notes,Model::Note->new(delta_place_numerator => $delta_place_numerator,
+            push(@notes,Music::Note->new(delta_place_numerator => $delta_place_numerator,
             length_numerator => $length_numerator,
             length_name => $ln,
             note_name => $note_name,
@@ -657,13 +657,13 @@ sub score2notes {
     die "Missing denominator" if !$self->denominator;
 
     my @notes;
-    my $startbeat = Model::Beat->new(denominator=>$self->denominator);
+    my $startbeat = Music::Position->new(denominator=>$self->denominator);
     my $prev_starttime=0;
     $self->totaltime(0);
     for my $score(@{$self->scores}) {
-        my $note= Model::Note->new;
+        my $note= Music::Note->new;
         $self->totaltime($self->totaltime + $score->{duration});
-        my ($length_name, $length_numerator) = Model::Utils::calc_length( { time => $score->{duration} }
+        my ($length_name, $length_numerator) = Music::Utils::calc_length( { time => $score->{duration} }
             ,{shortest_note_time=>$self->shortest_note_time, denominator=>$self->denominator} );
         $note->length_name($length_name);
         $note->length_numerator($length_numerator);
@@ -675,7 +675,7 @@ sub score2notes {
         $note->startbeat($startbeat->clone);
         $note->note($score->{note});
         #$note->order($note->startbeat->to_int*1000 + 128 - $note->note);
-        printf "%6d %3d %3d %3s\n" ,$note->order,$startbeat->to_int,$score->{duration},Model::Utils::Scale::value2notename($self->{scale}//'c_dur',$note->note) if $self->debug;
+        printf "%6d %3d %3d %3s\n" ,$note->order,$startbeat->to_int,$score->{duration},Music::Utils::Scale::value2notename($self->{scale}//'c_dur',$note->note) if $self->debug;
         push @notes,$note;
     }
 
@@ -684,17 +684,17 @@ sub score2notes {
 
 
     #loop another time through notes to calc delta_place_numerator after notes is sorted.
-    my $prev_note_int = 0;#Model::Note->new(startbeat=>Model::Beat->new(number=>0, numerator=>0));
+    my $prev_note_int = 0;#Music::Note->new(startbeat=>Music::Position->new(number=>0, numerator=>0));
     for my $note(@onotes) {
 		my $tb = $note->startbeat->to_int - $prev_note_int;#->startbeat->to_int;
 		$note->delta_place_numerator($tb);
 		$prev_note_int = $note->startbeat->to_int;
     }
 
-    say "score2notes  2:      ".join(',',map {Model::Utils::Scale::value2notename($self->{scale},$_->note)} @onotes) if $self->debug;
+    say "score2notes  2:      ".join(',',map {Music::Utils::Scale::value2notename($self->{scale},$_->note)} @onotes) if $self->debug;
 
     $self->notes(\@onotes);
-    $self->scale(Model::Utils::Scale::guess_scale_from_notes($self->notes));
+    $self->scale(Music::Utils::Scale::guess_scale_from_notes($self->notes));
     return $self;
 }
 
@@ -725,8 +725,8 @@ sub to_data_split_hands {
 	my $return={left=>[],right=>[],unknown=>[]};
 
     my ($max_left, $min_right);
-    $max_left  = Model::Utils::Scale::notename2value($self->hand_left_max ) if $self->hand_left_max;
-    $min_right = Model::Utils::Scale::notename2value($self->hand_right_min) if $self->hand_right_min;
+    $max_left  = Music::Utils::Scale::notename2value($self->hand_left_max ) if $self->hand_left_max;
+    $min_right = Music::Utils::Scale::notename2value($self->hand_right_min) if $self->hand_right_min;
     if ($max_left && ! $min_right) {
         $min_right = $max_left +1;
     } elsif (! $max_left && $min_right) {

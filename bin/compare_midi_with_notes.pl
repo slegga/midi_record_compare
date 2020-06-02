@@ -7,7 +7,7 @@ use lib "$FindBin::Bin/../../utilities-perl/lib";
 use lib "$FindBin::Bin/../lib";
 use SH::ScriptX;
 use Mojo::Base 'SH::ScriptX';
-use Model::Tune;
+use Music::Tune;
 
 =head1 NAME
 
@@ -24,10 +24,10 @@ Compare played song as midi file with a blue print as note-text.
 sub main {
     my $self = shift;
     my ($midifile, $tunefile) = $self->extra_options->[0,1];
-    my $tune_play = Model::Tune->from_midi_file($midifile);
+    my $tune_play = Music::Tune->from_midi_file($midifile);
     $tune_play->calc_shortest_note;
     $tune_play->score2notes;
-    my $tune_blueprint= Model::Tune->from_note_file($tunefile);
+    my $tune_blueprint= Music::Tune->from_note_file($tunefile);
 
     $tune_play->evaluate_with_blueprint($tune_blueprint);
     # print $tune_play->evaluation;

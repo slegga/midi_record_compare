@@ -9,7 +9,7 @@ use Mojo::Base 'SH::ScriptX';
 use MIDI; # uses MIDI::Opus et al
 use Data::Dumper;
 #use Carp::Always;
-use Model::Tune;
+use Music::Tune;
 use Mojo::File qw/path tempfile/;
 use Carp::Always;
 
@@ -47,7 +47,7 @@ sub main {
     die "File $note_file does not exists" if ! -e $note_file;
 
     my $tmpfile = tempfile(DIR=>'/tmp');
-    my $tune = Model::Tune->from_note_file($note_file);
+    my $tune = Music::Tune->from_note_file($note_file);
     $tune->notes2score;
     $tune->to_midi_file("$tmpfile");
 

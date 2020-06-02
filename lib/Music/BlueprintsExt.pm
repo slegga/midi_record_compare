@@ -1,4 +1,4 @@
-package Model::BlueprintsExt;
+package Music::BlueprintsExt;
 use Mojo::Base -base;
 use MIDI;
 use Encode qw/decode encode/;
@@ -9,24 +9,24 @@ use Term::ANSIColor;
 use Mojo::URL;
 use Mojo::JSON qw/from_json to_json/;
 use Clone 'clone';
-use Model::Utils;
-use Model::Tune;
+use Music::Utils;
+use Music::Tune;
 use Data::Printer;
 
 
 =head1 NAME
 
-Model::BlueprintsExt - Takes order from UI. Work with external API.
+Music::BlueprintsExt - Takes order from UI. Work with external API.
 
 =head1 SYNOPSIS
 
-use Model::BlueprintsExt;
+use Music::BlueprintsExt;
 ...;
 
 =head1 DESCRIPTION
 
 Handles request from UI either from cli or web.
-Talk with Model modules like Model::Tune
+Talk with Model modules like Music::Tune
 Use API
 
 =head1 ATTRIBUTES
@@ -82,7 +82,7 @@ sub init {
 #    	p $con;
 		die "Undef name" if ! $con;
 		die "Missing ->{tune}: ".to_json($con).' '.$id." $luri" if ! exists $con->{tune};
-        my $tmp = Model::Tune->from_string($con->{tune});
+        my $tmp = Music::Tune->from_string($con->{tune});
         my $num = scalar @{$tmp->notes};
         my $firstnotes;
         push @$firstnotes, $tmp->notes->[$_]->note for (0 .. 9);
@@ -123,9 +123,9 @@ sub do_comp {
         my $score = MIDI::Score::events_r_to_score_r( $tune->in_midi_events );
     #    warn p($score);
         #score:  ['note', startitme, length, channel, note, velocity],
-        $tune = (Model::Tune->from_midi_score($score));
+        $tune = (Music::Tune->from_midi_score($score));
     }
-    my $tune_blueprint= Model::Tune->from_string(path($filename));
+    my $tune_blueprint= Music::Tune->from_string(path($filename));
     $tune->denominator($tune_blueprint->denominator);
 
     $tune->calc_shortest_note;
@@ -184,13 +184,13 @@ sub do_play_blueprint {
     my $bdf = $self->blueprints_dir->child($note_file)->to_string;
     if (defined $note_file) {
         if ( -f $note_file) {
-            $blueprint = Model::Tune->from_note_file($note_file);
+            $blueprint = Music::Tune->from_note_file($note_file);
  		} elsif (-f $bdf) {
-            $blueprint = Model::Tune->from_note_file($bdf);
+            $blueprint = Music::Tune->from_note_file($bdf);
   		} else {
   			for my $f(sort {length $a <=> $b} $self->blueprints_dir->list->each) {
   				if ("$f" =~ /$note_file/) {
-  					$blueprint = Model::Tune->from_note_file("$f");
+  					$blueprint = Music::Tune->from_note_file("$f");
   					last;
   				}
   			}
@@ -200,7 +200,7 @@ sub do_play_blueprint {
         	return;
         }
     } elsif ($self->tune->blueprint_file) {
-        $blueprint = Model::Tune->from_note_file($self->tune->blueprint_file);
+        $blueprint = Music::Tune->from_note_file($self->tune->blueprint_file);
     }
     say path($blueprint->note_file)->basename;
     $blueprint->notes2score;
@@ -240,7 +240,7 @@ sub do_save_midi {
 
 =head2 get_blueprint_by_name
 
-Same as Model::Tune->from_note_file("$name");
+Same as Music::Tune->from_note_file("$name");
 
 =cut
 
@@ -352,7 +352,7 @@ Return note for print
 #sub pn {
 #	my ($self, $note) = @_;
 #	return if !defined $note;
-#    return Model::Utils::Scale::value2notename($self->tune->scale,$note);
+#    return Music::Utils::Scale::value2notename($self->tune->scale,$note);
 #}
 
 #

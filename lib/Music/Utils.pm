@@ -1,4 +1,4 @@
-package Model::Utils;
+package Music::Utils;
 use Mojo::Base -strict;
 use Mojo::JSON qw/to_json/;
 use autodie;
@@ -18,11 +18,11 @@ our $ALSA_CODE = {      'SND_SEQ_EVENT_SYSTEM'      => 0
 
 =head1 NAME
 
-Model::Utils - A place to store common functions.
+Music::Utils - A place to store common functions.
 
 =head1 SYNOPSIS
 
- use Model::Utils;
+ use Music::Utils;
  ...;
 
 =head1 DESCRIPTION

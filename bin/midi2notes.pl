@@ -10,7 +10,7 @@ use Mojo::Base 'SH::ScriptX';
 use MIDI; # uses MIDI::Opus et al
 use Data::Dumper;
 #use Carp::Always;
-use Model::Tune;
+use Music::Tune;
 
 =head1 NAME
 
@@ -38,7 +38,7 @@ option  'extend=s', 'Extend these periods to next valid length. Takes , separate
 __PACKAGE__->new->with_options( extra_options => 1 )->main();
 sub main {
 	my $self=shift;
-	my $tune = Model::Tune->from_midi_file(@{$self->extra_options});
+	my $tune = Music::Tune->from_midi_file(@{$self->extra_options});
 	$tune->calc_shortest_note;
 	$tune->score2notes;
 	$tune->clean($self->extend);
