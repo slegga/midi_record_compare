@@ -17,6 +17,11 @@ use overload
 
 Music::Position
 
+=head1 SYNOPSIS
+
+    use Music::Position;
+    print Music::Position->new(integer=>35, denominator=>8) + 4;
+
 =head1 DESCRIPTION
 
 Beat object. number.part
@@ -25,7 +30,7 @@ Beat object. number.part
 
 =head2 add
 
-my $new = $self->add(Music::Position->new(number=>1,numerator=>2,denominator=>4);
+    my $new = $self->add(Music::Position->new(number=>1,numerator=>2,denominator=>4);
 
 Add beats. Return new beat.
 
