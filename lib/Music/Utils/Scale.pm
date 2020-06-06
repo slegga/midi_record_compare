@@ -9,11 +9,18 @@ Music::Utils::Scale - converting from to scale and numbers
 
 =head1 SYNOPSIS
 
+    use 5.20.0;
+    use Music::Utils::Scale;
+    use Music::Note;
+    say Music::Utils::Scale::notename2value('C4');
+    say Music::Utils::Scale::value2notename(64);
+    say guess_scale_from_notes([Music::Note->from_String('0;3;C4')]);
+
 =head1 DESCRIPTION
 
 Convert number to note name
 
-=head1 METHODS
+=head1 FUNCTIONS
 
 
 =head2 notename2value

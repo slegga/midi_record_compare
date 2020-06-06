@@ -11,6 +11,11 @@ use lib "$FindBin::Bin/../lib";
 
 MidiRecordCompare
 
+=head1 SYNOPSIS
+
+...;
+underconstruction;
+
 =head1 DESCRIPTION
 
 Main web class. Under constructrion.

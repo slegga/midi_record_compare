@@ -40,6 +40,12 @@ use overload
 
 Music::Note - Handle notes alias a score
 
+=head1 SYNOPSIS
+
+    use Music::Note;
+    my $note = Music::Note->new( startposition=>0, length_numerator =>4 );
+    say $note->to_string;
+
 =head1 DESCRIPTION
 
 Keep data for one note. Handle transaction etc.
