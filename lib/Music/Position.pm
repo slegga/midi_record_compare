@@ -44,6 +44,8 @@ sub add {
 			$integer += $other->integer;
 	} elsif($other=~/^\d+$/)	{
 		$integer += $other;
+	} elsif (! $other ) {
+	    # do nothing
 	} else {
 		die ref $other .'  '. $other;
 	}
