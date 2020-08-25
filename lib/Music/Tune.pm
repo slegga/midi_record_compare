@@ -37,14 +37,13 @@ has delta_beat_score =>0;
 has total_score => 0;
 has startbeat => 0;
 has debug => 0;
-#has hand_left_max => 'H4';
-#has hand_logic => 'static';
 has 'allowed_note_lengths';
 has 'allowed_note_types';
 has ['hand_left_max','hand_right_min','hand_default'];
 has 'comment';
 has 'totaltime';
 has in_midi_events => sub {[]}; # For storing input for later convertion
+
 =head1 NAME
 
 Music::Tune - Handle tunes
@@ -846,7 +845,7 @@ sub to_midi_file_content {
     $opus->dump;
     print '['.join (', ',@$_)."]\n" for  $opus->tracks_r()->[0]->events;
     my $data;
-    my $SH = new IO::Scalar \$data;
+    my $SH = IO::Scalar->new(\$data);
 	$opus->write_to_handle($SH );
     return $data;
     #return $self;
