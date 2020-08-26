@@ -80,7 +80,9 @@ sub init {
 =head2 do_comp
 
 Do compare played tune with an blueprint with relative path.
-Return $self if success and undef if failed
+Return $self if success and undef if failed.
+
+Takes tune object and filename
 
 =cut
 

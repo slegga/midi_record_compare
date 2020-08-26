@@ -188,7 +188,7 @@ sub clean {
 
 Compare notes with notes.
 Self is the played tune in note format and the argument is a Music::Tune which is the blueprint.
-This method should give an over all score and partly socres for corerect played notes, correct beat, correct note length++.
+This method should give an over all score and partly scores for correct played notes, correct beat, correct note length++.
 And the diff between the blueprint and the played should show what should be played better to get an higher score.
 
 Return by default a text - evaluation. With options {output=>hash} this method will return an hash ref with data from the evaluation.
@@ -391,7 +391,7 @@ sub finish {
     $self->calc_shortest_note;
     $self->score2notes;
 
-    printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
+    printf "\n\nMusic::Tune->finish\nshortest_note_time %s, denominator %s\n",$self->shortest_note_time,$self->denominator;
 
 #    my $guess = $self->guessed_blueprint();
 #    return $self if ! $guess;

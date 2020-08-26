@@ -178,7 +178,9 @@ sub register_midi_event {
             #end tune if left pedal pressed
             if ($event->[3] == 67 && $event->[4]) {
                 $self->finish;
-                $self->blueprints->do_comp($self->tune, $self->blueprints->guess_blueprint($self->tune));
+                my $guess;
+                $guess = $self->comp || $self->blueprints->guess_blueprint($self->tune);
+                $self->blueprints->do_comp($self->tune, $guess);
 
                 return;
             }
@@ -195,7 +197,9 @@ sub register_midi_event {
 	#}
     if ($event->[0] eq 'port_unsubscribed') { # piano is turned off.
         $self->finish;
-        $self->blueprints->do_comp($self->tune,$self->blueprints->guess_blueprint($self->tune));
+        my $guess;
+        $guess = $self->comp || $self->blueprints->guess_blueprint($self->tune);
+        $self->blueprints->do_comp($self->tune, $guess);
         say 'Forced quit';
         $self->do_quit;
         return;
