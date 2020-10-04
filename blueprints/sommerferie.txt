@@ -2,6 +2,7 @@ denominator=3
 shortest_note_time=62
 beat_score=66
 scale=c_dur
+name=Sommerfeire
 0;1;E4        # 0.0-1/4
 1;1;D4        # 0.1-1/4
 1;1;E4        # 0.2-1/4

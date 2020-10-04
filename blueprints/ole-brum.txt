@@ -4,6 +4,7 @@ beat_score=25
 scale=c_dur
 allowed_note_lengths=1,2,3
 comment=28. Ole Brum
+name=Ole Brum
 0;1;E4        # 0.0-1/4
 0;2;C3        # 0.0-1/2
 1;1;D4        # 0.1-1/4

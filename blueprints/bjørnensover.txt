@@ -2,6 +2,7 @@ denominator=4
 shortest_note_time=51
 beat_score=65
 scale=c_dur
+name=Bjørnen sover
 0;1;C4        # 0.0-1/4
 0;4;G3        # 0.0-1/1
 0;4;C3        # 0.0-1/1

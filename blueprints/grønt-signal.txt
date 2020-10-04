@@ -2,6 +2,7 @@ denominator=2
 shortest_note_time=52
 beat_score=74
 scale=c_dur
+name=Grønt signal
 0;1;C4        # 0.0-1/2
 1;1;C4        # 0.1-1/2
 1;2;D4        # 1.0-1/1

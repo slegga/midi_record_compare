@@ -2,6 +2,7 @@ denominator=8
 shortest_note_time=43
 beat_score=42
 scale=d_dur
+name=Finsk folkevise
 0;2;Fs4       # 0.0-1/4
 0;4;D4        # 0.0-1/2
 0;4;Fs3       # 0.0-1/2

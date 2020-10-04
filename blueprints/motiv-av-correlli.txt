@@ -4,6 +4,7 @@ beat_score=75
 scale=b_dur
 hand_left_max=F4
 hand_right_min=C4
+name=Motiv av Correlli
 0;4;D5        # 0.0-1/2
 0;6;As4       # 0.0-7/8
 1;1;As3       # 0.1-1/8

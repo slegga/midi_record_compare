@@ -4,6 +4,7 @@ beat_score=61
 scale=c_dur
 hand_left_max=C4
 hand_right_min=C4
+name=Vaktparaden
 0;1;C4        # 0.0-1/4
 1;1;C4        # 0.1-1/4
 1;1;H3        # 0.2-1/4

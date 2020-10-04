@@ -2,6 +2,7 @@ denominator=6
 shortest_note_time=20
 beat_score=70
 scale=c_dur
+name=Edelweiss
 0;4;E4        # 0.0-1/2
 0;2;C3        # 0.0-1/4
 2;2;G3        # 0.2-1/4

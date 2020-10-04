@@ -5,6 +5,7 @@ scale=c_dur
 startbeat=2
 allowed_note_lengths=1,2,3,7
 comment=Vi spiller piano nr 37.
+name=Sengetid
 0;1;C4        # 0.2-1/4
 #0;1;H-2       # 0.2-1/4
 1;2;D4        # 1.0-1/2

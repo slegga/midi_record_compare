@@ -2,6 +2,7 @@ denominator=4
 shortest_note_time=120
 beat_score=100
 scale=c_dur
+name=Til Paris
 0;1;C4        # 0.0-1/4
 0;2;C3        # 0.0-3/4
 1;1;E4        # 0.1-1/4

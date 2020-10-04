@@ -4,6 +4,7 @@ beat_score=43
 scale=f_dur
 allowed_note_lengths=1,2,4,8
 comment=Rød bok nr 38
+name=Hans og Grete
 0;2;G4        # 0.0-1/2
 0;4;C3        # 0.0-1/1
 2;1;E4        # 0.2-1/4

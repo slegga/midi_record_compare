@@ -4,6 +4,7 @@ beat_score=77
 scale=c_dur
 allowed_note_lengths=1,2,3
 comment=24. Klokkene ringer
+name=Klokkene ringer
 0;1;C4        # 0.0-1/4
 0;2;G3        # 0.0-1/2
 0;2;C3        # 0.0-1/2

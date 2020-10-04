@@ -3,6 +3,7 @@ shortest_note_time=33
 beat_score=36
 scale=f_dur
 startbeat=6
+name=Guter mond
 0;1;C5        # 0.6-1/8
 1;1;Hm4       # 0.7-1/8
 1;2;A4        # 1.0-1/4

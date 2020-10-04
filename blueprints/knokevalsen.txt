@@ -2,6 +2,7 @@ denominator=7
 shortest_note_time=62
 beat_score=22
 scale=em_dur
+name=Knokevalsen
 0;1;Fs4       # 0.0-1/7
 1;1;Gs4       # 0.1-1/7
 1;2;As4       # 0.2-2/7

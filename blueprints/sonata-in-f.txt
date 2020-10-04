@@ -3,6 +3,7 @@ shortest_note_time=52
 beat_score=80
 scale=em_dur
 startbeat=2
+name=Sonata in F
 0;1;Ds4       # 0.2-1/8
 0;1;G3        # 0.2-1/8
 0;1;Ds3       # 0.2-1/8

@@ -2,6 +2,7 @@ denominator=8
 shortest_note_time=60
 beat_score=49
 scale=c_dur
+name=Pælser her
 0;2;E4        # 0.0-1/4
 0;8;G3        # 0.0-1/1
 0;8;C3        # 0.0-1/1

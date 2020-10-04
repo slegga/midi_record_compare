@@ -4,6 +4,7 @@ beat_score=38
 scale=c_dur
 hand_left_max=C4
 hand_right_min=C4
+name=Pachelbels canon
 0;8;C3        # 0.0-1/2
 8;8;G2        # 0.8-1/2
 8;8;A2        # 1.0-1/2

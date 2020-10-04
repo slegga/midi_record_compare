@@ -2,6 +2,7 @@ denominator=4
 shortest_note_time=75
 beat_score=51
 scale=c_dur
+name=Karavanen
 0;2;E4        # 0.0-1/2
 0;8;G3        # 0.0-2/1
 0;8;C3        # 0.0-2/1

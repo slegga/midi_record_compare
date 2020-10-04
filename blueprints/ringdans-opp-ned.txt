@@ -4,6 +4,7 @@ beat_score=35
 scale=c_dur
 allowed_note_lengths=1,2,3,6
 comment=34.
+name=Ringdans oppned
 0;6;G4        # 0.0-3/2
 0;6;C4        # 0.0-3/2
 0;2;G3        # 0.0-1/2

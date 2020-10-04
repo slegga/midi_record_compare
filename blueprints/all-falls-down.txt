@@ -2,6 +2,7 @@ denominator=8
 shortest_note_time=25
 beat_score=100
 scale=cis_dur
+name=All falls down
 0;2;F4        # 0.0-1/4
 2;1;Cs4       # 0.2-1/8
 1;4;As3       # 0.3-1/2
