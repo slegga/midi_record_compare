@@ -7,7 +7,7 @@ use Mojo::Base -strict;
 use Mojo::File qw /path/;
 use Data::Dumper;
 # use Carp::Always;
-my $bluepr_file = path("$FindBin::Bin/../blueprints/polser_her.txt");
+my $bluepr_file = path("t/blueprints/polser_her.txt");
 my $played_file = path("$FindBin::Bin/notes/polser-her-disorder.txt");
 my $bluepr_tune = Music::Tune->from_string($bluepr_file->slurp);
 is(Music::Utils::Scale::guess_scale_from_notes($bluepr_tune->notes),'c_dur','Guessed correct');

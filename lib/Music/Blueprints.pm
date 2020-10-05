@@ -1,7 +1,7 @@
 package Music::Blueprints;
 use Mojo::Base -base;
-use Mojo::File qw(tempfile path);
-use File::Basename;
+use Mojo::File qw(tempfile path curfile);
+#use File::Basename;
 use MIDI;
 use Encode 'decode';
 use open ':encoding(UTF-8)';
@@ -52,7 +52,7 @@ Talk with Model modules like Music::Tune
 # has tune => sub {Music::Tune->new};
 # has midi_events => sub {[]};
 # has shortest_note_time => 9;
-has blueprints_dir => sub {path("$FindBin::Bin/../blueprints")};
+has blueprints_dir => sub {curfile->dirname->dirname->dirname->sibling('midi-blueprints')};
 has blueprints => sub{[]}; # [ [65,66,...], Mojo::File ]
 
 =head1 METHODS
@@ -68,6 +68,7 @@ sub init {
     # load blueprints
     my $self = shift;
     for my $b ($self->blueprints_dir->list->each) {
+        next if $b->basename !~/\.txt$/ ;
         my $tmp = Music::Tune->from_string($b->slurp);
         my $num = scalar @{$tmp->notes};
         my $firstnotes;
