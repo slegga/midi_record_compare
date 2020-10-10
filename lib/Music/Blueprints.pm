@@ -91,6 +91,7 @@ sub do_comp {
     my ($self, $tune, $filename) = @_;
     die "Missing self" if !$self;
     die "Missing (played) tune" if !$tune;
+    my $score;
     return if ! $filename;
     if (! -f $filename) {
         print STDERR "ERROR: File not found $filename";
@@ -109,15 +110,16 @@ sub do_comp {
             }
         }
     } else {
-        my $score = MIDI::Score::events_r_to_score_r( $tune->in_midi_events );
-    #    warn p($score);
-        #score:  ['note', startitme, length, channel, note, velocity],
+        $score = MIDI::Score::events_r_to_score_r( $tune->in_midi_events );
+#    warn p($score);
+    #score:  ['note', startitme, length, channel, note, velocity],
         $tune = (Music::Tune->from_midi_score($score));
     }
     my $tune_blueprint= Music::Tune->from_string($file->slurp);
+    my $new_shortest_note = $tune_blueprint->get_best_shortest_note($score);
     $tune->denominator($tune_blueprint->denominator);
 
-    $tune->calc_shortest_note;
+    $tune->calc_shortest_note; #$tune->shortest_note_time($new_shortest_note);
     $tune->score2notes;
     #say "Played notes after:  ".join(',',map {$self->pn($_->note)} @{$self->tune->notes});
     my $play_bs = $tune->get_beat_sum;
@@ -140,7 +142,8 @@ sub do_comp {
     $tune->evaluate_with_blueprint($tune_blueprint);
     printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$tune->shortest_note_time,$tune->denominator;
     printf "Navn:          %s\n", color('blue') . decode('UTF-8',basename($tune_blueprint->name||$tune_blueprint->note_file) ) . color('reset');
-    printf "Korteste note: %s\n", $tune->shortest_note_time;
+    printf "Korteste note: %.2f\n", $tune->shortest_note_time;
+    printf "Korteste ny note: %.2f\n", $new_shortest_note;
     printf "Totaltid:      %5.2f\n", $tune->totaltime;
     return $self;
 }

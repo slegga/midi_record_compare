@@ -1,5 +1,5 @@
 package Music::Tune;
-use Mojo::Base -base;
+use Mojo::Base -base,-signatures;
 use Music::Note;
 use Music::Position;
 use Music::Utils;
@@ -11,7 +11,7 @@ use MIDI;
 use Carp;
 use List::Util qw/min max/;
 use Term::ANSIColor;
-use Algorithm::Diff qw/diff compact_diff/;
+use Algorithm::Diff qw/diff compact_diff LCSidx/;
 use Mojo::File qw(tempfile path);
 use IO::Scalar;
 use overload
@@ -141,6 +141,44 @@ sub calc_shortest_note {
 	return $self;
 }
 
+=head2 get_best_shortest_note
+
+Take played score. 
+Compare with tune and return best suited shortest note value
+
+scoreformat:
+('note', starttime, duration, channel, note, velocity)
+
+Noteformat:
+$note->note
+
+=cut
+
+sub get_best_shortest_note($self, $played_score) {
+
+# prepare diff
+	my @played_note_values = map{$_->[4]} @{ $played_score};
+	my @blueprint_note_values = map{$_->note + 0} @{ $self->notes};
+	my( $idx1, $idx2 ) = LCSidx( \@played_note_values, \@blueprint_note_values );
+	my @shortest_notes_time;
+	if ($#$idx1< 4) {
+        warn Dumper $played_score;
+        
+        return 50; # some default value
+	}
+	for my $i (0 .. $#$idx1) {
+        push @shortest_notes_time, $played_score->[$idx1->[$i]]->[2] / $self->notes->[$idx2->[$i]]->length_numerator;  # duration/length_numerator
+	}
+	
+# Return median
+    @shortest_notes_time = sort {$a <=> $b} @shortest_notes_time;
+    if (scalar @shortest_notes_time %2 ==1 ) {
+        return $shortest_notes_time[$#shortest_notes_time/2];
+    }
+    else {
+        return ($shortest_notes_time[$#shortest_notes_time -1 ] + $shortest_notes_time[$#shortest_notes_time ]) / 2;
+    }
+}
 
 =head2 clean
 
