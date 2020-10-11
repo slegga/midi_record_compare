@@ -166,8 +166,13 @@ sub get_best_shortest_note($self, $played_score) {
         
         return 50; # some default value
 	}
+	
+# calculate all the shortest_note for all relevant notes.
 	for my $i (0 .. $#$idx1) {
-        push @shortest_notes_time, $played_score->[$idx1->[$i]]->[2] / $self->notes->[$idx2->[$i]]->length_numerator;  # duration/length_numerator
+        next if $idx1->[$i] == 0; # no previous note to calculated diff in time
+        next if ! $self->notes->[$idx2->[$i]]->length_numerator; # remove when length_numerator == 0 
+        my $delta_time = $played_score->[$idx1->[$i]]->[1] -$played_score->[$idx1->[$i] -1]->[1]; 
+        push @shortest_notes_time, $delta_time / $self->notes->[$idx2->[$i]]->length_numerator;  # duration/length_numerator
 	}
 	
 # Return median
