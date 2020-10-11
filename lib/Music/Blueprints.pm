@@ -91,7 +91,6 @@ sub do_comp {
     my ($self, $tune, $filename) = @_;
     die "Missing self" if !$self;
     die "Missing (played) tune" if !$tune;
-    my $score;
     return if ! $filename;
     if (! -f $filename) {
         print STDERR "ERROR: File not found $filename";
@@ -100,6 +99,7 @@ sub do_comp {
     say "compare $filename";
 	my $file = path($filename);
     #midi_event: ['note_on', dtime, channel, note, velocity]
+    my $score = $tune->to_midi_score;
     if  ( @{$tune->in_midi_events } < 8 ) {
         if (scalar @{$tune->notes} <8) {
             if ("$file") {
@@ -110,40 +110,42 @@ sub do_comp {
             }
         }
     } else {
-        $score = MIDI::Score::events_r_to_score_r( $tune->in_midi_events );
+#        $score = MIDI::Score::events_r_to_score_r( $tune->in_midi_events );
 #    warn p($score);
     #score:  ['note', startitme, length, channel, note, velocity],
-        $tune = (Music::Tune->from_midi_score($score));
+        $tune = Music::Tune->from_midi_score($score);
     }
     my $tune_blueprint= Music::Tune->from_string($file->slurp);
-    my $new_shortest_note = $tune_blueprint->get_best_shortest_note($score);
     $tune->denominator($tune_blueprint->denominator);
+    my $new_shortest_note = $tune_blueprint->get_best_shortest_note($score);
 
-    $tune->calc_shortest_note; #$tune->shortest_note_time($new_shortest_note);
+    if (0) {
+        $tune->shortest_note_time($new_shortest_note);
+    } else {
+        $tune->calc_shortest_note;
+    }
+
     $tune->score2notes;
     #say "Played notes after:  ".join(',',map {$self->pn($_->note)} @{$self->tune->notes});
     my $play_bs = $tune->get_beat_sum;
-   	my $blueprint_bs = $tune_blueprint->get_beat_sum;
+    my $blueprint_bs = $tune_blueprint->get_beat_sum;
     printf "beatlengde før   fasit: %s, spilt: %s\n",$blueprint_bs,$play_bs;
-   	if ($play_bs*1.5 <$blueprint_bs || $play_bs > 1.5*$blueprint_bs) {
+    if ($play_bs*1.5 <$blueprint_bs || $play_bs > 1.5*$blueprint_bs) {
         say "###### NÅ BLIR DET FEIL!!!!";
         $tune->beat_score($tune->beat_score/2) ;
         my $old_shortest_note_time = $tune->shortest_note_time;
-	    say "SHORTEST NOTE TIME " .$tune->shortest_note_time . "$old_shortest_note_time * $play_bs / $blueprint_bs";
+        say "SHORTEST NOTE TIME " .$tune->shortest_note_time . "$old_shortest_note_time * $play_bs / $blueprint_bs";
         $tune->shortest_note_time($old_shortest_note_time * $play_bs / $blueprint_bs);
         $tune->score2notes;
         $play_bs = $tune->get_beat_sum;
         printf "beatlengde etter fasit: %s, spilt: %s\n",$blueprint_bs,$play_bs;
     }
-
-    #$self->denominator($self->tune->denominator);
-
-    #$self->shortest_note_time($self->tune->shortest_note_time);
-    $tune->evaluate_with_blueprint($tune_blueprint);
+   $tune->evaluate_with_blueprint($tune_blueprint);
     printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$tune->shortest_note_time,$tune->denominator;
     printf "Navn:          %s\n", color('blue') . decode('UTF-8',basename($tune_blueprint->name||$tune_blueprint->note_file) ) . color('reset');
     printf "Korteste note: %.2f\n", $tune->shortest_note_time;
-    printf "Korteste ny note: %.2f\n", $new_shortest_note;
+    printf "Ny korteste note: %.2f\n", $new_shortest_note;
+    printf "Beatinternval: %.2f\n", $tune->beat_interval;
     printf "Totaltid:      %5.2f\n", $tune->totaltime;
     return $self;
 }
@@ -158,7 +160,7 @@ sub do_list {
     my ($self, $name) = @_;
     say '';
     say "notes/";
-    my $notes_dir = path("$FindBin::Bin/../notes");
+    my $notes_dir = $self->curfile->dirname->sibling("notes");
     say $notes_dir->list_tree->map(sub{basename($_)})->join("\n");
     say $notes_dir->list_tree->map(sub{basename($_)})->join("\n");
 

@@ -143,7 +143,7 @@ sub calc_shortest_note {
 
 =head2 get_best_shortest_note
 
-Take played score. 
+Take played score.
 Compare with tune and return best suited shortest note value
 
 scoreformat:
@@ -155,33 +155,35 @@ $note->note
 =cut
 
 sub get_best_shortest_note($self, $played_score) {
-
+    say STDERR Dumper $played_score;
+    #die "Missi" if ! @$played_score;
 # prepare diff
 	my @played_note_values = map{$_->[4]} @{ $played_score};
 	my @blueprint_note_values = map{$_->note + 0} @{ $self->notes};
 	my( $idx1, $idx2 ) = LCSidx( \@played_note_values, \@blueprint_note_values );
 	my @shortest_notes_time;
-	if ($#$idx1< 4) {
+	if (scalar @$idx1< 4) {
         warn Dumper $played_score;
-        
+
         return 50; # some default value
 	}
-	
+
 # calculate all the shortest_note for all relevant notes.
 	for my $i (0 .. $#$idx1) {
         next if $idx1->[$i] == 0; # no previous note to calculated diff in time
-        next if ! $self->notes->[$idx2->[$i]]->length_numerator; # remove when length_numerator == 0 
-        my $delta_time = $played_score->[$idx1->[$i]]->[1] -$played_score->[$idx1->[$i] -1]->[1]; 
+        next if ! $self->notes->[$idx2->[$i]]->length_numerator; # remove when length_numerator == 0
+        my $delta_time = $played_score->[$idx1->[$i]]->[1] - $played_score->[$idx1->[$i] -1]->[1];
+        next if !$delta_time;
         push @shortest_notes_time, $delta_time / $self->notes->[$idx2->[$i]]->length_numerator;  # duration/length_numerator
 	}
-	
+
 # Return median
     @shortest_notes_time = sort {$a <=> $b} @shortest_notes_time;
-    if (scalar @shortest_notes_time %2 ==1 ) {
+    if (scalar $#shortest_notes_time %2 ==0 ) {
         return $shortest_notes_time[$#shortest_notes_time/2];
     }
     else {
-        return ($shortest_notes_time[$#shortest_notes_time -1 ] + $shortest_notes_time[$#shortest_notes_time ]) / 2;
+        return ($shortest_notes_time[int($#shortest_notes_time/2) +1 ] + $shortest_notes_time[int($#shortest_notes_time/2) ]);
     }
 }
 
@@ -894,6 +896,28 @@ sub to_midi_file_content {
     #return $self;
 }
 
+=head2 to_midi_score
+
+Return tune as MIDI::Score
+
+=cut
+
+sub to_midi_score($self) {
+    if (@{ $self->in_midi_events }) {
+        return  MIDI::Score::events_r_to_score_r( $self->in_midi_events );
+    }
+    elsif (@{ $self->scores }) {
+        my $return= [];
+        for my $score (@{ $self->scores }) {
+            push @$return, ['note', $score->{starttime}, $score->{duration}, 0, $score->{note}, $score->{velocity}//96];
+        }
+        return $return;
+    }
+    else {
+        warn "Make notres to scores";
+        ...;
+    }
+}
 
 =head2 to_string
 
