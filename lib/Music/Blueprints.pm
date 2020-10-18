@@ -118,12 +118,7 @@ sub do_comp {
     my $tune_blueprint= Music::Tune->from_string($file->slurp);
     $tune->denominator($tune_blueprint->denominator);
     my $new_shortest_note = $tune_blueprint->get_best_shortest_note($score);
-    $new_shortest_note = 50 if ! $new_shortest_note;
-    if (1) {
-        $tune->shortest_note_time($new_shortest_note);
-    } else {
-        $tune->calc_shortest_note;
-    }
+    $tune->shortest_note_time($new_shortest_note);
 
     $tune->score2notes;
     #say "Played notes after:  ".join(',',map {$self->pn($_->note)} @{$self->tune->notes});

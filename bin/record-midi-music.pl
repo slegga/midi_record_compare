@@ -22,6 +22,8 @@ use utf8;
 # binmode(STDIN, ":utf8");
 binmode(STDOUT, ":encoding(UTF-8)");
 use open ':encoding(UTF-8)';
+use IO::Handle; 
+STDOUT->autoflush(1);
 
 #use Carp::Always;
 
@@ -183,12 +185,13 @@ sub register_midi_event {
             $self->prev_controller($crl);
         }
     } else    {
-	    printf("%-8s %-3s %3d %.3f %5d\n",$event->[0]
+	    printf("%-8s %-3s %3d %.3f %5d",$event->[0]
 	    ,(defined($event->[3]) ? Music::Utils::Scale::value2notename($self->tune->scale,$event->[3]):'__UNDEF__')
 	    ,($event->[4]//0),
 	    ($event->[2]//0),
 	    ($event->[1]//0)
 	    );
+	    print "\r";
     }
 	#}
     if ($event->[0] eq 'port_unsubscribed') { # piano is turned off.
