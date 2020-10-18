@@ -155,7 +155,7 @@ $note->note
 =cut
 
 sub get_best_shortest_note($self, $played_score) {
-    say STDERR Dumper $played_score;
+#    say STDERR Dumper $played_score;
     #die "Missi" if ! @$played_score;
 # prepare diff
 	my @played_note_values = map{$_->[4]} @{ $played_score};
@@ -171,19 +171,21 @@ sub get_best_shortest_note($self, $played_score) {
 # calculate all the shortest_note for all relevant notes.
 	for my $i (0 .. $#$idx1) {
         next if $idx1->[$i] == 0; # no previous note to calculated diff in time
-        next if ! $self->notes->[$idx2->[$i]]->length_numerator; # remove when length_numerator == 0
+        next if ! $self->notes->[$idx2->[$i]]->delta_place_numerator; # remove when length_numerator == 0
         my $delta_time = $played_score->[$idx1->[$i]]->[1] - $played_score->[$idx1->[$i] -1]->[1];
-        next if !$delta_time;
-        push @shortest_notes_time, $delta_time / $self->notes->[$idx2->[$i]]->length_numerator;  # duration/length_numerator
+        next if $delta_time < 4;
+        say "$i $played_score->[$idx1->[$i]] ".$played_score->[$idx1->[$i]]->[1]." : ".$played_score->[$idx2->[$i]]." ".$self->notes->[$idx2->[$i]]->delta_place_numerator;
+        push @shortest_notes_time, $delta_time / $self->notes->[$idx2->[$i]]->delta_place_numerator;  # duration/delta_place_numerator
 	}
 
 # Return median
     @shortest_notes_time = sort {$a <=> $b} @shortest_notes_time;
+    say Dumper \@shortest_notes_time;
     if (scalar $#shortest_notes_time %2 ==0 ) {
         return $shortest_notes_time[$#shortest_notes_time/2];
     }
     else {
-        return ($shortest_notes_time[int($#shortest_notes_time/2) +1 ] + $shortest_notes_time[int($#shortest_notes_time/2) ]);
+        return ($shortest_notes_time[int($#shortest_notes_time/2) +1 ] + $shortest_notes_time[int($#shortest_notes_time/2) ])/2;
     }
 }
 
@@ -900,6 +902,10 @@ sub to_midi_file_content {
 
 Return tune as MIDI::Score
 
+scoreformat:
+('note', starttime, duration, channel, note, velocity)
+
+
 =cut
 
 sub to_midi_score($self) {
@@ -914,8 +920,16 @@ sub to_midi_score($self) {
         return $return;
     }
     else {
-        warn "Make notres to scores";
-        ...;
+        return [] if ! @{ $self->notes };
+        die 'Impossible with out $self->shortest_note_time' if !$self->shortest_note_time;
+        my $snt = $self->shortest_note_time;
+        my $time=0;
+        my @score;
+        for my $note (@{ $self->notes }) {
+            push @score,['note',$time + $note->delta_place_numerator * $snt,$note->length_numerator * $snt,0, ];
+        }
+        warn "... Make notes to scores";
+#        ...;
     }
 }
 
