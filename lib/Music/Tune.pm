@@ -174,7 +174,7 @@ sub get_best_shortest_note($self, $played_score) {
         next if ! $self->notes->[$idx2->[$i]]->delta_place_numerator; # remove when length_numerator == 0
         my $delta_time = $played_score->[$idx1->[$i]]->[1] - $played_score->[$idx1->[$i] -1]->[1];
         next if $delta_time < 4;
-        say "$i $played_score->[$idx1->[$i]] ".$played_score->[$idx1->[$i]]->[1]." : ".$played_score->[$idx2->[$i]]." ".$self->notes->[$idx2->[$i]]->delta_place_numerator;
+        say "$i $played_score->[$idx1->[$i]] ".($played_score->[$idx1->[$i]]->[1]//'__UNDEF__')." : ".($played_score->[$idx2->[$i]]//'')." ".($self->notes->[$idx2->[$i]]->delta_place_numerator//'');
         push @shortest_notes_time, $delta_time / $self->notes->[$idx2->[$i]]->delta_place_numerator;  # duration/delta_place_numerator
 	}
 
@@ -268,7 +268,7 @@ sub evaluate_with_blueprint {
 #	say "171\n".Dumper $wrongs;
 	# Calculate a note score
 	my $n = ((scalar @{ $blueprint->notes } - scalar @$wrongs * 3)/(scalar @{ $blueprint->notes }))*100;
-   warn $self->note_score($n);
+    $self->note_score($n);
 
 
 	# Calculate a note map
