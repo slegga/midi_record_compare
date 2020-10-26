@@ -19,7 +19,7 @@ use overload
 
 has length => 0;
 has shortest_note_time => 0;
-has denominator => 4;
+has denominator => 8;
 has beat_interval =>100000000;
 has 'scores' => sub {return []}; # hash_ref
 has 'notes' =>sub {return []}; # Music::Note
@@ -133,9 +133,9 @@ sub calc_shortest_note {
     $self->beat_score( int ((25 -(100 * ($best->{value} / $numnotes)))*4 ));
 
 	$self->shortest_note_time($best->{'period'});
-    if ( $best->{'period'} >= 64 ) {
+    if ( $best->{'period'} >= 96 ) {
         $self->denominator(4);
-    } elsif( $best->{'period'} < 64 ) {
+    } elsif( $best->{'period'} < 96 ) {
         $self->denominator(8);
     }
 	return $self;
