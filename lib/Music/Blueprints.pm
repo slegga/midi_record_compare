@@ -118,7 +118,11 @@ sub do_comp {
     my $tune_blueprint= Music::Tune->from_string($file->slurp);
     $tune->denominator($tune_blueprint->denominator);
     my $new_shortest_note = $tune_blueprint->get_best_shortest_note($score);
-    $tune->shortest_note_time($new_shortest_note);
+    if ($new_shortest_note) {
+        $tune->shortest_note_time($new_shortest_note);
+    } else {
+        $tune->calc_shortest_note_time; # calculate implesit
+    }
 
     $tune->score2notes;
     #say "Played notes after:  ".join(',',map {$self->pn($_->note)} @{$self->tune->notes});
@@ -135,7 +139,7 @@ sub do_comp {
         $play_bs = $tune->get_beat_sum;
         printf "beatlengde etter fasit: %s, spilt: %s\n",$blueprint_bs,$play_bs;
     }
-   $tune->evaluate_with_blueprint($tune_blueprint);
+    $tune->evaluate_with_blueprint($tune_blueprint);
     printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$tune->shortest_note_time,$tune->denominator;
     printf "Navn:          %s\n", color('blue') . decode('UTF-8',basename($tune_blueprint->name||$tune_blueprint->note_file) ) . color('reset');
     printf "Korteste note: %.2f\n", $tune->shortest_note_time;
@@ -163,46 +167,6 @@ sub do_list {
     say "blueprints/";
     say decode('utf8',$self->blueprints_dir->list_tree->map(sub{basename($_)})->join("\n"));
 }
-
-
-
-# =head2 do_play_blueprint
-#
-# Play compared blueprint
-#
-# =cut
-#
-# sub do_play_blueprint {
-#     my ($self, $note_file) = @_;
-#     my $tmpfile = tempfile(DIR=>'/tmp');
-#     my $blueprint;
-#     my $bdf = $self->blueprints_dir->child($note_file)->to_string;
-#     if (defined $note_file) {
-#         if ( -f $note_file) {
-#             $blueprint = Music::Tune->from_note_file($note_file);
-#  		} elsif (-f $bdf) {
-#             $blueprint = Music::Tune->from_note_file($bdf);
-#   		} else {
-#   			for my $f(sort {length $a <=> $b} $self->blueprints_dir->list->each) {
-#   				if ("$f" =~ /$note_file/) {
-#   					$blueprint = Music::Tune->from_note_file("$f");
-#   					last;
-#   				}
-#   			}
-#   		}
-#   		if(! $blueprint) {
-#         	warn "note_file does not exists $note_file";
-#         	return;
-#         }
-#     } elsif ($self->tune->blueprint_file) {
-#         $blueprint = Music::Tune->from_note_file($self->tune->blueprint_file);
-#     }
-#     say path($blueprint->note_file)->basename;
-#     $blueprint->notes2score;
-#     $blueprint->to_midi_file("$tmpfile");
-#     print `timidity $tmpfile`;
-#
-# }
 
 =head2 do_save
 
