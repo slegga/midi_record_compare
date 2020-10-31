@@ -129,16 +129,16 @@ sub do_comp {
     my $play_bs = $tune->get_beat_sum;
     my $blueprint_bs = $tune_blueprint->get_beat_sum;
     printf "beatlengde før   fasit: %s, spilt: %s\n",$blueprint_bs,$play_bs;
-    if ($play_bs*1.5 <$blueprint_bs || $play_bs > 1.5*$blueprint_bs) {
-        say "###### NÅ BLIR DET FEIL!!!!";
-        $tune->beat_score($tune->beat_score/2) ;
-        my $old_shortest_note_time = $tune->shortest_note_time;
-        say "SHORTEST NOTE TIME " .$tune->shortest_note_time . "$old_shortest_note_time * $play_bs / $blueprint_bs";
-        $tune->shortest_note_time($old_shortest_note_time * $play_bs / $blueprint_bs);
-        $tune->score2notes;
-        $play_bs = $tune->get_beat_sum;
-        printf "beatlengde etter fasit: %s, spilt: %s\n",$blueprint_bs,$play_bs;
-    }
+#     if ($play_bs*1.5 <$blueprint_bs || $play_bs > 1.5*$blueprint_bs) {
+#         say "###### NÅ BLIR DET FEIL!!!!";
+#         $tune->beat_score($tune->beat_score/2) ;
+#         my $old_shortest_note_time = $tune->shortest_note_time;
+#         say "SHORTEST NOTE TIME " .$tune->shortest_note_time . "$old_shortest_note_time * $play_bs / $blueprint_bs";
+#         $tune->shortest_note_time($old_shortest_note_time * $play_bs / $blueprint_bs);
+#         $tune->score2notes;
+#         $play_bs = $tune->get_beat_sum;
+#         printf "beatlengde etter fasit: %s, spilt: %s\n",$blueprint_bs,$play_bs;
+#     }
     $tune->evaluate_with_blueprint($tune_blueprint);
     printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$tune->shortest_note_time,$tune->denominator;
     printf "Navn:          %s\n", color('blue') . decode('UTF-8',basename($tune_blueprint->name||$tune_blueprint->note_file) ) . color('reset');
