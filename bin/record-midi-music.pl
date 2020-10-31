@@ -22,7 +22,7 @@ use utf8;
 # binmode(STDIN, ":utf8");
 binmode(STDOUT, ":encoding(UTF-8)");
 use open ':encoding(UTF-8)';
-use IO::Handle; 
+use IO::Handle;
 STDOUT->autoflush(1);
 
 #use Carp::Always;
@@ -175,7 +175,7 @@ sub register_midi_event {
         )
         {
             $crl->{$event->[3]} = $event->[4];
-            say join('  ', grep {defined } @$event);
+            print  join('  ', grep {defined } @$event)."\r";
 
             #end tune if left pedal pressed
             if ($event->[3] == 67 && $event->[4]) {

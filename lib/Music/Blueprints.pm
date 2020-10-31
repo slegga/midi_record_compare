@@ -179,6 +179,15 @@ sub do_save {
     return if !$name;
     $name .= '.txt' if ($name !~/\.midi?$/);
     my $new_file = $self->local_dir($self->blueprints_dir->child('notes'))->child($name);
+    if (! $tune->name) {
+        my $tname = $name;
+        $tname=~ s/_/ /;
+        $tname = uc(substr($tname,0,1)) . substr($tname,1);
+        $tune->name($tname);
+    }
+    if (! $tune->hand_right_min) {
+        $tune->hand_right_min('C4');
+    }
     $new_file->spurt($tune->to_string);
     say "Saved $new_file";
 }
