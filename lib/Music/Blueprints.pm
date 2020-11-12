@@ -259,7 +259,7 @@ sub guess_blueprint {
     my $self = shift;
     my $tune = shift;
     if (@{$tune->notes} <10) {
-        say "For kort låt for å sammenligne";
+        say "For kort låt for å sammenligne" if scalar @{$tune->notes};
         return;
     }
 
