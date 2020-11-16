@@ -973,6 +973,23 @@ has ['hand_left_max','hand_right_min','hand_default'];
   return $return . join('',@notes)."\n";
 }
 
+=head2 hand
+
+    $tune->hand('right');
+    say $tune->to_string;
+
+Filter out the hand that is not mention.
+    
+=cut
+
+sub hand {
+    my $self = shift;
+    my $hand = shift;
+    my $data = $self->to_data_split_hands();
+    $self->notes($data->{$hand});
+    return $self;
+}
+
 #
 #   PRIVATE SUBS
 #

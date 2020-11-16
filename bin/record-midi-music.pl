@@ -57,6 +57,7 @@ has silence_timer=> -1;
 has piano_keys_pressed =>sub{ {} };
 has input_object => sub { Music::Input::ALSA->new };
 has prev_controller => sub { {} };
+has 'hand';
 has commands => sub{[
     [[qw/h help/],     0, 'This help text', sub{$_[0]->print_help}],
     [[qw/l list/],     1, 'List saved tunes.', sub{
@@ -88,16 +89,13 @@ has commands => sub{[
         } else {
             my $filename = $self->blueprints->get_pathfile_by_name($name);
             $self->comp_working($filename);
-        	$self->blueprints->do_comp($self->tune,$filename);
+        	$self->blueprints->do_comp($self->tune,$filename,$self->hand);
         }
     }],
+    [[qw /ha hand/],    1, 'Bluenotes with only one hand. Valid values are left,right and both',sub {$_[0]->hand($_[1])}],
     [[qw/sm savemidi/],1, 'Save as midi file. Add .midi if not present in name.', sub{$_[0]->finish;  $_[0]->blueprints->do_save_midi($_[1])}],
     [[qw/q quit/],     0, 'End session.',sub{$_[0]->do_quit}],
     [[qw/defaults/],   0, 'Stop last tune and start on new.', sub {
-        # my $self = $_[0];
-        # $self->finish;
-        # $self->blueprints->do_comp;
-        # $self->restart;
     }]
 ]};
 has blueprints => sub {
@@ -240,7 +238,7 @@ sub finish_and_compare {
     $self->finish;
     my $guess;
     $guess = $self->comp || $self->blueprints->guess_blueprint($self->tune);
-    $self->blueprints->do_comp($self->tune, $guess);
+    $self->blueprints->do_comp($self->tune, $guess,$self->hand);
 }
 
 # Read note pressed.
