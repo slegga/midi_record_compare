@@ -46,6 +46,7 @@ option 'extend=s', 'Extend these periods to next valid length. Takes , separated
 option 'scale=s', 'Set scale. Convert from old to given scale. Example c_dur';
 option 'ticsprbeat=i', 'Number of tics. Examle 6.';
 option 'nowait!','No waiting',{default=>0};
+option 'limit=i','Number of rows';
 #option 'allowstacato!','Accept and marks notes as stacato if they look like that',{default=>0};
 
 sub main {
@@ -128,7 +129,7 @@ sub print_colornotes {
 #	say color('red').$allow_all_pause_lengths.color('reset');
     # splice hands
 	my @handsplice = sort {$a->order <=> $b->order} ( @{$data->{left}}, @{ $data->{right} }, @{$data->{unknown}});
-
+    my $i=0;
 	for my $n( @handsplice) {
 	    #Delay
         if(!defined $n->next_silence || $n->next_silence == 0) {
@@ -169,6 +170,9 @@ sub print_colornotes {
         }
         print $n->to_string({scale=>$tune->{scale}}),"\n";
         print color('reset');
+        $i++;
+        last if $self->limit && $self->limit < $i;
+
     }
     print color('reset');
 }

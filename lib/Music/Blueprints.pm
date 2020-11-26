@@ -114,7 +114,7 @@ sub do_comp {
         $tune = Music::Tune->from_midi_score($score);
     }
     my $tune_blueprint= Music::Tune->from_string($file->slurp);
-    $tune_blueprint->hand($hand) if (grep {$hand eq $_} (qw/left right/));
+    $tune_blueprint->hand($hand) if ($hand && grep {$hand eq $_} (qw/left right/));
     $tune->denominator($tune_blueprint->denominator);
     my $new_shortest_note = $tune_blueprint->get_best_shortest_note($score);
     if ($new_shortest_note) {
