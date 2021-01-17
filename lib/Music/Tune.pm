@@ -268,6 +268,7 @@ sub evaluate_with_blueprint {
 #	say "171\n".Dumper $wrongs;
 	# Calculate a note score
 	my $n = ((scalar @{ $blueprint->notes } - scalar @$wrongs * 3)/(scalar @{ $blueprint->notes }))*100;
+	say STDERR "##### $n wrongs: ".scalar @$wrongs ."  ".scalar @{ $blueprint->notes }. " ### ".join("\n", map {join ';',@$_ } @$wrongs)  ;
     $self->note_score($n);
 
 
@@ -334,10 +335,20 @@ sub evaluate_with_blueprint {
 				push @note_diff, ['3',$i,undef];
 				$i++;
 			}
+		} elsif ($i== $m && $j == $b) {
+            # success
+
+		} else{
+				push @note_diff, ['4',$#maps,$#maps];
 		}
 
 		if ($i == $m && $j == $b) {
 			push @note_diff, ['100',$i,$j];
+		} else {
+				push @note_diff, ['5',$i,$j];
+
+		#    say "4 $i == $m && $j == $b";
+#		    ...;
 		}
 
         $i++;$j++;
@@ -374,8 +385,8 @@ sub evaluate_with_blueprint {
 			} else {
                 print color('red');
             }
-			printf $format, $n->[0],defined $self->notes->[$n->[1]]? $self->notes->[$n->[1]]->to_string( {no_comment=>1, scale=>$blueprint->scale}) :''
-			, defined $blueprint->notes->[$n->[2]] ? $blueprint->notes->[$n->[2]]->to_string({scale=>$blueprint->scale}) : '';
+			printf $format, $n->[0],defined $self->notes->[$n->[1]]? $self->notes->[$n->[1]]->to_string( {no_comment=>1, scale=>$blueprint->scale}) :'X'
+			, defined $blueprint->notes->[$n->[2]] ? $blueprint->notes->[$n->[2]]->to_string({scale=>$blueprint->scale}) : 'X';
 		}
 		elsif (! defined $n->[1] && defined $n->[2]) {
 			print color('red');
@@ -979,7 +990,7 @@ has ['hand_left_max','hand_right_min','hand_default'];
     say $tune->to_string;
 
 Filter out the hand that is not mention.
-    
+
 =cut
 
 sub hand {
