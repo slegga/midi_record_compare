@@ -113,6 +113,7 @@ option  'comp=s', 'Compare play with this blueprint';
 option  'dryrun!',  'Do not expect a linked piano';
 option  'debug!',   'Print debug info';
 option 'api!',  'Get blueprints from API';
+option 'breaklength=i', 'Set length in seconds before program execute a end tune command Default: 5', { default => 5};
 
 
 sub main {
@@ -133,7 +134,7 @@ sub main {
     	if ( ! $self->silence_timer ) {
     		$self->silence_timer($t);
     	}
-    	elsif ( $t - $self->silence_timer >= 3 && ! keys %{ $self->piano_keys_pressed }) {
+    	elsif ( $t - $self->silence_timer >= $self->breaklength && ! keys %{ $self->piano_keys_pressed }) {
     		# do_endtune
     		$self->stdin_read();
     	}
