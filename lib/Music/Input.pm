@@ -26,13 +26,11 @@ Music::Input
   package Music::Input::ALSA;
   use Mojo::Base 'Music::Input';
 
-  sub port =>{ 80 };
+  has port =>{ 80 };
 
-  sub register_events => {
+  has register_events => {
 
-  }
-
-  sub
+  };
 
   sub input_init {
     my ($self, $app, $conf) = @_;

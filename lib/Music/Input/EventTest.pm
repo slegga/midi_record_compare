@@ -36,16 +36,13 @@ Music::Input::EventTest
 
 =head1 SYNOPSIS
 
-  package Music::Input::EventTest;
   use Mojo::Base 'Music::Input::EventTest';
 
-  sub port =>{ 80 };
+  has port =>{ 80 };
 
-  sub register_events => {
+  has register_events => {
 
-  }
-
-  sub
+  };
 
   sub input_init {
     my ($self, $app, $conf) = @_;

@@ -50,8 +50,10 @@ Music::Tune - Handle tunes
 
 =head1 SYNOPSIS
 
- use Music::Tune
- my $tune = Music::tune->from_notefile('my-notefile.txt');
+ use Music::Tune;
+ use Mojo::File 'path';
+ my $content = path('my-notefile.txt')->slurp;
+ my $tune = Music::Tune->from_string($content);
  $tune->play;
 
 =head1 DESCRIPTION
