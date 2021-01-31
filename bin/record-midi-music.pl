@@ -63,7 +63,8 @@ has commands => sub{[
     [[qw/l list/],     1, 'List saved tunes.', sub{
         my $self =$_[0]; $self->finish;$self->blueprints->do_list($_[1])}],
     [[qw/p play/],     1, ' Play last played tune.', sub{my $self =$_[0]; $self->finish; $self->tune->play}],
-    [[qw/pb playblueprint/],     1, ' Play compared blueprint. If none play none.', sub{
+    [[qw/pb playblueprint/],     1, ' Play
+    ared blueprint. If none play none.', sub{
         my ($self, $name) = @ _;
         my $filepath;
         if ($name) {
@@ -84,7 +85,7 @@ has commands => sub{[
     [[qw/c comp/],     0, 'Compare last tune with given name. If not name then test with --comp argument. 0=reset', sub{
         my ($self, $name)=@_;
         if (! $name) {
-            $self->comp_working('');
+            $self->comp_working(undef);
             say "Reset blueprint";
         } else {
             my $filename = $self->blueprints->get_pathfile_by_name($name);
@@ -124,6 +125,7 @@ sub main {
     	$self->input_object->port();
     	$self->input_object->init();
     }
+    $self->comp_working=$self->comp if $self->comp;
     $self->blueprints->init; #load blueprints
 
     $self->input_object->register_events( $self->loop, $self );
@@ -238,7 +240,7 @@ sub finish_and_compare {
     my ($self) = @_;
     $self->finish;
     my $guess;
-    $guess = $self->comp || $self->blueprints->guess_blueprint($self->tune);
+    $guess = $self->comp_woriking || $self->blueprints->guess_blueprint($self->tune);
     $self->blueprints->do_comp($self->tune, $guess,$self->hand);
 }
 

@@ -572,7 +572,9 @@ sub from_string {
 
     for my $line (split/\n/,$content) {
         $line =~ s/\s*\#.*$//;
-        if ($line eq '__END__') {
+        if ($line eq '__START__') {
+            @notes=(); #remove previous registered notes
+        } elsif ($line eq '__END__') {
             if(! $options->{ignore_end}) {
                 last;
             } else {
