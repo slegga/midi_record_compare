@@ -61,7 +61,7 @@ Music::Tune - Handle tunes
 ('note_off', dtime, channel, note, velocity)
 ('note_on',  dtime, channel, note, velocity)
 
-No file interaction. Consumer object is responsible for writning to disk.
+No file interaction. Consumer object is responsible for writing to disk.
 
 =head1 METHODS
 
@@ -79,7 +79,7 @@ sub calc_length {
 
 =head2 calc_shortest_note
 
-Guess the shorest note. If shorter than 64 it is a 1/8 else 1/4.
+Guess the shortest note. If shorter than 64 it is a 1/8 else 1/4.
 Set denominator, beat_interval, beat_score,shortest_note_time
 
 =cut
@@ -197,7 +197,7 @@ sub get_best_shortest_note($self, $played_score) {
 
 =head2 clean
 
-Modify tune after sertant rules like extend periods defined in opts argument.
+Modify tune after certain rules like extend periods defined in opts argument.
 Opts is a has ref, can have these options: extend, nobeattresspass, upgrade 0/1.
 
 =cut
@@ -471,7 +471,7 @@ sub finish {
 
 
 Take an array_ref of (MIDI) score and return a new Music::Tune object
-Do not concatinate on beat yet.
+Do not concatenate on beat yet.
 
 =cut
 
@@ -704,7 +704,7 @@ sub play {
 Populate and change order for notes. Keep score as is.
 and guess scale.
 
-Contatinate beats.
+Concatenate beats.
 
 Prepare output at notefile.
 i.e
@@ -713,7 +713,7 @@ i.e
  0.1;0.1;D4
 ...
 
-Reseason for clone is to evaluate and see if right shortest_note is choosen outside of this sub or try again with different shortest_note with out adjusting order.
+Reason for clone is to evaluate and see if right shortest_note is chosen outside of this sub or try again with different shortest_note with out adjusting order.
 
 =cut
 

@@ -55,7 +55,7 @@ the following new ones.
 
 =head2 reset_time
 
-Optional event when in need for reseting things when tune is finished played.
+Optional event when in need for resetting things when tune is finished played.
 
 =cut
 1;

@@ -14,11 +14,11 @@ MidiRecordCompare
 =head1 SYNOPSIS
 
 ...;
-underconstruction;
+under construction;
 
 =head1 DESCRIPTION
 
-Main web class. Under constructrion.
+Main web class. Under construction.
 
 =head1 METHODS
 

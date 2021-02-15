@@ -125,7 +125,7 @@ sub main {
     	$self->input_object->port();
     	$self->input_object->init();
     }
-    $self->comp_working=$self->comp if $self->comp;
+    $self->comp_working($self->comp) if $self->comp;
     $self->blueprints->init; #load blueprints
 
     $self->input_object->register_events( $self->loop, $self );
@@ -240,7 +240,7 @@ sub finish_and_compare {
     my ($self) = @_;
     $self->finish;
     my $guess;
-    $guess = $self->comp_woriking || $self->blueprints->guess_blueprint($self->tune);
+    $guess = $self->comp_working || $self->blueprints->guess_blueprint($self->tune);
     $self->blueprints->do_comp($self->tune, $guess,$self->hand);
 }
 

@@ -14,7 +14,7 @@ use Music::Input::ALSA
 
 =head1 DESCRIPTION
 
-"Input plugin" for Mojo::IOLoop for ALSA protocoll for reading .
+"Input plugin" for Mojo::IOLoop for ALSA protocol for reading .
 
 inherits all methods from Music::Input and override following methods.
 
@@ -64,7 +64,7 @@ sub port {
 =head2 init
 
 Initialize ALSA
-lissening.
+listening.
 
 =cut
 

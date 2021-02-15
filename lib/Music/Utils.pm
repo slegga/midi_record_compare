@@ -122,7 +122,7 @@ sub calc_length {
 
 =head2 tune_as_text_validate
 
-For å brukes til openapi grensesnittet iforbindelse med lagring av filer
+To be used for openapi interface to save files.
 
 Returns 1 if valid and 0 if not valid tune
 

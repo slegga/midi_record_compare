@@ -9,7 +9,7 @@ MidiRecordCompare::Controller::Midi - A start on a web page
 
 =head1 SYNOPSIS
 
-undercontruction.
+under construction.
 
 =head1 DESCRIPTION
 
