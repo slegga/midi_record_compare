@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE score-partwise PUBLIC
+    "-//Recordare//DTD MusicXML 3.1 Partwise//EN"
+    "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="3.1">
+<part-list>
+<score-part id="P1">
+<part-name>Stykkenavn</part-name>
+</score-part>
+</part-list>
+<part id="P1">
+<measure number="1">
+<attributes>
+<time>
+<beats>4</beats>
+<beat-type>4</beat-type>
+</time>
+<divisions>1</divisions>
+</attributes>
+<note>
+<duration>4</duration>
+<type>whole</type>
+<pitch>
+<octave>4</octave>
+<step>C</step>
+</pitch>
+</note>
+</measure>
+</part>
+</score-partwise>
+

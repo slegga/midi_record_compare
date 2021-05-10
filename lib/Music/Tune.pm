@@ -1029,6 +1029,19 @@ sub xml {
     return $return;
 }
 
+sub xml_measure {
+    my $measure = shift;
+    return xml('measure', {'number' => $measure->{number}}
+        ,join('', $measure->{attributes},
+        ,map {xml('note',
+            xml('pitch', xml('octave', $_->{octave}) . xml('step', $_->{step}))
+            . xml('duration', $_->{duration} )
+            . xml('type', $_->{type} )
+            )
+        } @{$measure->{notes}} )
+    )
+}
+
 
 =head2 to_musicxml_text
 
@@ -1037,8 +1050,23 @@ Return a long string on MusicXML format
 =cut
 
 sub to_musicxml_text($self){
-    my @notes=();
+    my @measures=();
+    my $tick = 0;
+    $tick = $self->startbeat if $self->startbeat;
+    my $measure_number = 1;
     die if ! @{ $self->notes };
+    my $measure = {
+        number => $measure_number,
+        attributes => xml('attributes'
+                    ,xml('divisions','1' ).
+                    xml('key',xml('fifths','0')).
+                    xml('time',xml('beats','4' ).xml('beat-type', '4' )).
+                    xml('clef', xml('line', '2' ).xml('sign','G'))
+                    
+                    ),
+        notes=>[]
+
+    };
     for my $tn(@{ $self->notes }) {
         my $wn = {}; 
         $wn->{duration} = $tn->{length_numerator};
@@ -1057,9 +1085,19 @@ sub to_musicxml_text($self){
         }
         ($wn->{step},$wn->{octave}) =( $tn->{note_name}=~/^([A-Z])(\d+)$/);
         die "Unknown note_name". ($tn->{note_name}||'__EMPTY/UNDEF__') if ! $wn->{step};
-        $wn->{step}='B' if $wn->{step}='H';
-        push @notes,$wn;
-}
+        $wn->{step}='B' if $wn->{step} eq 'H';
+        push @{$measure->{notes}}, $wn;
+        $tick =$tick + $tn->{length_numerator};
+        if ($tick>=$self->denominator) {
+            $tick = $tick - $self->denominator;
+            my $copy;
+            %$copy = %$measure;
+            $measure_number++;
+            push @measures,$copy;
+            $measure={ attributes=>'', number => $measure_number, notes=>[] };
+        }
+    }
+
    my $txt =q|<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE score-partwise PUBLIC
     "-//Recordare//DTD MusicXML 3.1 Partwise//EN"
@@ -1067,27 +1105,10 @@ sub to_musicxml_text($self){
 |; 
     $txt .=xml('score-partwise',{version=>"3.1"}, xml('part-list', xml('score-part',{id=>'P1'}, 
             xml('part-name',"Stykkenavn"))).
-            xml('part', {'id' => 'P1'}
-            ,xml('measure', {'number' => '1'}
-                ,join('',xml('attributes'
-                    ,xml('divisions','1' ).
-                    xml('key',xml('fifths','0')).
-                    xml('time',xml('beats','4' ).xml('beat-type', '4' )).
-                    xml('clef', xml('line', '2' ).xml('sign','G'))
-                    
-                    )
-                ,map {xml('note',
-                    xml('pitch', xml('octave', $_->{octave}) . xml('step', $_->{step}))
-                    . xml('duration', $_->{duration} )
-                    . xml('type', $_->{type} )
-                    )
-                } @notes )
-            
-                )
-            )
-     
-   );
-
+            xml('part', {'id' => 'P1'},
+               join('',map{ xml_measure($_)} @measures)
+            ) 
+    );
 }
 
 =head2 to_string
