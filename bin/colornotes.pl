@@ -52,7 +52,7 @@ option 'limit=i','Number of rows';
 sub main {
     my $self = shift;
     my ($file) = path($self->extra_options->[0]);
-    my $tune = Music::Tune->from_string($file->slurp);
+    my $tune = Music::Tune->from_string($file->slurp, {ignore_end=>1});
     my $new_scale;
     warn $tune->scale;
     if ($self->scale) {
@@ -75,7 +75,7 @@ sub main {
     	my (@changed) =$d->changed;
     	#say @changed;
 		if ( @changed ) {
-		    my $tune = Music::Tune->from_string($file->slurp);
+		    my $tune = Music::Tune->from_string($file->slurp,{ignore_end=>1});
 			say "\n";
    			$self->print_colornotes($tune);
    			$d->update();

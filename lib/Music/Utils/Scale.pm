@@ -116,11 +116,11 @@ Takes scalename and a number for note and return note name.
 
 sub value2notename {
     my $scale = shift//'c_dur';
-    my $value = shift;
+    my $value = shift||die "Missing input.";
     return 'PL' if $value == -1; # pause left
     return 'PR' if $value == -2; # pause right
     return 'PD' if $value == -3; # Pedal
-    die "Need a number" if ! looks_like_number($value);
+    die "Need a number ".($value//'__UNDEF__') if ! looks_like_number($value);
     my $oct = int($value /12)-1;
     return _bit_from_value($scale,$value % 12) . $oct;
 }

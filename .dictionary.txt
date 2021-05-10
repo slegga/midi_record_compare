@@ -22,3 +22,4 @@ notename
 notevalues
 scalename
 openapi
+musicxml

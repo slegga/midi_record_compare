@@ -7,6 +7,7 @@ use Music::Utils::Scale;
 use Data::Dumper;
 use Mojo::JSON 'to_json';
 use MIDI;
+use Tie::IxHash;
 
 use Carp;
 use List::Util qw/min max/;
@@ -573,7 +574,12 @@ sub from_string {
     for my $line (split/\n/,$content) {
         $line =~ s/\s*\#.*$//;
         if ($line eq '__START__') {
-            @notes=(); #remove previous registered notes
+            if(! $options->{ignore_end}) {
+                @notes=(); #remove previous registered notes
+            } else {
+                push(@notes,Music::Note->new(type=>'string',string=>'__START__'));
+            }
+            next;
         } elsif ($line eq '__END__') {
             if(! $options->{ignore_end}) {
                 last;
@@ -917,6 +923,43 @@ sub to_midi_file_content {
     #return $self;
 }
 
+=head2 to_midi_events
+
+Return tune as MIDI::Events
+
+=cut
+
+sub to_midi_events($self) {
+        $DB::single=2;
+
+    if (@{ $self->in_midi_events }) {
+            return  $self->in_midi_events ;
+    }
+    if (!@{ $self->scores }) {
+        $self->notes2score;
+    }
+
+    if (@{ $self->scores }) {
+        my $scores = $self->scores;
+
+        # convert to midi scores
+#        {starttime, duration, delta_time, velocity,note}
+        # from hash {starttime, duration, delta_time, velocity,note} to:('note', starttime, duration, channel, note, velocity)
+        my $events=[];
+        for my $s(@$scores) {
+            push @$events,['note',$s->{starttime}, $s->{duration},0,$s->{note},$s->{velocity}];
+
+        }
+
+        MIDI::Score::score_r_to_events_r( $events );
+        return $events;
+    }
+    else {
+        warn "EMPTY RESULT";
+        return;
+    }
+}
+
 =head2 to_midi_score
 
 Return tune as MIDI::Score
@@ -950,6 +993,101 @@ sub to_midi_score($self) {
         warn "... Make notes to scores";
 #        ...;
     }
+}
+
+=head2 xml
+
+Utility function to generate XML as text.
+
+    $xml =  xml('key',{parameter=>''},$value);
+    $xml .= xml('key2','value2');
+
+=cut
+
+sub xml {
+    my $key = shift ||die "no key";
+    my $hash;
+    if (ref $_[0] eq 'HASH') {
+        $hash =shift;
+    }
+    my $text;
+    $text = shift if defined $_[0] && length($_[0]); 
+    my $return='';
+    if (! $hash) {
+        $return .= "<$key>";
+    } else {
+        $return .= "<$key";
+        while (my ($k,$v) = each %$hash) {
+            $return .= " $k=\"$v\"";
+        }
+        $return .=">";
+    }
+    $return .= "\n" if $text && $text =~/\>/;
+    $return .= $text if length($text);
+    $return .= "</$key>";
+    $return .= "\n";# if $text && $text =~/\>/;    
+    return $return;
+}
+
+
+=head2 to_musicxml_text
+
+Return a long string on MusicXML format
+
+=cut
+
+sub to_musicxml_text($self){
+    my @notes=();
+    die if ! @{ $self->notes };
+    for my $tn(@{ $self->notes }) {
+        my $wn = {}; 
+        $wn->{duration} = $tn->{length_numerator};
+        if ($tn->{length_numerator} == $self->denominator) {
+            $wn->{type} = 'whole';
+        } elsif (2 *$tn->{length_numerator} == $self->denominator) {
+            $wn->{type} = 'half';
+        } elsif (4 *$tn->{length_numerator} == $self->denominator) {
+            $wn->{type} = 'quarter';
+        } elsif (8 *$tn->{length_numerator} == $self->denominator) {
+            $wn->{type} = 'eighth';
+        } elsif (16 *$tn->{length_numerator} == $self->denominator) {
+            $wn->{type} = '16th';
+        } else {
+            $wn->{type} = '128th';
+        }
+        ($wn->{step},$wn->{octave}) =( $tn->{note_name}=~/^([A-Z])(\d+)$/);
+        die "Unknown note_name". ($tn->{note_name}||'__EMPTY/UNDEF__') if ! $wn->{step};
+        $wn->{step}='B' if $wn->{step}='H';
+        push @notes,$wn;
+}
+   my $txt =q|<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE score-partwise PUBLIC
+    "-//Recordare//DTD MusicXML 3.1 Partwise//EN"
+    "http://www.musicxml.org/dtds/partwise.dtd">
+|; 
+    $txt .=xml('score-partwise',{version=>"3.1"}, xml('part-list', xml('score-part',{id=>'P1'}, 
+            xml('part-name',"Stykkenavn"))).
+            xml('part', {'id' => 'P1'}
+            ,xml('measure', {'number' => '1'}
+                ,join('',xml('attributes'
+                    ,xml('divisions','1' ).
+                    xml('key',xml('fifths','0')).
+                    xml('time',xml('beats','4' ).xml('beat-type', '4' )).
+                    xml('clef', xml('line', '2' ).xml('sign','G'))
+                    
+                    )
+                ,map {xml('note',
+                    xml('pitch', xml('octave', $_->{octave}) . xml('step', $_->{step}))
+                    . xml('duration', $_->{duration} )
+                    . xml('type', $_->{type} )
+                    )
+                } @notes )
+            
+                )
+            )
+     
+   );
+
 }
 
 =head2 to_string

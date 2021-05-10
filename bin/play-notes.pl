@@ -47,9 +47,10 @@ sub main {
     die "File $note_file does not exists" if ! -e $note_file;
 
     my $tmpfile = tempfile(DIR=>'/tmp');
-    my $tune = Music::Tune->from_note_file($note_file);
+    my $tune = Music::Tune->from_string(path($note_file)->slurp);
     $tune->notes2score;
-    $tune->to_midi_file("$tmpfile");
+    my $cont = $tune->to_midi_file_content;
+    path("$tmpfile")->spurt($cont);
 
     print `timidity $tmpfile`;
 }

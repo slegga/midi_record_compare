@@ -24,11 +24,12 @@ use SH::UseLib;
 use Music::Utils::Scale;
 my $handsplit_y=-80;
 # Convertion from a XML String to a Hash
-if(0) {
-	my $p = XML::LibXML->new();
-	$p->validation(1);
-	my $xml_hash = $p->load_xml(location => 'lg-69390178.xml');#'notes/Alan_Walker_-_All_Falls_Down.mxl');
-	print Dumper $xml_hash;
+if(1) {
+	my $xml_converter = XML::Hash->new();
+	my $xml =  $xml_converter->fromXMLStringtoHash('helloworld.musicxml');
+	#	$p->validation(1);
+#	my $xml_hash = $p->load_xml(location => 'lg-69390178.xml');#'notes/Alan_Walker_-_All_Falls_Down.mxl');
+	print Dumper $xml;
 } else {
 	my $xml_converter = XML::Hash->new();
 	my $xml =  $xml_converter->fromXMLStringtoHash('lg-69390178.xml');
