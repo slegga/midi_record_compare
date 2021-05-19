@@ -11,7 +11,7 @@
 <part id="P1">
 <measure number="1">
 <attributes>
-<divisions>1</divisions>
+<divisions>2</divisions>
 <key>
 <fifths>0</fifths>
 </key>
@@ -19,9 +19,13 @@
 <beats>4</beats>
 <beat-type>4</beat-type>
 </time>
-<clef>
+<clef number="1">
 <line>2</line>
 <sign>G</sign>
+</clef>
+<clef number="2">
+<line>4</line>
+<sign>F</sign>
 </clef>
 </attributes>
 <note>

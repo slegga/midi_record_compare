@@ -1011,7 +1011,7 @@ sub xml {
         $hash =shift;
     }
     my $text;
-    $text = shift if defined $_[0] && length($_[0]); 
+    $text = shift if defined $_[0] && length($_[0]);
     my $return='';
     if (! $hash) {
         $return .= "<$key>";
@@ -1025,7 +1025,7 @@ sub xml {
     $return .= "\n" if $text && $text =~/\>/;
     $return .= $text if length($text);
     $return .= "</$key>";
-    $return .= "\n";# if $text && $text =~/\>/;    
+    $return .= "\n";# if $text && $text =~/\>/;
     return $return;
 }
 
@@ -1034,12 +1034,15 @@ sub xml_measure {
     return xml('measure', {'number' => $measure->{number}}
         ,join('', $measure->{attributes},
         ,map {xml('note',
-            xml('pitch', xml('octave', $_->{octave}) . xml('step', $_->{step}))
-            . xml('duration', $_->{duration} )
-            . xml('type', $_->{type} )
+            xml('pitch', xml('octave', $_->{octave}) . xml('step', $_->{step}).
+             (exists $_->{alter} && $_{alter}?xml('alter', $_->{alter}):'')
+             . xml('duration', $_->{duration} )
+             . xml('type', $_->{type} )
             )
-        } @{$measure->{notes}} )
+        )} @{$measure->{notes}} )
+
     )
+    
 }
 
 
@@ -1058,17 +1061,18 @@ sub to_musicxml_text($self){
     my $measure = {
         number => $measure_number,
         attributes => xml('attributes'
-                    ,xml('divisions','1' ).
+                    ,xml('divisions','2' ).
                     xml('key',xml('fifths','0')).
                     xml('time',xml('beats','4' ).xml('beat-type', '4' )).
-                    xml('clef', xml('line', '2' ).xml('sign','G'))
-                    
+                    xml('clef', {number=>1}, xml('line', '2' ).xml('sign','G')).
+                    xml('clef', {number=>2}, xml('line', '4' ).xml('sign','F'))
+
                     ),
         notes=>[]
 
     };
     for my $tn(@{ $self->notes }) {
-        my $wn = {}; 
+        my $wn = {};
         $wn->{duration} = $tn->{length_numerator};
         if ($tn->{length_numerator} == $self->denominator) {
             $wn->{type} = 'whole';
@@ -1083,9 +1087,24 @@ sub to_musicxml_text($self){
         } else {
             $wn->{type} = '128th';
         }
-        ($wn->{step},$wn->{octave}) =( $tn->{note_name}=~/^([A-Z])(\d+)$/);
+        my @tnote =( $tn->{note_name}=~/^([A-Z])(\w)?(\d+)$/);
+        if (@tnote == 3) {
+            ($wn->{step},$wn->{alter},$wn->{octave})=@tnote;
+            if (!exists $wn->{alter} ||! $wn->{alter}) {
+
+            } elsif ($wn->{alter} eq 's') {
+                $wn->{alter} = 1;
+            } elsif($wn->{alter} eq 'm') {
+                $wn->{alter} = -1;
+            } else {
+                die "Unkown alter $wn->{alter}. Must be either m,s";
+            }
+        } elsif (@tnote == 2) {
+            ($wn->{step},$wn->{octave})=@tnote;
+        }
         die "Unknown note_name". ($tn->{note_name}||'__EMPTY/UNDEF__') if ! $wn->{step};
         $wn->{step}='B' if $wn->{step} eq 'H';
+        die $wn->{alter} if exists $wn->{alter} && $wn->{alter} && $wn->{alter} !~ /\w/;
         push @{$measure->{notes}}, $wn;
         $tick =$tick + $tn->{length_numerator};
         if ($tick>=$self->denominator) {
@@ -1102,12 +1121,14 @@ sub to_musicxml_text($self){
 <!DOCTYPE score-partwise PUBLIC
     "-//Recordare//DTD MusicXML 3.1 Partwise//EN"
     "http://www.musicxml.org/dtds/partwise.dtd">
-|; 
-    $txt .=xml('score-partwise',{version=>"3.1"}, xml('part-list', xml('score-part',{id=>'P1'}, 
-            xml('part-name',"Stykkenavn"))).
+|;
+    $txt .=xml('score-partwise',{version=>"3.1"},
+        xml('work',xml('work-title',$self->name))
+        . xml('part-list', xml('score-part',{id=>'P1'},
+            xml('part-name',$self->name))).
             xml('part', {'id' => 'P1'},
-               join('',map{ xml_measure($_)} @measures)
-            ) 
+                join('',map{ xml_measure($_)} @measures)
+            )
     );
 }
 
