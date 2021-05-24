@@ -818,12 +818,16 @@ sub to_data_split_hands {
 	       # look back to se if ok
         my $hash = $note->to_hash_ref;
         if ($hash->{note} == -1 ) {
+            $note->{hand}= 'left';
 	   		push @{ $return->{'left'} }, $note;
         } elsif ( $hash->{note} == -2) {
+            $note->{hand}= 'right';
    	  		push @{ $return->{'right'} }, $note;
 		} elsif ($hash->{note} >= $min_right) {#	 right
+            $note->{hand}= 'right';
 	    	push @{ $return->{'right'} }, $note;
 	   	} elsif($hash->{note} <= $max_left) { # left
+            $note->{hand}= 'left';
 	      	push @{ $return->{'left'} }, $note;
         } else {
             # Algorithm
@@ -831,11 +835,13 @@ sub to_data_split_hands {
             my $n = $self->notes->[$i+1] ;
             if (($p->note==-2 || $p->note>= $min_right) && $note->delta_place_numerator == 0) {
                 # right hand puse on same beat place.
+                $note->{hand}= 'left';
                 push @{ $return->{'left'} }, $note;
 
             }
             elsif (defined $n && ($n->note==-1 || $n->note<=$max_left ) && $n->delta_place_numerator == 0) {
                 # left hand pause on same beat place.
+                $note->{hand}= 'right';
                 push @{ $return->{'right'} }, $note;
             }
             elsif (scalar @{$return->{right}} && scalar @{$return->{left}}
@@ -845,6 +851,7 @@ sub to_data_split_hands {
                 + $return->{left}->[-1]->length_numerator
                 ) {
                     # right hand ready not left
+                    $note->{hand}= 'right';
                     push @{ $return->{'right'} }, $note;
             }# which hand plays similar length
             elsif (scalar @{$return->{left}} && scalar @{$return->{right}}
@@ -854,6 +861,7 @@ sub to_data_split_hands {
                 + $return->{right}->[-1]->length_numerator
                 ) {
                     # left hand ready not right
+                    $note->{hand}= 'left';
                     push @{ $return->{'left'} }, $note;
             }# which hand plays similar length
 			elsif ($self->hand_default) {
@@ -869,6 +877,7 @@ sub to_data_split_hands {
 	                $return->{right}->[-1]->startbeat->to_int
 	                + $return->{right}->[-1]->length_numerator ;
 	            }
+                $note->{hand}= 'unknown';
 	            push @{ $return->{'unknown' }}, $note;
 	  	  #          die "Tried all rules. Please have a look and give me an advice.";
             }
@@ -1029,20 +1038,44 @@ sub xml {
     return $return;
 }
 
+=head2 xml_measure
+
+    my $xml= xml_measure($hashxml);
+
+Takes a hash with measure data and produce xml-text.
+
+=cut
+
 sub xml_measure {
     my $measure = shift;
+    die if ! $measure->{denominator};
     return xml('measure', {'number' => $measure->{number}}
         ,join('', $measure->{attributes},
         ,map {xml('note',
-            xml('pitch', xml('octave', $_->{octave}) . xml('step', $_->{step}).
-             (exists $_->{alter} && $_{alter}?xml('alter', $_->{alter}):'')
+            ($_->{chord}?xml('chord',''):'')
+            . xml('pitch', xml('octave', $_->{octave}) . xml('step', $_->{step})
+             . (exists $_->{alter} && $_->{alter}?xml('alter', $_->{alter}):'')
+            )
              . xml('duration', $_->{duration} )
              . xml('type', $_->{type} )
+             . (exists $_->{dot} && $_->{dot}? xml('dot','') : '')
+            . xml('staff', 1)
+        )} @{$measure->{right}->{notes}} )
+        .  xml('backup', xml('duration', $measure->{denominator}))
+        . join('',
+         map {xml('note',
+            ($_->{chord}?xml('chord',''):'')
+            . xml('pitch', xml('octave', $_->{octave}) . xml('step', $_->{step}).
+             (exists $_->{alter} && $_{alter}?xml('alter', $_->{alter}):'')
             )
-        )} @{$measure->{notes}} )
+            . xml('duration', $_->{duration} )
+            . xml('type', $_->{type} )
+            . (exists $_->{dot} && $_->{dot}? xml('dot','') : '')
+            . xml('staff', 2)
+        )} @{$measure->{left}->{notes}} )
 
     )
-    
+
 }
 
 
@@ -1057,13 +1090,16 @@ sub to_musicxml_text($self){
     my $tick = 0;
     $tick = $self->startbeat if $self->startbeat;
     my $measure_number = 1;
+    $self->to_data_split_hands; # as a beeffect set hand
     die if ! @{ $self->notes };
     my $measure = {
         number => $measure_number,
+        denominator => $self->denominator,
         attributes => xml('attributes'
                     ,xml('divisions','2' ).
                     xml('key',xml('fifths','0')).
                     xml('time',xml('beats','4' ).xml('beat-type', '4' )).
+                    xml('staves','2').
                     xml('clef', {number=>1}, xml('line', '2' ).xml('sign','G')).
                     xml('clef', {number=>2}, xml('line', '4' ).xml('sign','F'))
 
@@ -1071,20 +1107,61 @@ sub to_musicxml_text($self){
         notes=>[]
 
     };
-    for my $tn(@{ $self->notes }) {
-        my $wn = {};
-        $wn->{duration} = $tn->{length_numerator};
-        if ($tn->{length_numerator} == $self->denominator) {
-            $wn->{type} = 'whole';
-        } elsif (2 *$tn->{length_numerator} == $self->denominator) {
-            $wn->{type} = 'half';
-        } elsif (4 *$tn->{length_numerator} == $self->denominator) {
-            $wn->{type} = 'quarter';
-        } elsif (8 *$tn->{length_numerator} == $self->denominator) {
-            $wn->{type} = 'eighth';
-        } elsif (16 *$tn->{length_numerator} == $self->denominator) {
-            $wn->{type} = '16th';
+    my $type_denominator = $self->denominator;
+    while (1) {
+        if (grep {$type_denominator == $_}(2,4,8,16,32,64,128,256) ) {
+            last;
+        } elsif($type_denominator>256) {
+            die "$type_denominator to high. Above 256";
         } else {
+            $type_denominator++;
+        }
+    }
+    my $lasthand="unknown";
+    for my $tn(@{$self->notes}) {
+        if ($tick + $tn->{delta_place_numerator} >= $self->denominator) {
+            $tick += $tn->{delta_place_numerator} - $self->denominator;
+            if (! $tick == 0) {
+                warn Dumper $tn;
+                die "\tick =$tick is not 0 $measure->{number}";
+            }
+            my $copy;
+            %$copy = %$measure;
+            $measure_number++;
+            push @measures,$copy;
+            $measure={ attributes=>'', number => $measure_number, denominator => $self->denominator, notes=>[] };
+        } else {
+            $tick += $tn->{delta_place_numerator};
+        }
+        my $wn = {};
+        my $hand = $tn->{hand};
+        if (!$hand) {
+            warn Dumper $tn;
+            die "Missing hand";
+        }
+        $wn->{duration} = $tn->{length_numerator};
+        $wn->{chord} = 1 if $tn->{delta_place_numerator} == 0 && $lasthand eq $tn->{hand};
+        if ($tn->{length_numerator} == $type_denominator) {
+            $wn->{type} = 'whole';
+        } elsif (2 *$tn->{length_numerator} == $type_denominator) {
+            $wn->{type} = 'half';
+        } elsif (4 *$tn->{length_numerator} == $type_denominator) {
+            $wn->{type} = 'quarter';
+        } elsif (8 *$tn->{length_numerator} == $type_denominator) {
+            $wn->{type} = 'eighth';
+        } elsif (16 *$tn->{length_numerator} == $type_denominator) {
+            $wn->{type} = '16th';
+        } elsif (4/3 * $tn->{length_numerator} == $type_denominator) {
+            $wn->{type} = 'half';
+            $wn->{dot} = 1;
+        } elsif (8/3 * $tn->{length_numerator} == $type_denominator) {
+            $wn->{type} = 'quarter';
+            $wn->{dot} = 1;
+        } elsif (16/3 * $tn->{length_numerator} == $type_denominator) {
+            $wn->{type} = 'eighth';
+            $wn->{dot} = 1;
+        } else {
+            die "$tn->{length_numerator}  : " . $type_denominator;
             $wn->{type} = '128th';
         }
         my @tnote =( $tn->{note_name}=~/^([A-Z])(\w)?(\d+)$/);
@@ -1105,17 +1182,10 @@ sub to_musicxml_text($self){
         die "Unknown note_name". ($tn->{note_name}||'__EMPTY/UNDEF__') if ! $wn->{step};
         $wn->{step}='B' if $wn->{step} eq 'H';
         die $wn->{alter} if exists $wn->{alter} && $wn->{alter} && $wn->{alter} !~ /\w/;
-        push @{$measure->{notes}}, $wn;
-        $tick =$tick + $tn->{length_numerator};
-        if ($tick>=$self->denominator) {
-            $tick = $tick - $self->denominator;
-            my $copy;
-            %$copy = %$measure;
-            $measure_number++;
-            push @measures,$copy;
-            $measure={ attributes=>'', number => $measure_number, notes=>[] };
-        }
+        push @{$measure->{$hand}->{notes}}, $wn;
+        $lasthand = $tn->{hand};
     }
+    push @measures,$measure;
 
    my $txt =q|<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE score-partwise PUBLIC
