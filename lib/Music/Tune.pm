@@ -690,6 +690,18 @@ sub notes2score {
 	return $self;
 }
 
+=head2 per_minute
+
+    say $tune->per_minute;
+
+Return per_minute value based on shortest_note_time
+
+=cut
+
+sub per_minute($self) {
+    return 60 * 100 / $self->shortest_note_time * $self->denominator /4
+}
+
 =head2 play
 
 Takes self, filepathname
@@ -1053,8 +1065,10 @@ sub xml_measure {
         ,join('', $measure->{attributes},
         ,map {xml('note',
             ($_->{chord}?xml('chord',''):'')
-            . xml('pitch', xml('octave', $_->{octave}) . xml('step', $_->{step})
-             . (exists $_->{alter} && $_->{alter}?xml('alter', $_->{alter}):'')
+            . ($_->{rest}?xml('rest',''):
+             xml('pitch', xml('octave', $_->{octave}) . xml('step', $_->{step})
+              . (exists $_->{alter} && $_->{alter}?xml('alter', $_->{alter}):'')
+             )
             )
              . xml('duration', $_->{duration} )
              . xml('type', $_->{type} )
@@ -1065,8 +1079,10 @@ sub xml_measure {
         . join('',
          map {xml('note',
             ($_->{chord}?xml('chord',''):'')
-            . xml('pitch', xml('octave', $_->{octave}) . xml('step', $_->{step}).
-             (exists $_->{alter} && $_{alter}?xml('alter', $_->{alter}):'')
+            . ($_->{rest}?xml('rest',''):
+             xml('pitch', xml('octave', $_->{octave}) . xml('step', $_->{step}).
+              (exists $_->{alter} && $_{alter}?xml('alter', $_->{alter}):'')
+             )
             )
             . xml('duration', $_->{duration} )
             . xml('type', $_->{type} )
@@ -1087,9 +1103,12 @@ Return a long string on MusicXML format
 
 sub to_musicxml_text($self){
     my @measures=();
-    my $tick = 0;
-    $tick = $self->startbeat if $self->startbeat;
+    my $tick = $self->startbeat;
     my $measure_number = 1;
+    if ($self->startbeat) {
+        $tick = $self->startbeat;
+        $measure_number = 0; 
+    } 
     $self->to_data_split_hands; # as a beeffect set hand
     die if ! @{ $self->notes };
     my $measure = {
@@ -1118,13 +1137,22 @@ sub to_musicxml_text($self){
         }
     }
     my $lasthand="unknown";
+    my %endprev = (left=>$tick, right=>$tick);
     for my $tn(@{$self->notes}) {
         if ($tick + $tn->{delta_place_numerator} >= $self->denominator) {
+            if ($tick - $endprev{ $tn->{hand} } > 0) {
+                my $silence= {rest=>1};
+                $silence->{duration} = $tick - $endprev{ $tn->{hand} };
+                _populate_xml_type($silence,$tn,$type_denominator);
+                push @{$measure->{$tn->{hand}}->{notes}}, $silence;
+            }
             $tick += $tn->{delta_place_numerator} - $self->denominator;
+
             if (! $tick == 0) {
                 warn Dumper $tn;
                 die "\tick =$tick is not 0 $measure->{number}";
             }
+            %endprev = (left=>$tick, right=>$tick);
             my $copy;
             %$copy = %$measure;
             $measure_number++;
@@ -1133,6 +1161,14 @@ sub to_musicxml_text($self){
         } else {
             $tick += $tn->{delta_place_numerator};
         }
+        if ($tick - $endprev{ $tn->{hand} } > 0) {
+            my $silence= {rest=>1};
+            $silence->{duration} = $tick - $endprev{ $tn->{hand} };
+            _populate_xml_type($silence,$tn,$type_denominator);
+            push @{$measure->{$tn->{hand}}->{notes}}, $silence;
+        }
+
+        $endprev{$tn->{hand}} = $tick + $tn->{length_numerator};
         my $wn = {};
         my $hand = $tn->{hand};
         if (!$hand) {
@@ -1141,29 +1177,7 @@ sub to_musicxml_text($self){
         }
         $wn->{duration} = $tn->{length_numerator};
         $wn->{chord} = 1 if $tn->{delta_place_numerator} == 0 && $lasthand eq $tn->{hand};
-        if ($tn->{length_numerator} == $type_denominator) {
-            $wn->{type} = 'whole';
-        } elsif (2 *$tn->{length_numerator} == $type_denominator) {
-            $wn->{type} = 'half';
-        } elsif (4 *$tn->{length_numerator} == $type_denominator) {
-            $wn->{type} = 'quarter';
-        } elsif (8 *$tn->{length_numerator} == $type_denominator) {
-            $wn->{type} = 'eighth';
-        } elsif (16 *$tn->{length_numerator} == $type_denominator) {
-            $wn->{type} = '16th';
-        } elsif (4/3 * $tn->{length_numerator} == $type_denominator) {
-            $wn->{type} = 'half';
-            $wn->{dot} = 1;
-        } elsif (8/3 * $tn->{length_numerator} == $type_denominator) {
-            $wn->{type} = 'quarter';
-            $wn->{dot} = 1;
-        } elsif (16/3 * $tn->{length_numerator} == $type_denominator) {
-            $wn->{type} = 'eighth';
-            $wn->{dot} = 1;
-        } else {
-            die "$tn->{length_numerator}  : " . $type_denominator;
-            $wn->{type} = '128th';
-        }
+        _populate_xml_type($wn,$tn,$type_denominator);
         my @tnote =( $tn->{note_name}=~/^([A-Z])(\w)?(\d+)$/);
         if (@tnote == 3) {
             ($wn->{step},$wn->{alter},$wn->{octave})=@tnote;
@@ -1202,6 +1216,38 @@ sub to_musicxml_text($self){
     );
 }
 
+
+# 
+sub _populate_xml_type($wn,$tn,$type_denominator) {
+    if ($tn->{length_numerator} == $type_denominator) {
+        $wn->{type} = 'whole';
+    } elsif (2 *$tn->{length_numerator} == $type_denominator) {
+        $wn->{type} = 'half';
+    } elsif (4 *$tn->{length_numerator} == $type_denominator) {
+        $wn->{type} = 'quarter';
+    } elsif (8 *$tn->{length_numerator} == $type_denominator) {
+        $wn->{type} = 'eighth';
+    } elsif (16 *$tn->{length_numerator} == $type_denominator) {
+        $wn->{type} = '16th';
+    } elsif (4/3 * $tn->{length_numerator} == $type_denominator) {
+        $wn->{type} = 'half';
+        $wn->{dot} = 1;
+    } elsif (8/3 * $tn->{length_numerator} == $type_denominator) {
+        $wn->{type} = 'quarter';
+        $wn->{dot} = 1;
+    } elsif (16/3 * $tn->{length_numerator} == $type_denominator) {
+        $wn->{type} = 'eighth';
+        $wn->{dot} = 1;
+    } elsif (! $tn->{length_numerator}) {
+        $wn->{type} = '128th';
+        $wn->{chord} = 1;
+    } else {
+        warn Dumper $tn;
+        die "$tn->{length_numerator}  : " . $type_denominator;
+        $wn->{type} = '128th';
+    }
+    return $wn;
+}
 =head2 to_string
 
 Return a text with all notes and some general variables for the tune.
