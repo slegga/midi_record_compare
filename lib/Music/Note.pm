@@ -18,7 +18,9 @@ has velocity => 0;
 has note_name =>'';
 
 # note
-has startbeat => sub {return Music::Position->new()};
+has startbeat => sub {
+    return Music::Position->new( count_first => shift->count_first );
+};
 has length_numerator => 0;
 
 #note help
@@ -28,6 +30,7 @@ has 'hand';
 has ['next_silence','stacato']; # used by colornotes.pl script
 has 'type'; # currently null or storing
 has 'string'; #string like __END__
+has count_first =>1;
 #has tickpersec =>96;
 
 use overload
@@ -111,7 +114,9 @@ sub from_score {
     $self->length_numerator($length_numerator);
     #step up beat
     my $numerator = int( 1/2 + ($score->[1] - $options->{prev_starttime}) / $options->{shortest_note_time} );
-    my $startbeat = Music::Position->new(denominator=>$options->{denominator});
+    my @suboptions =(denominator=>$options->{denominator});
+    push @suboptions,(count_first=>0) if exists $options->{count_first} &&  $options->{count_first} ==0;
+    my $startbeat = Music::Position->new(@suboptions);
     $startbeat = $startbeat + $numerator;
     $self->startbeat($startbeat->clone);
 #    say Dumper $self;

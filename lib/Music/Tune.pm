@@ -207,7 +207,8 @@ sub clean {
 
     my $self = shift;
     my $opts = shift;
-    my $startbeat = Music::Position->new(denominator=>$self->denominator);
+    my $count_first = $self->startbeat ? 0 :1;
+    my $startbeat = Music::Position->new(denominator=>$self->denominator, count_first=>$count_first);
     if ($opts) {
       my $extend;
       if ($opts->extend) {
@@ -388,19 +389,19 @@ sub evaluate_with_blueprint {
 			} else {
                 print color('red');
             }
-			printf $format, $n->[0],defined $self->notes->[$n->[1]]? $self->notes->[$n->[1]]->to_string( {no_comment=>1, scale=>$blueprint->scale}) :'X'
-			, defined $blueprint->notes->[$n->[2]] ? $blueprint->notes->[$n->[2]]->to_string({scale=>$blueprint->scale}) : 'X';
+			printf $format, $n->[0],defined $self->notes->[$n->[1]]? $self->notes->[$n->[1]]->to_string( {no_comment=>1, scale=>$blueprint->scale, count_first => ($self->startbeat?0:1),}) :'X'
+			, defined $blueprint->notes->[$n->[2]] ? $blueprint->notes->[$n->[2]]->to_string({scale=>$blueprint->scale,count_first => ($self->startbeat?0:1),}) : 'X';
 		}
 		elsif (! defined $n->[1] && defined $n->[2]) {
 			print color('red');
             if (defined $blueprint->notes->[$n->[2]]) {
                 printf $format,$n->[0],''
-					, $blueprint->notes->[$n->[2]]->to_string({scale=>$blueprint->scale});
+					, $blueprint->notes->[$n->[2]]->to_string({scale=>$blueprint->scale,count_first => ($self->startbeat?0:1),});
             }
 		}
 		elsif (! defined $n->[2] && defined $n->[1]) {
 			print color('red');
-			printf $format,$n->[0],$self->notes->[$n->[1]]->to_string( {no_comment=>1, scale=>$blueprint->scale} )
+			printf $format,$n->[0],$self->notes->[$n->[1]]->to_string( {no_comment=>1, scale=>$blueprint->scale,count_first => ($self->startbeat?0:1),} )
 						,'';
 		}
 		else {
@@ -569,7 +570,8 @@ sub from_string {
             }
         }
     }
-    my $beat = Music::Position->new(integer => $self->startbeat, denominator => $self->denominator);
+    my $count_first = $self->startbeat ? 0 :1;
+    my $beat = Music::Position->new(integer => $self->startbeat, denominator => $self->denominator, count_first=>$count_first);
 
     for my $line (split/\n/,$content) {
         $line =~ s/\s*\#.*$//;
@@ -594,6 +596,7 @@ sub from_string {
         } else {
             my ($delta_place_numerator, $length_numerator, $note_name) = split(/\;/,$line);
             $beat = $beat + $delta_place_numerator;
+            my $count_first = ($self->startbeat?0:1);
             my ($ln,undef) = Music::Utils::calc_length({numerator =>$length_numerator}
             ,{shortest_note_time=>$self->shortest_note_time, denominator=>$self->denominator});
             push(@notes,Music::Note->new(delta_place_numerator => $delta_place_numerator,
@@ -602,6 +605,7 @@ sub from_string {
             note_name => $note_name,
             denominator => $self->denominator,
             startbeat =>$beat->clone,
+            count_first => $count_first,
             )->compile);
         }
     }
@@ -740,11 +744,12 @@ sub score2notes {
     die "Missing denominator" if !$self->denominator;
 
     my @notes;
-    my $startbeat = Music::Position->new(denominator=>$self->denominator);
+    my $count_first = $self->startbeat ? 0 :1;
+    my $startbeat = Music::Position->new(denominator=>$self->denominator, count_first=>$count_first);
     my $prev_starttime=0;
     $self->totaltime(0);
     for my $score(@{$self->scores}) {
-        my $note= Music::Note->new;
+        my $note= Music::Note->new(count_first => ($self->startbeat?0:1),);
         $self->totaltime($self->totaltime + $score->{duration});
         my ($length_name, $length_numerator) = Music::Utils::calc_length( { time => $score->{duration} }
             ,{shortest_note_time=>$self->shortest_note_time, denominator=>$self->denominator} );
@@ -1107,8 +1112,8 @@ sub to_musicxml_text($self){
     my $measure_number = 1;
     if ($self->startbeat) {
         $tick = $self->startbeat;
-        $measure_number = 0; 
-    } 
+        $measure_number = 0;
+    }
     $self->to_data_split_hands; # as a beeffect set hand
     die if ! @{ $self->notes };
     my $measure = {
@@ -1150,7 +1155,8 @@ sub to_musicxml_text($self){
 
             if (! $tick == 0) {
                 warn Dumper $tn;
-                die "\tick =$tick is not 0 $measure->{number}";
+                warn "\tick =$tick is not 0 $measure->{number}";
+                last;
             }
             %endprev = (left=>$tick, right=>$tick);
             my $copy;
@@ -1217,7 +1223,7 @@ sub to_musicxml_text($self){
 }
 
 
-# 
+#
 sub _populate_xml_type($wn,$tn,$type_denominator) {
     if ($tn->{length_numerator} == $type_denominator) {
         $wn->{type} = 'whole';
@@ -1248,6 +1254,7 @@ sub _populate_xml_type($wn,$tn,$type_denominator) {
     }
     return $wn;
 }
+
 =head2 to_string
 
 Return a text with all notes and some general variables for the tune.
@@ -1260,7 +1267,7 @@ sub to_string {
 #	my $args = shift;
 
 	my @notes;
-	@notes = map{$_->to_string({scale => $self->{scale}, end =>"\n"})} grep {$_} @{$self->notes};
+	@notes = map{$_->to_string({scale => $self->{scale}, end =>"\n",count_first => ($self->startbeat?0:1),})} grep {$_} @{$self->notes};
 has 'allowed_note_lengths';
 has 'allowed_note_types';
 has ['hand_left_max','hand_right_min','hand_default'];

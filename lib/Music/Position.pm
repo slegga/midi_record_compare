@@ -7,6 +7,7 @@ has integer =>0;
 # has number => 0;
 # has numerator => 0;
 has denominator => 8;
+has count_first =>1;
 
 use overload
     '""' => sub { shift->to_string }, fallback => 1,
@@ -53,7 +54,7 @@ sub add {
 #		$number++;
 #        $numerator -= $self->denominator;
 #	}
-	return Music::Position->new(integer => $integer, denominator => $self->denominator);
+	return Music::Position->new(integer => $integer, denominator => $self->denominator, count_first => $self->count_first);
 }
 
 =head2 clone
@@ -64,7 +65,7 @@ Return a new similar beat with same values.
 
 sub clone {
     my $self = shift;
-    return Music::Position->new(integer => $self->integer, denominator => $self->denominator);
+    return Music::Position->new(integer => $self->integer, denominator => $self->denominator, count_first => $self->count_first);
 }
 
 =head2 subtract
@@ -90,7 +91,7 @@ sub subtract {
 #    $number--;
 #        $numerator += $self->denominator;
 #  }
-  return Music::Position->new(integer => $integer, denominator => $self->denominator);
+  return Music::Position->new(integer => $integer, denominator => $self->denominator, count_first => $self->count_first);
 
 }
 
@@ -104,7 +105,7 @@ sub to_string {
     my $self = shift;
     my $number = int($self->integer/$self->denominator);
     my $numerator = $self->integer - $number * $self->denominator;
-    return sprintf "%d.%d",$number +1, $numerator;
+    return sprintf "%d.%d",$number + $self->count_first, $numerator;
       # time, length,note
       # 3.8;1/4;C4
 
