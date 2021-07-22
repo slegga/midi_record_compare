@@ -28,6 +28,5 @@ use Carp::Always;
 
 my $tune = Music::Tune->from_string(path($ARGV[0])->slurp);
 $tune->notes2score;
-say STDERR $tune->per_minute;
 say $tune->to_musicxml_text;
 

@@ -1000,25 +1000,29 @@ sub to_midi_score($self) {
     if (@{ $self->in_midi_events }) {
         return  MIDI::Score::events_r_to_score_r( $self->in_midi_events );
     }
-    elsif (@{ $self->scores }) {
-        my $return= [];
+    else {
+        if (! @{ $self->scores }) {
+           return [] if ! @{ $self->notes };
+            $self->notes2score;
+        }
+        my $return=[];
         for my $score (@{ $self->scores }) {
             push @$return, ['note', $score->{starttime}, $score->{duration}, 0, $score->{note}, $score->{velocity}//96];
         }
         return $return;
     }
-    else {
-        return [] if ! @{ $self->notes };
-        die 'Impossible with out $self->shortest_note_time' if !$self->shortest_note_time;
-        my $snt = $self->shortest_note_time;
-        my $time=0;
-        my @score;
-        for my $note (@{ $self->notes }) {
-            push @score,['note',$time + $note->delta_place_numerator * $snt,$note->length_numerator * $snt,0, ];
-        }
-        warn "... Make notes to scores";
-#        ...;
-    }
+    # else {
+        # die 'Impossible with out $self->shortest_note_time' if !$self->shortest_note_time;
+        # my $snt = $self->shortest_note_time;
+        # my $time=0;
+        # my @score;
+        # for my $note (@{ $self->notes }) {
+            # push @score,['note',$time + $note->delta_place_numerator * $snt,$note->length_numerator * $snt,0, ];
+        # }
+        # warn "... Make notes to scores";
+# #        ...;
+        #
+    # }
 }
 
 =head2 xml
@@ -1248,8 +1252,9 @@ sub _populate_xml_type($wn,$tn,$type_denominator) {
         $wn->{type} = '128th';
         $wn->{chord} = 1;
     } else {
-        warn Dumper $tn;
-        die "$tn->{length_numerator}  : " . $type_denominator;
+        # TODO: Sjekk hvor lenge i gjen av takt og del note med bindebue. Ellers splitt med bindebue med færrest noter og første note er lengst.
+        say STDERR Dumper $tn;
+        warn "Unknown $tn->{length_numerator}  : " . $type_denominator;
         $wn->{type} = '128th';
     }
     return $wn;
