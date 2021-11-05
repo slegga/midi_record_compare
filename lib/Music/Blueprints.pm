@@ -72,7 +72,10 @@ sub init {
         my $tmp = Music::Tune->from_string($b->slurp);
         my $num = scalar @{$tmp->notes};
         my $firstnotes;
-        push @$firstnotes, $tmp->notes->[$_]->note for (0 .. 9);
+        for my $i(0 .. 9) {
+            die "Short score for ".$b->basename if !defined $tmp->notes->[$i];
+            push @$firstnotes, $tmp->notes->[$i]->note;
+        }
         push @{$self->blueprints},[$firstnotes , "$b"];
     }
 
