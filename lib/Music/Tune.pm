@@ -8,6 +8,7 @@ use Data::Dumper;
 use Mojo::JSON 'to_json';
 use MIDI;
 use Tie::IxHash;
+use Clone 'clone';
 
 use Carp;
 use List::Util qw/min max/;
@@ -784,6 +785,28 @@ sub score2notes {
     $self->notes(\@onotes);
     $self->scale(Music::Utils::Scale::guess_scale_from_notes($self->notes));
     return $self;
+}
+
+=head2 to_data
+
+Return a complete hash datastructure reference.
+Made for use with SH::DataStructure.
+
+Notes is stored as /notes/[0..$#]
+
+Return Music::Tune->new()->attr
+
+Delete some uninteresting attributes like filename and score
+
+=cut
+
+sub to_data($self) {
+    my $return = {};
+    for my $k(keys %$self) {
+        next if grep {$k eq $_} qw/scores midi_file note_file blueprint_file note_diff beat_score note_score length_score delta_beat_score total_score in_midi_events/;
+        $return->{$k} = $self->$k;
+    }
+    return $return;
 }
 
 =head2 to_data_split_hands
