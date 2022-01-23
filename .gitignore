@@ -2,3 +2,4 @@ local/*
 *.ptkdb
 t/testarena/*
 .prove
+*.kate-swp

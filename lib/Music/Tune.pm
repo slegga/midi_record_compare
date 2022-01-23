@@ -1,4 +1,4 @@
-package Music::Tune;
+  package Music::Tune;
 use Mojo::Base -base,-signatures;
 use Music::Note;
 use Music::Position;
@@ -469,6 +469,18 @@ sub finish {
     return $self;
 }
 
+=head2 from_data
+
+    my $tune = Music::Tune->from_data({name=>'piano song',scale=>'c_dur'notes=>[]})
+
+Take a deep datastructure and return a Music::Tune object
+
+=cut
+
+sub from_data($class,$data) {
+    my $return = $class->new(%$data);
+    return $return;
+}
 
 =head2 from_midi_score
 
@@ -538,7 +550,7 @@ sub from_midi_file {
     my $data = $tracks[0]->data;
     my $events = MIDI::Event::decode( \$data );
     my $score = MIDI::Score::events_r_to_score_r( $events );
-    return $class->from_midi_score($score, { midi_file => $midi_filename, hand_split_on => 56 } );
+    return $class->from_midi_score($score, { midi_file => $midi_filename, hand_right_min => 'C4' } );
 
 }
 

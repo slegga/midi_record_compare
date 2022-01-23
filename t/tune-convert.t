@@ -55,5 +55,10 @@ sub remove_comments {
 	return $return;
 }
 
+# DATA
+my $old_data = $midi_tune->to_data;
+my $new_midi_tune= Music::Tune->from_data($old_data);
+my $new_data = $new_midi_tune->to_data;
+is_deeply ($old_data,$new_data,'Datastructure is OK');
 
 done_testing;
