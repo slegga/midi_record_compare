@@ -124,6 +124,7 @@ sub from_score {
     $self->delta_place_numerator($delta->to_int);
     if ( ! $options->{hand_split_on} ) {
     } elsif ($self->note < $options->{hand_split_on} ) {
+        ...; # should calculate hand
     	$self->hand('left');
     } else {
     	$self->hand('right');
@@ -246,6 +247,27 @@ Clone. Copy and return a new object.
 
 sub clone {
 	my $self = shift;
-	return clone $self;
+	my %params;
+#	has note => 0;
+#	has velocity => 0;
+#	has note_name =>'';
+#	has startbeat => sub {
+#	    return Music::Position->new( count_first => shift->count_first );
+#	};
+	# has length_numerator => 0;
+	# has delta_place_numerator => 0;
+	# has length_name => '';
+	# has 'hand';
+	# has ['next_silence','stacato']; # used by colornotes.pl script
+	# has 'type'; # currently null or storing
+	# has 'string'; #string like __END__
+	# has count_first =>1;
+
+	for my $key (qw/note velocity length_numerator delta_place_numerator length_name string/) {
+	    $params{$key}= $self->$key;
+	}
+	my $startbeat = Music::Position->new(integer=>$self->startbeat->integer);
+	my $x =  $self->new(%params, startbeat => $startbeat);
+	return $x;
 }
 1;
