@@ -184,7 +184,7 @@ sub get_best_shortest_note($self, $played_score) {
 
 # Return median
     @shortest_notes_time = sort {$a <=> $b} @shortest_notes_time;
-    say Dumper \@shortest_notes_time;
+#    say Dumper \@shortest_notes_time;
     my $return;
     return 60 if ! scalar @shortest_notes_time;
     if (scalar $#shortest_notes_time %2 ==0 ) {
