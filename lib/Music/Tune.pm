@@ -167,6 +167,7 @@ sub get_best_shortest_note($self, $played_score) {
 	my( $idx1, $idx2 ) = LCSidx( \@played_note_values, \@blueprint_note_values );
 	my @shortest_notes_time;
 	if (scalar @$idx1< 4) {
+	    say STDERR '$idx1';
         warn Dumper $played_score;
 
         return 50; # some default value
@@ -556,7 +557,11 @@ sub from_midi_file {
 
 =head2 from_string
 
-Input is the content of at note file, either from local disk or external api
+    my $tune = Music::Tune->from($text,{ignore_end=>1});
+
+Input is the content of at note file, either from local disk or external api. First parameter is tje text to be parsed. The second is options as a hash ref.
+
+ignore_end=>1 means read the hole text and ignore words like __START__, __END__, __LEFT__, __RIGHT__
 
 =cut
 
@@ -586,27 +591,55 @@ sub from_string {
     my $count_first = $self->startbeat ? 0 :1;
     my $beat = Music::Position->new(integer => $self->startbeat, denominator => $self->denominator, count_first=>$count_first);
 
+    my @hands;
+    my $hand;
     for my $line (split/\n/,$content) {
         $line =~ s/\s*\#.*$//;
         if ($line eq '__START__') {
-            if(! $options->{ignore_end}) {
-                @notes=(); #remove previous registered notes
-            } else {
+            if($options->{ignore_end}) {
                 push(@notes,Music::Note->new(type=>'string',string=>'__START__'));
+            } else {
+                @notes=(); #remove previous registered notes
             }
             next;
         } elsif ($line eq '__END__') {
-            if(! $options->{ignore_end}) {
-                last;
-            } else {
+            if($options->{ignore_end}) {
                 push(@notes,Music::Note->new(type=>'string',string=>'__END__'));
                 next;
+            } else {
+                last;
             }
+        } elsif ($line eq '__LEFT__') {
+            if($options->{ignore_end}) {
+                push(@notes,Music::Note->new(type=>'string',string=>'__LEFT__'));
+                next;
+            } else {
+                $hand = 'left';
+            }
+            next;
+        } elsif ($line eq '__RIGHT__') {
+            if($options->{ignore_end}) {
+                push(@notes,Music::Note->new(type=>'string',string=>'__RIGHT__'));
+                next;
+            } else {
+                $hand = 'right';
+            }
+            next;
+        } elsif ($line eq '__BOTH__') {
+            if($options->{ignore_end}) {
+                push(@notes,Music::Note->new(type=>'string',string=>'__BOTH__'));
+                next;
+            } else {
+                $hand = undef;
+            }
+            next;
         }
+
         next if ! $line;
         if ($line=~/([\w\_\-]+)\s*=\s*(.+)$/) {
             next;
         } else {
+            push @hands, $hand;
             my ($delta_place_numerator, $length_numerator, $note_name) = split(/\;/,$line);
             $beat = $beat + $delta_place_numerator;
             my $count_first = ($self->startbeat?0:1);
@@ -625,6 +658,22 @@ sub from_string {
 
     @notes = grep { defined $_ } @notes;
     $self->notes(\@notes);
+
+    # Remove unwanted notes
+    $self->to_data_split_hands;
+    if ( ! $options->{ignore_end}) {
+        my @notesx;
+        for my $x(0 .. $#hands) {
+            if (! $hands[$x]) {
+                push @notesx, $notes[$x];
+            } elsif( $hands[$x] eq 'right' && $notes[$x]->hand ne 'left') {
+                push @notesx, $notes[$x];
+            } elsif( $hands[$x] eq 'left' && $notes[$x]->hand ne 'right') {
+                push @notesx, $notes[$x];
+            }
+        }
+        $self->notes(\@notesx);
+    }
     return $self;
 }
 
@@ -1193,7 +1242,7 @@ sub to_musicxml_text($self){
             $tick += $tn->{delta_place_numerator} - $self->denominator;
 
             if (! $tick == 0) {
-                warn Dumper $tn;
+                say Dumper $tn;
                 warn "\tick =$tick is not 0 $measure->{number}";
                 last;
             }

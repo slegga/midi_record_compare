@@ -173,12 +173,16 @@ sub do_save {
     my $new_file = $self->local_dir($self->blueprints_dir->child('notes'))->child($name);
     if (! $tune->name) {
         my $tname = $name;
-        $tname=~ s/_/ /;
+        $tname=~ s/[_-]/ /;
+        $tname=~ s/\.txt//;
         $tname = uc(substr($tname,0,1)) . substr($tname,1);
         $tune->name($tname);
     }
     if (! $tune->hand_right_min) {
         $tune->hand_right_min('C4');
+    }
+    if (! $tune->hand_left_max) {
+        $tune->hand_left_max('H3');
     }
     $new_file->spurt($tune->to_string);
     say "Saved $new_file";
