@@ -40,10 +40,10 @@ my @midievents = map{Music::Utils::alsaevent2midievent(@$_)} grep {defined} @als
 $t->tune->in_midi_events(\@midievents);
 $t->tune($t->tune->finish);
 my $f = $t->blueprints->get_pathfile_by_name('polser_her.txt');
-like($f,qr'blueprints/polser_her.txt','correct fimename');
+like($f,qr'blueprints/polser_her.txt','correct filename');
 ok($t->blueprints->do_comp($t->tune,$f),'OK');
-diag $t->blueprints->do_comp('polser_her.txt');
+#diag $t->blueprints->do_comp('polser_her.txt');
 $t->blueprints->init;
-diag p($t->blueprints->blueprints);
+#diag p($t->blueprints->blueprints);
 like($t->blueprints->guess_blueprint($t->tune),qr'polser_her.txt$','Tipper riktig sang');
 done_testing;

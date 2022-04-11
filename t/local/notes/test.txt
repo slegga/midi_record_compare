@@ -1,5 +1,6 @@
 denominator=8
 scale=c_dur
+hand_left_max=H3
 hand_right_min=C4
-name=Test.txt
+name=Test
 

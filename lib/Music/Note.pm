@@ -102,7 +102,7 @@ sub from_score {
     my $score = shift;
     my $options = shift;
     if ($score->[0] ne 'note') {
-        warn Dumper $score;
+#        warn Dumper $score;
         return;
     }
     my $prev_startbeat = $options->{prev_startbeat} || 0;

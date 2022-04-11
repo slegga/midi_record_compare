@@ -168,7 +168,7 @@ sub get_best_shortest_note($self, $played_score) {
 	my @shortest_notes_time;
 	if (scalar @$idx1< 4) {
 	    say STDERR '$idx1';
-        warn Dumper $played_score;
+#        warn Dumper $played_score;
 
         return 50; # some default value
 	}
@@ -559,7 +559,7 @@ sub from_midi_file {
 
     my $tune = Music::Tune->from($text,{ignore_end=>1});
 
-Input is the content of at note file, either from local disk or external api. First parameter is tje text to be parsed. The second is options as a hash ref.
+Input is the content of at note file, either from local disk or external api. First parameter is the text to be parsed. The second is options as a hash ref.
 
 ignore_end=>1 means read the hole text and ignore words like __START__, __END__, __LEFT__, __RIGHT__
 
@@ -660,8 +660,10 @@ sub from_string {
     $self->notes(\@notes);
 
     # Remove unwanted notes
-    $self->to_data_split_hands;
-    if ( ! $options->{ignore_end}) {
+
+    my $garbage = $self->to_data_split_hands;
+
+    if ( ! $options->{ignore_end} ) {
         my @notesx;
         for my $x(0 .. $#hands) {
             if (! $hands[$x]) {
@@ -971,9 +973,9 @@ sub to_data_split_hands {
 	            push @{ $return->{$self->hand_default} }, $note;
 	        } else {
 	            # dies in end and ask for advice
-	            say STDERR Dumper $hash;
-	            if (scalar @{$return->{left}} && scalar @{$return->{right}} ) {
-		            printf STDERR "%s  %s  %s", $i,$return->{left}->[-1]->startbeat->to_int
+#	            say STDERR Dumper $hash;
+	            if (0 && scalar @{$return->{left}} && scalar @{$return->{right}} ) {
+		            warn sprintf "%s  %s  %s", $i,$return->{left}->[-1]->startbeat->to_int
 	                + $return->{left}->[-1]->length_numerator,
 	                $return->{right}->[-1]->startbeat->to_int
 	                + $return->{right}->[-1]->length_numerator ;

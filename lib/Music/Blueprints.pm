@@ -69,6 +69,9 @@ sub init {
     my $self = shift;
     for my $b ($self->blueprints_dir->list->each) {
         next if $b->basename !~/\.txt$/ ;
+if ($b->basename =~/^fred/) {
+$DB::single=2;
+}
         my $tmp = Music::Tune->from_string($b->slurp);
         my $num = scalar @{$tmp->notes};
         my $firstnotes;
@@ -77,8 +80,8 @@ sub init {
             push @$firstnotes, $tmp->notes->[$i]->note;
         }
         push @{$self->blueprints},[$firstnotes , "$b"];
-    }
 
+    }
 }
 
 =head2 do_comp
