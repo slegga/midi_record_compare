@@ -599,21 +599,21 @@ sub from_string {
         $line =~ s/\s*\#.*$//;
         if ($line eq '__START__') {
             if($options->{ignore_end}) {
-                push(@notes,Music::Note->new(type=>'string',string=>'__START__'));
+                push(@notes,Music::Note->new(type=>'string', string=>'__START__', startbeat=>$beat->clone));
             } else {
                 @notes=(); #remove previous registered notes
             }
             next;
         } elsif ($line eq '__END__') {
             if($options->{ignore_end}) {
-                push(@notes,Music::Note->new(type=>'string',string=>'__END__'));
+                push(@notes,Music::Note->new(type=>'string',string=>'__END__', startbeat=>$beat->clone));
                 next;
             } else {
                 last;
             }
         } elsif ($line eq '__LEFT__') {
             if($options->{ignore_end}) {
-                push(@notes,Music::Note->new(type=>'string',string=>'__LEFT__'));
+                push(@notes,Music::Note->new(type=>'string',string=>'__LEFT__', startbeat=>$beat->clone));
                 next;
             } else {
                 $hand = 'left';
@@ -621,7 +621,7 @@ sub from_string {
             next;
         } elsif ($line eq '__RIGHT__') {
             if($options->{ignore_end}) {
-                push(@notes,Music::Note->new(type=>'string',string=>'__RIGHT__'));
+                push(@notes,Music::Note->new(type=>'string',string=>'__RIGHT__', startbeat=>$beat->clone));
                 next;
             } else {
                 $hand = 'right';
@@ -629,7 +629,7 @@ sub from_string {
             next;
         } elsif ($line eq '__BOTH__') {
             if($options->{ignore_end}) {
-                push(@notes,Music::Note->new(type=>'string',string=>'__BOTH__'));
+                push(@notes,Music::Note->new(type=>'string',string=>'__BOTH__', startbeat=>$beat->clone));
                 next;
             } else {
                 $hand = undef;
