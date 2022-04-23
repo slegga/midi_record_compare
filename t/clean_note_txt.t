@@ -19,6 +19,7 @@ $t->stderr_ok->stdout_like(qr{__END__\n}m);
 $t->stderr_ok->stdout_like(qr{c_dur\n}m);
 
 }
+
 {
 unlink('t/testarena/*');
 copy('t/startpos/klokkene.txt','t/testarena/klokkene.txt');

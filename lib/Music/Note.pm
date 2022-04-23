@@ -2,6 +2,8 @@ package Music::Note;
 use Mojo::Base -base;
 use Clone;
 use Music::Utils::Scale;
+use Data::Dumper;
+
 
 my $ALSA_CODE = {'SND_SEQ_EVENT_SYSTEM'=>0,'SND_SEQ_EVENT_RESULT'=>1
 ,'SND_SEQ_EVENT_NOTE'=>5,'SND_SEQ_EVENT_NOTEON'=>6,'SND_SEQ_EVENT_NOTEOFF'=>7};
@@ -28,10 +30,11 @@ has delta_place_numerator => 0;
 has length_name => '';
 has 'hand';
 has ['next_silence','stacato']; # used by colornotes.pl script
-has 'type'; # currently null or storing
+#has 'type'; # currently null or storing
 has 'string'; #string like __END__
 has count_first =>1;
 #has tickpersec =>96;
+has type => 'note'; # note,control_change,string. default note
 
 use overload
     '""' => sub { shift->to_string({end=>"\n"}) }, fallback => 1;
@@ -62,6 +65,11 @@ Keep data for one note. Handle transaction etc.
 =item duration
 
 =item note
+    a number reflecting note which is played
+
+    -1 left pause
+    -2 right pause
+    -3 right pedal
 
 =item velocity
 
@@ -78,6 +86,8 @@ Keep data for one note. Handle transaction etc.
 =item length_name
 
 =item order
+
+=item type
 
 =back
 
@@ -101,13 +111,14 @@ sub from_score {
     my $class = shift;
     my $score = shift;
     my $options = shift;
-    if ($score->[0] ne 'note') {
-#        warn Dumper $score;
+    if ($score->[0] ne 'note' && $score->[0] ne 'control_change') {
+        warn Dumper $score;
+        die;
         return;
     }
     my $prev_startbeat = $options->{prev_startbeat} || 0;
     my $self =  $class->new(starttime => $score->[1] - ($options->{tune_starttime}//0)
-    , note =>$score->[4], velocity =>$score->[5]);
+    , note =>$score->[4], velocity =>$score->[5], type=>$score->[0]);
     my ($length_name, $length_numerator) =
         Music::Utils::calc_length( { time => $score->[2] }, $options );
     $self->length_name($length_name);
@@ -122,7 +133,12 @@ sub from_score {
 #    say Dumper $self;
     my $delta = $startbeat - $prev_startbeat;
     $self->delta_place_numerator($delta->to_int);
-    if ( ! $options->{hand_split_on} ) {
+    if ( $score->[0] ne 'note') {
+        warn Dumper $score;
+        ...; # make code for pedal
+    }
+    elsif ( ! $options->{hand_split_on}  ) {
+
     } elsif ($self->note < $options->{hand_split_on} ) {
         ...; # should calculate hand
     	$self->hand('left');
@@ -142,7 +158,7 @@ Return a unique number for ordering/sorting notes in a note paper/file.
 sub order {
     my $self = shift;
     shift && die "No more arguments";
-    return $self->startbeat->to_int * 1000 -250 if ($self->note == -2);
+    return $self->startbeat->to_int * 1000 -250 if $self->type ne 'note';
 
     return $self->startbeat->to_int * 1000 + 128 - $self->note;
 }
@@ -157,7 +173,7 @@ sub to_hash_ref {
 	my $self = shift;
 	my $hash = {};
 	for my $key(qw/note note_name startbeat length_numerator
-	 delta_place_numerator length_name order/) {
+	 delta_place_numerator length_name order type/) {
 	 	$hash->{$key} = $self->$key;
 	}
 
@@ -180,7 +196,7 @@ sub to_score {
     }
 
     #score:  ['note', startitme, length, channel, note, velocity],
-    return ['note', $self->starttime * $factor, int($self->duration * $factor + 0.5), 0, $self->note, $self->velocity];
+    return [$self->type, $self->starttime * $factor, int($self->duration * $factor + 0.5), 0, $self->note, $self->velocity];
 }
 
 
@@ -228,11 +244,29 @@ Calculate and fill missing values if able.
 sub compile {
     my $self = shift;
     if (! $self->note) {
-        if ($self->note_name =~/\w/) {
-            $self->note(Music::Utils::Scale::notename2value($self->note_name));
-        } elsif($self->type && $self->type eq 'string') {
+        if (! $self->type ) {
+        warn Dumper $self;
+        die "All notes must have a type. Consider setting type to note if notename";
+        }
+        elsif ($self->type eq 'control_change') {
+            ...;
+        }
+        elsif ($self->type eq 'note') {#$self->note_name =~/\w/) {
+            my $val = Music::Utils::Scale::notename2value($self->note_name);
+            $self->note($val);
+        } elsif($self->type eq 'PL') {
+            $self->note(-1); # left pause
+            $self->note_name('PL');
+        } elsif($self->type eq 'PR') {
+            $self->note(-2); # right pause
+            $self->note_name('PR');
+        } elsif($self->type eq 'PD') {
+            $self->note(-3); # right pedal
+            $self->note_name('PD');
+        } elsif($self->type eq 'string') {
             $self->note($self->string);
         } else {
+            warn Dumper $self;
             die"Must have note";
         }
     }

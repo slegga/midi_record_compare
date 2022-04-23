@@ -23,6 +23,7 @@ name=Glade-jul
 2;2;G3        # 4.4-1/4 left 
 2;4;D5        # 5.0-1/2 right
 0;6;F3        # 5.0-3/4 left 
+__RIGHT__
 4;2;D5        # 5.4-1/4 right
 2;4;H4        # 6.0-1/2 right
 0;6;G3        # 6.0-3/4 left 

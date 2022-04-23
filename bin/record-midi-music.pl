@@ -182,6 +182,14 @@ sub register_midi_event {
             if ($event->[3] == 67 && $event->[4]) {
         		    $self->finish_and_compare;
                 return;
+            } elsif ($event->[3] == 64 && $event->[4]) {
+                   printf("%-8s %-3s %3d %.3f %5d",$event->[0]
+                   ,'pedal3'
+                   ,($event->[4]//0),
+                   ($event->[2]//0),
+                   ($event->[1]//0)
+                   );
+                   print "\r";
             }
             $self->prev_controller($crl);
         }
@@ -201,9 +209,11 @@ sub register_midi_event {
         $self->do_quit;
         return;
     }
-    if (defined $event && grep { $event->[0] eq $_ } qw/note_on note_off/) {
+    if (! defined $event) {
+        # do nothing
+    }
+    elsif (defined $event && grep { $event->[0] eq $_ } qw/note_on note_off/) {
         push @{ $self->tune->in_midi_events }, $event;
-        my $pks = $self->piano_keys_pressed;
         my $pkp = $self->piano_keys_pressed;
         if ($event->[0] eq 'note_on') {
         	$pkp->{$event->[3]} =1;
@@ -211,6 +221,8 @@ sub register_midi_event {
         	delete $pkp->{$event->[3]};
         }
         $self->piano_keys_pressed($pkp);
+    } elsif($event->[0] eq 'control_change' && $event->[3] eq 64  && $event->[4]) {
+        push @{ $self->tune->in_midi_events }, $event;
     } else {
     	to_json($event);
     }
@@ -264,6 +276,7 @@ sub stdin_read {
 	if(!defined $cmd) {
         $self->finish_and_compare;
 	} else {
+
 		for my $c(@{$self->commands}) {
 			if (grep {$cmd eq $_} @{$c->[0]} ) {
 				my $sub = $c->[3];

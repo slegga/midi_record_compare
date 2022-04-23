@@ -503,7 +503,9 @@ sub from_midi_score {
     my @score_t = sort {$a->[1] <=> $b->[1]} @$score;
     my @score;
     for my $sp(@score_t) {#0=type,1=dtime,2=duration,3=0,4=note,5=volumne
-        next if $sp->[0] ne 'note';
+        if ($sp->[0] ne 'note' && $sp->[0] ne 'control_change') {
+            next;
+        }
         $tune_start=$sp->[1] if ! defined $tune_start;
         push @score, {starttime => $sp->[1] - $tune_start
         , duration => $sp->[2],channel =>$sp->[3], note =>$sp->[4], velocity =>$sp->[5]};
@@ -642,7 +644,7 @@ sub from_string {
             push @hands, $hand;
             my ($delta_place_numerator, $length_numerator, $note_name) = split(/\;/,$line);
             $beat = $beat + $delta_place_numerator;
-            my $count_first = ($self->startbeat?0:1);
+            my $count_first = ( $self->startbeat ? 0 : 1 );
             my ($ln,undef) = Music::Utils::calc_length({numerator =>$length_numerator}
             ,{shortest_note_time=>$self->shortest_note_time, denominator=>$self->denominator});
             push(@notes,Music::Note->new(delta_place_numerator => $delta_place_numerator,
@@ -652,6 +654,7 @@ sub from_string {
             denominator => $self->denominator,
             startbeat =>$beat->clone,
             count_first => $count_first,
+            type => ($note_name =~/[A-H][\w\-]*\d$/ ? 'note': $note_name)
             )->compile);
         }
     }
@@ -920,7 +923,23 @@ sub to_data_split_hands {
 	       # split
 	       # look back to se if ok
         my $hash = $note->to_hash_ref;
-        if ($hash->{note} == -1 ) {
+        if (exists $hash->{type} && $hash->{type} ne 'note') {
+            if ($hash->{note} eq 'PL') {
+                $note->{hand}= 'left';
+    	   		push @{ $return->{'left'} }, $note;
+            } elsif ($hash->{type} eq 'PR') {
+                $note->{hand}= 'right';
+    	   		push @{ $return->{'right'} }, $note;
+            } elsif ($hash->{type} eq 'PD') {
+                $note->{hand}= 'fot';
+    	   		push @{ $return->{'fot'} }, $note;
+            } else {
+#                warn Dumper $hash;
+                $note->{hand}= 'fot';
+    	   		push @{ $return->{'fot'} }, $note;
+            }
+        }
+        elsif ($hash->{note} == -1 ) {
             $note->{hand}= 'left';
 	   		push @{ $return->{'left'} }, $note;
         } elsif ( $hash->{note} == -2) {
@@ -1359,9 +1378,6 @@ sub to_string {
 
 	my @notes;
 	@notes = map{$_->to_string({scale => $self->{scale}, end =>"\n",count_first => ($self->startbeat?0:1),})} grep {$_} @{$self->notes};
-has 'allowed_note_lengths';
-has 'allowed_note_types';
-has ['hand_left_max','hand_right_min','hand_default'];
 
 	my $return='';
     for my $name (qw/denominator shortest_note_time beat_score scale startbeat
