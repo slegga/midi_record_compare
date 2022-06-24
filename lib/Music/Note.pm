@@ -85,8 +85,6 @@ Keep data for one note. Handle transaction etc.
 
 =item length_name
 
-=item order
-
 =item type
 
 =back
@@ -158,7 +156,7 @@ Return a unique number for ordering/sorting notes in a note paper/file.
 sub order {
     my $self = shift;
     shift && die "No more arguments";
-    return $self->startbeat->to_int * 1000 -250 if $self->type ne 'note';
+    return $self->startbeat->to_int * 1000 + 129 if $self->type ne 'note';
 
     return $self->startbeat->to_int * 1000 + 128 - $self->note;
 }
