@@ -48,7 +48,7 @@ sub add {
 	} elsif (! $other ) {
 	    # do nothing
 	} else {
-		die (ref $other//'') .' , '. ($other//'__UNDEF__');
+		die ((ref $other//'') .' , '. ($other//'__UNDEF__'));
 	}
 #	 while ($numerator >= $self->denominator) {
 #		$number++;
