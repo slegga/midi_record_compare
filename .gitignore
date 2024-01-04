@@ -3,4 +3,5 @@ local/*
 t/testarena/*
 .prove
 *.kate-swp
+*.bak
 t/testarena/clean_note_txt_test.txt
