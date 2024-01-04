@@ -64,7 +64,7 @@ option 'reduce_octave!', 'Move tune one octave down';
     }
 
     say "$tune";
-    $file->spurt($tune->to_string); # will write notes based on $tune->scale
+    $file->spew($tune->to_string); # will write notes based on $tune->scale
 }
 
 __PACKAGE__->new(options_cfg=>{extra=>1})->main();

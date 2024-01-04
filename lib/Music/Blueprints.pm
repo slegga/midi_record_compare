@@ -1,6 +1,7 @@
 package Music::Blueprints;
 use Mojo::Base -base;
 use Mojo::File qw(tempfile path curfile);
+
 #use File::Basename;
 use MIDI;
 use Encode 'decode';
@@ -52,8 +53,8 @@ Talk with Model modules like Music::Tune
 # has tune => sub {Music::Tune->new};
 # has midi_events => sub {[]};
 # has shortest_note_time => 9;
-has blueprints_dir => sub {curfile->dirname->dirname->dirname->sibling('midi-blueprints')};
-has blueprints => sub{[]}; # [ [65,66,...], Mojo::File ]
+has blueprints_dir => sub { curfile->dirname->dirname->dirname->sibling('midi-blueprints') };
+has blueprints     => sub { [] };    # [ [65,66,...], Mojo::File ]
 
 =head1 METHODS
 
@@ -65,21 +66,22 @@ Initialize Blueprints object loads all the blueprints
 
 
 sub init {
+
     # load blueprints
     my $self = shift;
     for my $b ($self->blueprints_dir->list->each) {
-        next if $b->basename !~/\.txt$/ ;
-if ($b->basename =~/^fred/) {
-$DB::single=2;
-}
+        next if $b->basename !~ /\.txt$/;
+        if ($b->basename =~ /^fred/) {
+            $DB::single = 2;
+        }
         my $tmp = Music::Tune->from_string($b->slurp);
         my $num = scalar @{$tmp->notes};
         my $firstnotes;
-        for my $i(0 .. 9) {
-            die "Short score for ".$b->basename if !defined $tmp->notes->[$i];
+        for my $i (0 .. 9) {
+            die "Short score for " . $b->basename if !defined $tmp->notes->[$i];
             push @$firstnotes, $tmp->notes->[$i]->note;
         }
-        push @{$self->blueprints},[$firstnotes , "$b"];
+        push @{$self->blueprints}, [$firstnotes, "$b"];
 
     }
 }
@@ -94,53 +96,59 @@ Takes tune object and filename
 =cut
 
 sub do_comp {
-    my ($self, $tune, $filename,$hand) = @_;
-    die "Missing self" if !$self;
+    my ($self, $tune, $filename, $hand) = @_;
+    die "Missing self"          if !$self;
     die "Missing (played) tune" if !$tune;
-    return if ! $filename;
-    if (! -f $filename) {
+    return                      if !$filename;
+    if (!-f $filename) {
         print STDERR "ERROR: File not found $filename";
-        return
+        return;
     }
     say "compare $filename";
-	my $file = path($filename);
+    my $file = path($filename);
+
     #midi_event: ['note_on', dtime, channel, note, velocity]
     my $score = $tune->to_midi_score;
-    if  ( @{$tune->in_midi_events } < 8 ) {
-        if (scalar @{$tune->notes} <8) {
+    if (@{$tune->in_midi_events} < 8) {
+        if (scalar @{$tune->notes} < 8) {
             if ("$file") {
                 say "Notthing to work with. Less than 8 notes";
                 return;
-            } else {
+            }
+            else {
                 die "should never get here";
             }
         }
-    } else {
-    #score:  ['note', startitme, length, channel, note, velocity],
+    }
+    else {
+        #score:  ['note', startitme, length, channel, note, velocity],
         $tune = Music::Tune->from_midi_score($score);
     }
-    my $tune_blueprint= Music::Tune->from_string($file->slurp);
-    $tune_blueprint->hand($hand) if ($hand && grep {$hand eq $_} (qw/left right/));
+    my $tune_blueprint = Music::Tune->from_string($file->slurp);
+    $tune_blueprint->hand($hand) if ($hand && grep { $hand eq $_ } (qw/left right/));
     $tune->denominator($tune_blueprint->denominator);
     my $new_shortest_note = $tune_blueprint->get_best_shortest_note($score);
     if ($new_shortest_note) {
         $tune->shortest_note_time($new_shortest_note);
-    } else {
-        $tune->calc_shortest_note_time; # calculate implesit
+    }
+    else {
+        $tune->calc_shortest_note_time;    # calculate implesit
     }
 
     $tune->score2notes;
+
     #say "Played notes after:  ".join(',',map {$self->pn($_->note)} @{$self->tune->notes});
-    my $play_bs = $tune->get_beat_sum;
+    my $play_bs      = $tune->get_beat_sum;
     my $blueprint_bs = $tune_blueprint->get_beat_sum;
-    printf "beatlengde før   fasit: %s, spilt: %s\n",$blueprint_bs,$play_bs;
+    printf "beatlengde før   fasit: %s, spilt: %s\n", $blueprint_bs, $play_bs;
     $tune->evaluate_with_blueprint($tune_blueprint);
-    printf "\n\nSTART\nshortest_note_time %s, denominator %s\n",$tune->shortest_note_time,$tune->denominator;
-    printf "Navn:          %s\n", color('blue') . decode('UTF-8',basename($tune_blueprint->name||$tune_blueprint->note_file) ) . color('reset');
-    printf "Korteste note: %.2f\n", $tune->shortest_note_time;
+    printf "\n\nSTART\nshortest_note_time %s, denominator %s\n", $tune->shortest_note_time, $tune->denominator;
+    printf "Navn:          %s\n",
+        color('blue') . decode('UTF-8', basename($tune_blueprint->name || $tune_blueprint->note_file)) . color('reset');
+    printf "Korteste note: %.2f\n",    $tune->shortest_note_time;
     printf "Ny korteste note: %.2f\n", $new_shortest_note;
-    printf "Beatinternval: %.2f\n", $tune->beat_interval;
-    printf "Totaltid:      %5.2f\n", $tune->totaltime;
+    printf "Beatinternval: %.2f\n",    $tune->beat_interval;
+    printf "Totaltid:      %5.2f\n",   $tune->totaltime;
     return $self;
 }
 
@@ -155,12 +163,12 @@ sub do_list {
     say '';
     say "notes/";
     my $notes_dir = $self->curfile->dirname->sibling("notes");
-    say $notes_dir->list_tree->map(sub{basename($_)})->join("\n");
-    say $notes_dir->list_tree->map(sub{basename($_)})->join("\n");
+    say $notes_dir->list_tree->map(sub { basename($_) })->join("\n");
+    say $notes_dir->list_tree->map(sub { basename($_) })->join("\n");
 
     say '';
     say "blueprints/";
-    say decode('utf8',$self->blueprints_dir->list_tree->map(sub{basename($_)})->join("\n"));
+    say decode('utf8', $self->blueprints_dir->list_tree->map(sub { basename($_) })->join("\n"));
 }
 
 =head2 do_save
@@ -171,23 +179,23 @@ Save played tune to disk in local/notes directory as notes (txt)
 
 sub do_save {
     my ($self, $tune, $name) = @_;
-    return if !$name;
-    $name .= '.txt' if ($name !~/\.midi?$/);
+    return          if !$name;
+    $name .= '.txt' if ($name !~ /\.midi?$/);
     my $new_file = $self->local_dir($self->blueprints_dir->child('notes'))->child($name);
-    if (! $tune->name) {
+    if (!$tune->name) {
         my $tname = $name;
-        $tname=~ s/[_-]/ /;
-        $tname=~ s/\.txt//;
-        $tname = uc(substr($tname,0,1)) . substr($tname,1);
+        $tname =~ s/[_-]/ /;
+        $tname =~ s/\.txt//;
+        $tname = uc(substr($tname, 0, 1)) . substr($tname, 1);
         $tune->name($tname);
     }
-    if (! $tune->hand_right_min) {
+    if (!$tune->hand_right_min) {
         $tune->hand_right_min('C4');
     }
-    if (! $tune->hand_left_max) {
+    if (!$tune->hand_left_max) {
         $tune->hand_left_max('H3');
     }
-    $new_file->spurt($tune->to_string);
+    $new_file->spew($tune->to_string);
     say "Saved $new_file";
 }
 
@@ -199,7 +207,7 @@ Save played tune as midi
 
 sub do_save_midi {
     my ($self, $name) = @_;
-    $name .= '.midi' if ($name !~/\.midi?$/);
+    $name .= '.midi' if ($name !~ /\.midi?$/);
     my $new_file = $self->local_dir($self->blueprints_dir->child('notes'))->child($name);
     $self->tune->to_midi_file($new_file);
     say "Saved $new_file";
@@ -212,7 +220,7 @@ Same as Music::Tune->from_note_file("$name");
 =cut
 
 sub get_blueprint_by_pathfile {
-    my ($class,$name) = @_;
+    my ($class, $name) = @_;
     return Music::Tune->from_note_file("$name");
 }
 
@@ -225,22 +233,26 @@ Return filepath for tune name part
 sub get_pathfile_by_name {
     my ($self, $name) = @_;
     my $filename = $name;
-    if (! -e $filename) {
+    if (!-e $filename) {
         my $bluedir = $self->blueprints_dir->to_string;
+
         #say $bluedir;
-        if ( -e $self->blueprints_dir->child($filename)) {
+        if (-e $self->blueprints_dir->child($filename)) {
             $filename = $self->blueprints_dir->child($filename);
-        } else {
+        }
+        else {
             my $lbf = $self->local_dir($self->blueprints_dir);
             if (-e $lbf) {
                 $filename = $lbf;
-            } else {
-                my ($cand) = grep {$_=~ /$name/} map{$_->to_string} $self->blueprints_dir->list->each;
+            }
+            else {
+                my ($cand) = grep { $_ =~ /$name/ } map { $_->to_string } $self->blueprints_dir->list->each;
                 if ($cand) {
                     $filename = $cand;
-                } else {
-                   warn "$filename or ".$self->blueprints_dir->child($filename).", $lbf or regex $name not found.";
-                   return;
+                }
+                else {
+                    warn "$filename or " . $self->blueprints_dir->child($filename) . ", $lbf or regex $name not found.";
+                    return;
                 }
             }
         }
@@ -257,36 +269,36 @@ Return guessed blueprint based on played notes.
 sub guess_blueprint {
     my $self = shift;
     my $tune = shift;
-    if (@{$tune->notes} <10) {
+    if (@{$tune->notes} < 10) {
         say "For kort låt for å sammenligne" if scalar @{$tune->notes};
         return;
     }
 
     # Reduce number of candidates for each note played until one.
     my @candidates = @{$self->blueprints};
-    my $i =0;
+    my $i          = 0;
     my $bestname;
-    for my $n( map {$_->note} @{$tune->notes}) {
-    	next if ! defined $n;
-        for my $j(reverse 0 .. $#candidates) {
-        	next if ! defined $candidates[$j][0][$i];
-            splice(@candidates,$j,1) if $n != $candidates[$j][0][$i];
+    for my $n (map { $_->note } @{$tune->notes}) {
+        next if !defined $n;
+        for my $j (reverse 0 .. $#candidates) {
+            next                       if !defined $candidates[$j][0][$i];
+            splice(@candidates, $j, 1) if $n != $candidates[$j][0][$i];
         }
         if (@candidates == 1) {
             $bestname = $candidates[0][1];
             last;
         }
-        if (@candidates == 0 ) {
-        	last;
+        if (@candidates == 0) {
+            last;
         }
         $i++;
-        if ($i>10) {
+        if ($i > 10) {
             say "Flere kandidater etter 10 noter er spilt. Fjern en av fasitene";
             return;
         }
     }
-    if (! defined $bestname) {
-        printf "Ingen passende fasit er funnet etter %s noter", $i+1;
+    if (!defined $bestname) {
+        printf "Ingen passende fasit er funnet etter %s noter", $i + 1;
         return;
     }
     return $bestname;
@@ -300,13 +312,13 @@ Find local dir. Where to save tunes.
 =cut
 
 sub local_dir {
-	my ($self, $mojofiledir) =@_;
+    my ($self, $mojofiledir) = @_;
 
-    my $mf = path("$mojofiledir");
-	my @l = @$mf;
-	my $remove=1;
-	splice(@l,$#$mf-1, $remove, 'local');
-	return path(@l);
+    my $mf     = path("$mojofiledir");
+    my @l      = @$mf;
+    my $remove = 1;
+    splice(@l, $#$mf - 1, $remove, 'local');
+    return path(@l);
 }
 
 =head2 pn

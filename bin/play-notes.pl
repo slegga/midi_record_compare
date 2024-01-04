@@ -50,7 +50,7 @@ sub main {
     my $tune = Music::Tune->from_string(path($note_file)->slurp);
     $tune->notes2score;
     my $cont = $tune->to_midi_file_content;
-    path("$tmpfile")->spurt($cont);
+    path("$tmpfile")->spew($cont);
 
     print `timidity $tmpfile`;
 }

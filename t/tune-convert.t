@@ -9,7 +9,7 @@ use Data::Dumper;
 my $orginal_file_c = path("$FindBin::Bin/blueprints/lista_gikk_til_skolen_en_haand.txt")->slurp;
 my $note_file = tempfile;
 my $tune = Music::Tune->from_string($orginal_file_c);
-$note_file->spurt($tune->to_string);
+$note_file->spew($tune->to_string);
 is( remove_comments($note_file->slurp), remove_comments($orginal_file_c),'Read write notefile');
 my $new_tune = clone $tune;
 is_deeply($tune,$new_tune,'Do clone work');
@@ -18,12 +18,12 @@ $tune->notes2score;
 $tune->score2notes;
 #warn Dumper $tune->notes;
 my $score2notes_file = tempfile;
-$score2notes_file->spurt($tune->to_string);
+$score2notes_file->spew($tune->to_string);
 is(remove_comments($score2notes_file->slurp),remove_comments($orginal_file_c),'test notes2score and back');
 
 # Test write read midi file
 my $midi_file = tempfile(SUFFIX =>'.mid');
-$midi_file->spurt($tune->to_midi_file_content);
+$midi_file->spew($tune->to_midi_file_content);
 my $midi_tune = Music::Tune->from_midi_file($midi_file);
 is_deeply( extract_midi($midi_tune->scores), extract_midi($tune->scores) );
 

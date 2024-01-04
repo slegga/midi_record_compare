@@ -782,7 +782,7 @@ Plays self->tune or given filepathname
 
 sub play {
     my $tmpfile = tempfile(DIR=>'/tmp');
-    $tmpfile->spurt($_[0]->to_midi_file_content("$tmpfile"));
+    $tmpfile->spew($_[0]->to_midi_file_content("$tmpfile"));
     print `timidity $tmpfile`;
 }
 
